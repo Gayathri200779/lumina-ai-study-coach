@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina AI Coach - Study Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="study-planner.css">
+</head>
+<body>
+
+<!-- ===== TOP NAVIGATION BAR (connects to every page) ===== -->
+<nav class="top-nav">
+  <a href="dashboard.html" class="logo">Lumina AI<br>Coach</a>
+
+  <ul class="nav-links">
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="concept-explainer.html">AI Concept Explainer</a></li>
+    <li><a href="quiz.html">AI Quiz Generator</a></li>
+    <li><a href="my-notes.html">My Notes</a></li>
+    <li><a href="study-planner.html" class="active">Study Plan</a></li>
+    <li><a href="progress-tracker.html">Progress Tracker</a></li>
+  </ul>
+
+  <div class="nav-icons">
+    <button class="icon-btn" title="Settings">
+      <span class="material-symbols-outlined">settings</span>
+    </button>
+    <!-- No profile.html was specified, so this stays a plain button.
+         Change to <a href="profile.html" class="icon-btn"> if you add one. -->
+    <button class="icon-btn" title="Profile">
+      <span class="material-symbols-outlined">person</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main-content">
+
+  <header class="page-header">
+    <h1>Study Plan</h1>
+    <p>Set simple targets and keep track of your learning.</p>
+  </header>
+
+  <div class="bento-grid">
+
+    <!-- Today's Targets -->
+    <section class="column">
+      <div class="column-header">
+        <h2>Today's Targets</h2>
+        <button class="btn btn-primary" id="addTodayBtn">
+          <span class="material-symbols-outlined">add</span>Add Today's Target
+        </button>
+      </div>
+
+      <article class="target-card priority-high">
+        <div class="card-top">
+          <div>
+            <div class="tag-row">
+              <span class="tag tag-high">High Priority</span>
+              <span class="meta"><span class="material-symbols-outlined">schedule</span>45 mins</span>
+            </div>
+            <h3>Machine Learning Basics</h3>
+          </div>
+          <div class="card-actions">
+            <button class="icon-btn small" title="Edit"><span class="material-symbols-outlined">edit</span></button>
+            <button class="icon-btn small" title="Delete"><span class="material-symbols-outlined">delete</span></button>
+          </div>
+        </div>
+        <p class="card-desc">Chapter 3: Gradient Descent and Loss Functions</p>
+        <button class="btn btn-outline btn-full">
+          <span class="material-symbols-outlined">check_circle</span>Mark as completed
+        </button>
+      </article>
+
+      <article class="target-card completed">
+        <div class="card-top">
+          <div>
+            <div class="tag-row"><span class="tag tag-med">Med Priority</span></div>
+            <h3 class="strike">Data Structures</h3>
+          </div>
+          <span class="material-symbols-outlined check-icon filled">check_circle</span>
+        </div>
+        <p class="card-desc strike">Review Binary Trees implementations</p>
+      </article>
+    </section>
+
+    <!-- Weekly Targets -->
+    <section class="column">
+      <div class="column-header">
+        <h2>Weekly Targets</h2>
+        <button class="btn btn-secondary" id="addWeeklyBtn">
+          <span class="material-symbols-outlined">add</span>Add Weekly Target
+        </button>
+      </div>
+
+      <div class="empty-state">
+        <span class="material-symbols-outlined">calendar_month</span>
+        <p class="empty-title">No weekly targets yet</p>
+        <p class="empty-sub">Set a broader goal for the week to stay on track.</p>
+      </div>
+
+      <!-- Ethics Papers card: now a real checklist that drives the progress bar -->
+      <article class="target-card" id="ethicsCard">
+        <div class="card-top">
+          <div>
+            <span class="tag tag-low">Low Priority</span>
+            <h3>Read AI Ethics Papers</h3>
+          </div>
+          <button class="icon-btn small" title="Edit"><span class="material-symbols-outlined">edit</span></button>
+        </div>
+        <p class="card-desc">Read and summarize 2 papers on bias in LLMs.</p>
+
+        <ul class="checklist" id="ethicsChecklist">
+          <li>
+            <label>
+              <input type="checkbox" class="paper-check" data-paper="1">
+              <span>Paper 1: Bias in Large Language Models</span>
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" class="paper-check" data-paper="2">
+              <span>Paper 2: Fairness Metrics in NLP</span>
+            </label>
+          </li>
+        </ul>
+
+        <div class="progress-row">
+          <span>Progress</span>
+          <span id="ethicsProgressText">0 / 2 completed</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="ethicsProgressFill" style="width:0%"></div></div>
+      </article>
+    </section>
+
+  </div>
+</main>
+
+<!-- ===== BOTTOM NAV (mobile only, connects to every page too) ===== -->
+<nav class="bottom-nav">
+  <a href="concept-explainer.html"><span class="material-symbols-outlined">psychology</span><span>Concepts</span></a>
+  <a href="quiz.html"><span class="material-symbols-outlined">quiz</span><span>Quizzes</span></a>
+  <a href="study-planner.html" class="active"><span class="material-symbols-outlined filled">event_note</span><span>Plan</span></a>
+  <a href="progress-tracker.html"><span class="material-symbols-outlined">query_stats</span><span>Tracker</span></a>
+  <a href="dashboard.html"><span class="material-symbols-outlined">space_dashboard</span><span>Dashboard</span></a>
+</nav>
+
+<!-- ===== SCRIPT: makes the Ethics Papers progress update as-you-go ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const checklist = document.querySelectorAll('#ethicsChecklist .paper-check');
+  const progressText = document.getElementById('ethicsProgressText');
+  const progressFill = document.getElementById('ethicsProgressFill');
+  const storageKey = 'lumina-ethics-progress';
+
+  // Restore whatever the user had checked last time
+  const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+  if (saved) {
+    checklist.forEach(cb => {
+      if (saved[cb.dataset.paper] !== undefined) cb.checked = saved[cb.dataset.paper];
+    });
+  }
+
+  function updateProgress() {
+    const total = checklist.length;
+    const completed = Array.from(checklist).filter(cb => cb.checked).length;
+
+    progressText.textContent = `${completed} / ${total} completed`;
+    progressFill.style.width = `${(completed / total) * 100}%`;
+
+    const state = {};
+    checklist.forEach(cb => state[cb.dataset.paper] = cb.checked);
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  }
+
+  checklist.forEach(cb => cb.addEventListener('change', updateProgress));
+  updateProgress(); // set initial state on load
+});
+</script>
+
+</body>
+</html>

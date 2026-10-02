@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina Academy - Dashboard</title>
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="navbar">
+    <div class="logo">Lumina Academy</div>
+    <nav class="nav-links">
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="notes.html">My Notes</a>
+    </nav>
+    <div class="nav-icons">
+      <span class="icon">🔔</span>
+      <span class="icon">❓</span>
+
+      <!-- Avatar with dropdown (replaces the old text Profile/Settings links) -->
+      <div class="avatar-menu">
+        <img src="https://i.pravatar.cc/40" alt="profile" class="avatar" id="avatarToggle">
+        <div class="avatar-dropdown" id="avatarDropdown">
+          <a href="profile.html">👤 Profile</a>
+          <a href="settings.html">⚙️ Settings</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Welcome Section -->
+    <section class="welcome">
+      <h1>Welcome back, Alex 👋</h1>
+      <p>What would you like to learn today?</p>
+    </section>
+
+    <!-- Info Bar -->
+    <section class="info-bar">
+      <div class="info-item" id="currentSemester">🎓 Current Semester: 5th Semester</div>
+      <div class="info-item" id="subjectCount">📖 Subjects: 6 Subjects</div>
+      <button class="edit-profile-btn" onclick="window.location.href='profile.html'">Edit Profile</button>
+    </section>
+
+    <!-- Learning Tools -->
+    <section class="tools-section">
+      <h2>Your Learning Tools</h2>
+      <div class="tools-grid">
+        <a href="concept-explainer.html" class="tool-card">
+          <div class="tool-icon">🧠</div>
+          <h3>AI Concept Explainer</h3>
+          <p>Understand difficult concepts with simple AI-powered explanations.</p>
+          <span class="open-link">Open →</span>
+        </a>
+
+        <a href="quiz.html" class="tool-card">
+          <div class="tool-icon">❓</div>
+          <h3>AI Quiz Generator</h3>
+          <p>Generate personalized quizzes to test your understanding.</p>
+          <span class="open-link">Open →</span>
+        </a>
+
+        <a href="my-notes.html" class="tool-card">
+          <div class="tool-icon">📝</div>
+          <h3>AI Notes Summarizer</h3>
+          <p>Turn study material into clear and concise notes.</p>
+          <span class="open-link">Open →</span>
+        </a>
+
+        <a href="my-notes.html" class="tool-card">
+          <div class="tool-icon">🔖</div>
+          <h3>My Notes</h3>
+          <p>Save and revisit your notes whenever you need them.</p>
+          <span class="open-link">Open →</span>
+        </a>
+
+        <a href="study-planner.html" class="tool-card">
+          <div class="tool-icon">📅</div>
+          <h3>Study Planner</h3>
+          <p>Organize your study time and stay on track.</p>
+          <span class="open-link">Open →</span>
+        </a>
+
+        <a href="exam-prep.html" class="tool-card">
+          <div class="tool-icon">✅</div>
+          <h3>Exam Preparation</h3>
+          <p>Prepare smarter with focused exam preparation tools.</p>
+          <span class="open-link">Open →</span>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- Progress Tracker -->
+    <section class="progress-tracker">
+      <div class="progress-header">
+        <span class="tool-icon">📈</span>
+        <h2>Progress Tracker</h2>
+      </div>
+      <p>Track your learning progress and study activity.</p>
+      <div class="progress-empty">
+        <div class="chart-icon">📊</div>
+        <p><em>Your progress will appear here as you start learning.</em></p>
+      </div>
+    </section>
+
+    <!-- Start Learning CTA -->
+    <section class="cta-section">
+      <h2>Start Learning</h2>
+      <p>Ready to dive into a new topic or need help with a difficult concept? Ask Lumina AI directly.</p>
+      <button class="ask-btn">Ask Lumina AI →</button>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-logo">Lumina Academy</div>
+    <div class="footer-text">© 2024 Lumina Academy. Supporting your academic journey.</div>
+    <nav class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Help Center</a>
+    </nav>
+  </footer>
+
+  <script>
+    // ----- Avatar dropdown toggle -----
+    const avatarToggle = document.getElementById('avatarToggle');
+    const avatarDropdown = document.getElementById('avatarDropdown');
+
+    avatarToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      avatarDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', function () {
+      avatarDropdown.classList.remove('show');
+    });
+
+    // ----- Load semester/subject count from Profile Setup page -----
+    // On your profile setup page, save data like this when the user submits the form:
+    //
+    //   localStorage.setItem('luminaProfile', JSON.stringify({
+    //     semester: "3rd Semester",
+    //     subjects: 5
+    //   }));
+    //
+    document.addEventListener('DOMContentLoaded', function () {
+      const savedProfile = localStorage.getItem('luminaProfile');
+      if (savedProfile) {
+        const profile = JSON.parse(savedProfile);
+        if (profile.semester) {
+          document.getElementById('currentSemester').textContent =
+            `🎓 Current Semester: ${profile.semester}`;
+        }
+        if (profile.subjects) {
+          document.getElementById('subjectCount').textContent =
+            `📖 Subjects: ${profile.subjects} Subjects`;
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>

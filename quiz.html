@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina AI Coach - AI Quiz Generator</title>
+<link rel="stylesheet" href="quiz.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="navbar">
+    <div class="logo">🎓 Lumina AI Coach</div>
+    <nav class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="concept-explainer.html">AI Concept Explainer</a>
+      <a href="quiz.html" class="active">AI Quiz Generator</a>
+      <a href="my-notes.html">My Notes</a>
+      <a href="study-planner.html">Study Plan</a>
+      <a href="progress-tracker.html">Progress Tracker</a>
+    </nav>
+    <div class="nav-icons">
+      <span class="icon">⚙️</span>
+      <img src="https://i.pravatar.cc/40" class="avatar" alt="profile">
+    </div>
+  </header>
+
+  <div class="page-title">AI Quiz Generator ✨</div>
+
+  <main class="container">
+
+    <div class="main-col">
+
+      <!-- Config Card -->
+      <section class="card config-card">
+        <div class="config-top">
+          <p class="config-desc">Create targeted assessments to pinpoint your learning gaps and accelerate mastery.</p>
+          <button class="history-btn">🕘 History</button>
+        </div>
+
+        <div class="form-group">
+          <label for="subjectArea">Subject Area</label>
+          <select id="subjectArea">
+            <option>Computer Science</option>
+            <option>Mathematics</option>
+            <option>Physics</option>
+            <option>Biology</option>
+            <option>Chemistry</option>
+            <option>History</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="specificTopic">Specific Topic (Optional)</label>
+          <input type="text" id="specificTopic" placeholder="e.g., Bayes' Theorem">
+        </div>
+
+        <div class="difficulty-block">
+          <label>Target Difficulty</label>
+          <div class="gauge-wrap">
+            <div class="gauge-label" id="gaugeLabel">MEDIUM</div>
+            <svg viewBox="0 0 200 110" class="gauge">
+              <path d="M10 100 A90 90 0 0 1 68 20" class="zone zone-easy" data-diff="easy"></path>
+              <path d="M68 20 A90 90 0 0 1 132 20" class="zone zone-med" data-diff="medium"></path>
+              <path d="M132 20 A90 90 0 0 1 190 100" class="zone zone-hard" data-diff="hard"></path>
+            </svg>
+            <div class="needle" id="needle"></div>
+            <div class="gauge-endlabels">
+              <span class="end-label" data-diff="easy">EASY</span>
+              <span class="end-label" data-diff="hard">HARD</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="questions-block">
+          <label>Questions</label>
+          <div class="count-buttons">
+            <button class="count-btn" data-count="5">5</button>
+            <button class="count-btn active" data-count="10">10</button>
+            <button class="count-btn" data-count="15">15</button>
+          </div>
+        </div>
+
+        <button class="generate-btn" id="generateBtn">✨ Generate Quiz</button>
+      </section>
+
+      <!-- Quiz Question Card -->
+      <section class="card quiz-card" id="quizSection" hidden>
+        <div class="quiz-meta">
+          <span class="q-count"><span id="qNum">1</span> of <span id="qTotal">10</span></span>
+          <span class="timer">⏱ <span id="timerDisplay">14:59</span></span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <h2 class="question-text" id="questionText"></h2>
+
+        <div class="options" id="optionsContainer"></div>
+
+        <div class="quiz-nav">
+          <button class="prev-btn" id="prevBtn">‹ Previous</button>
+          <button class="next-btn" id="nextBtn">Next ›</button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- AI Insights Sidebar -->
+    <aside class="card insights-card">
+      <h3>🧠 AI Insights</h3>
+      <p class="insights-intro">Based on your recent performance, Lumina suggests focusing on these areas.</p>
+
+      <div class="insight strong">
+        <span class="dot green"></span>
+        <div>
+          <strong>Strong Topic</strong>
+          <p>Probability Basics</p>
+        </div>
+      </div>
+
+      <div class="insight practice">
+        <span class="dot yellow"></span>
+        <div>
+          <strong>Needs Practice</strong>
+          <p>Conditional Probability</p>
+        </div>
+      </div>
+
+      <div class="insight weak">
+        <span class="dot red"></span>
+        <div>
+          <strong>Weak Topic</strong>
+          <p>Bayes' Theorem Applications</p>
+          <div class="weak-note">Struggling with identifying prior probabilities from word problems.</div>
+        </div>
+      </div>
+
+      <button class="practice-btn">⟳ Practice Weak Topics</button>
+      <button class="review-btn">📖 Review Concepts</button>
+    </aside>
+
+  </main>
+
+<script>
+  // ---------- STATE ----------
+  let selectedDifficulty = "medium";
+  let selectedCount = 10;
+  let quiz = [];
+  let currentIndex = 0;
+  let selectedAnswers = [];
+  let timerInterval = null;
+  let secondsLeft = 0;
+
+  // ---------- DIFFICULTY GAUGE ----------
+  const needle = document.getElementById("needle");
+  const gaugeLabel = document.getElementById("gaugeLabel");
+  const diffAngles = { easy: -55, medium: 0, hard: 55 };
+
+  function setDifficulty(diff) {
+    selectedDifficulty = diff;
+    needle.style.transform = `rotate(${diffAngles[diff]}deg)`;
+    gaugeLabel.textContent = diff.toUpperCase();
+    document.querySelectorAll(".zone").forEach(z => {
+      z.classList.toggle("zone-active", z.dataset.diff === diff);
+    });
+    document.querySelectorAll(".end-label").forEach(l => {
+      l.classList.toggle("active", l.dataset.diff === diff);
+    });
+  }
+
+  document.querySelectorAll(".zone").forEach(zone => {
+    zone.addEventListener("click", () => setDifficulty(zone.dataset.diff));
+  });
+  document.querySelectorAll(".end-label").forEach(label => {
+    label.addEventListener("click", () => setDifficulty(label.dataset.diff));
+  });
+  setDifficulty("medium");
+
+  // ---------- QUESTION COUNT ----------
+  document.querySelectorAll(".count-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".count-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedCount = parseInt(btn.dataset.count, 10);
+    });
+  });
+
+  // ---------- QUIZ GENERATION (mock, fully dynamic based on user input) ----------
+  const templates = [
+    (t) => `What is the core purpose of ${t} in this subject?`,
+    (t) => `Which statement best describes how ${t} is applied?`,
+    (t) => `Identify the correct outcome when using ${t} on a real-world example.`,
+    (t) => `Which of the following is a common mistake when applying ${t}?`,
+    (t) => `How does ${t} relate to other concepts in this subject area?`,
+    (t) => `What condition must be true for ${t} to hold?`,
+    (t) => `Which formula/approach is most closely tied to ${t}?`,
+    (t) => `What is a limitation of ${t}?`,
+    (t) => `Choose the best example illustrating ${t}.`,
+    (t) => `Why is ${t} considered important at this difficulty level?`,
+    (t) => `Which scenario would NOT use ${t}?`,
+    (t) => `What is the first step when solving a problem involving ${t}?`,
+    (t) => `Which term is most closely associated with ${t}?`,
+    (t) => `What result would you expect after correctly applying ${t}?`,
+    (t) => `Which of these best summarizes ${t}?`
+  ];
+
+  const optionPool = [
+    "It updates existing knowledge based on new evidence.",
+    "It calculates the probability of independent events.",
+    "It determines variance across a data set.",
+    "It has no real-world application.",
+    "It only applies to a single fixed scenario.",
+    "It combines prior information with new data.",
+    "It is unrelated to the subject entirely.",
+    "It simplifies complex relationships into a single rule."
+  ];
+
+  function shuffle(arr) {
+    return [...arr].sort(() => Math.random() - 0.5);
+  }
+
+  function generateQuiz(count, subject, topic, difficulty) {
+    const focus = topic && topic.trim() !== "" ? topic.trim() : subject;
+    const pool = shuffle(templates).slice(0, count);
+    return pool.map((tmpl, i) => {
+      const opts = shuffle(optionPool).slice(0, 4);
+      return {
+        question: `[${difficulty.toUpperCase()}] ${tmpl(focus)}`,
+        options: opts,
+        correctIndex: Math.floor(Math.random() * opts.length)
+      };
+    });
+  }
+
+  // ---------- GENERATE BUTTON ----------
+  document.getElementById("generateBtn").addEventListener("click", () => {
+    const subject = document.getElementById("subjectArea").value;
+    const topic = document.getElementById("specificTopic").value;
+
+    quiz = generateQuiz(selectedCount, subject, topic, selectedDifficulty);
+    selectedAnswers = new Array(quiz.length).fill(null);
+    currentIndex = 0;
+
+    document.getElementById("qTotal").textContent = quiz.length;
+    document.getElementById("quizSection").hidden = false;
+    document.getElementById("quizSection").scrollIntoView({ behavior: "smooth" });
+
+    startTimer(15 * 60 - 1); // 14:59 style countdown
+    renderQuestion();
+  });
+
+  // ---------- RENDER QUESTION ----------
+  const optionsContainer = document.getElementById("optionsContainer");
+  const questionText = document.getElementById("questionText");
+  const qNum = document.getElementById("qNum");
+  const progressFill = document.getElementById("progressFill");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const letters = ["A", "B", "C", "D", "E"];
+
+  function renderQuestion() {
+    const q = quiz[currentIndex];
+    qNum.textContent = currentIndex + 1;
+    questionText.textContent = q.question;
+    progressFill.style.width = `${((currentIndex + 1) / quiz.length) * 100}%`;
+
+    optionsContainer.innerHTML = "";
+    q.options.forEach((opt, i) => {
+      const div = document.createElement("div");
+      div.className = "option";
+      if (selectedAnswers[currentIndex] === i) div.classList.add("selected");
+      div.innerHTML = `
+        <span class="radio-dot"></span>
+        <div>
+          <strong>${letters[i]}</strong>
+          <p>${opt}</p>
+        </div>`;
+      div.addEventListener("click", () => {
+        selectedAnswers[currentIndex] = i;
+        renderQuestion();
+      });
+      optionsContainer.appendChild(div);
+    });
+
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.textContent = currentIndex === quiz.length - 1 ? "Finish ✓" : "Next ›";
+  }
+
+  prevBtn.addEventListener("click", () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderQuestion();
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentIndex < quiz.length - 1) {
+      currentIndex++;
+      renderQuestion();
+    } else {
+      clearInterval(timerInterval);
+      const score = selectedAnswers.filter((a, i) => a === quiz[i].correctIndex).length;
+      alert(`Quiz complete! You scored ${score} out of ${quiz.length}.`);
+    }
+  });
+
+  // ---------- TIMER ----------
+  function startTimer(seconds) {
+    clearInterval(timerInterval);
+    secondsLeft = seconds;
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        clearInterval(timerInterval);
+        secondsLeft = 0;
+      }
+      updateTimerDisplay();
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    const m = Math.floor(secondsLeft / 60);
+    const s = secondsLeft % 60;
+    document.getElementById("timerDisplay").textContent =
+      `${m}:${s.toString().padStart(2, "0")}`;
+  }
+</script>
+
+</body>
+</html>

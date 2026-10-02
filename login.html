@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sign In - Lumina AI Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="login.css" rel="stylesheet"/>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <span>🌿</span>
+    <span>Lumina AI Coach</span>
+  </div>
+  <a class="back-link" href="home.html">&#8592; Back to Home</a>
+</header>
+
+<main class="main">
+  <div class="auth-card">
+
+    <div class="card-header">
+      <h1>Welcome Back!</h1>
+      <p>Sign in to continue your learning journey with Lumina AI Coach.</p>
+    </div>
+
+    <button class="google-btn" id="googleBtn" type="button">
+      <img alt="Google Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE0BKtExcyOVgHK1pVtRH2j-VbHPuo0bhDo8dIFtRCT-W0_2-XcGGVDWd1N9UMES7QIPMORkU-9NiWPxL5utqGuMNbwEqQ4pnPqxgS0TIbc9djD-EQ2BztYOGvRrj1gVKm_dpJPkDWUVjuQQgmFap1o50oc3Hb_0x--7HvFFT6-Y7zkWPzLA3RVU6MJV7UYCmh0oXYiNQ4LaKkNJZhwL7qg3mBO-Z-JJt8bO1Egk-A2gV31YfOBoMq"/>
+      Continue with Google
+    </button>
+
+    <div class="divider">
+      <div class="line"></div>
+      <span>OR</span>
+      <div class="line"></div>
+    </div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" placeholder="Enter your email" type="email" required/>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="password-wrapper">
+          <input id="password" placeholder="Enter your password" type="password" required/>
+          <button aria-label="Toggle password visibility" class="toggle-password" id="togglePassword" type="button">👁</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="remember-me">
+          <input type="checkbox"/>
+          Remember me
+        </label>
+        <a class="forgot-link" href="forgot-password.html">Forgot password?</a>
+      </div>
+
+      <button class="submit-btn" type="submit">
+        Sign In &#8594;
+      </button>
+    </form>
+
+    <div class="card-footer">
+      Don't have an account?
+      <a href="signup.html">Create an account</a>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  document.getElementById('togglePassword').addEventListener('click', function () {
+    const pw = document.getElementById('password');
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    window.location.href = 'profile-setup.html';
+  });
+
+  document.getElementById('googleBtn').addEventListener('click', function () {
+    window.location.href = 'profile-setup.html';
+  });
+</script>
+
+</body>
+</html>

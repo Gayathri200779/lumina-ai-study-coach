@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile Setup - Lumina AI Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="profile-setup.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="bg-blob blob-1"></div>
+<div class="bg-blob blob-2"></div>
+
+<header class="header">
+  <div class="logo">
+    <span class="logo-mark">🌿</span>
+    <span>Lumina AI Coach</span>
+  </div>
+</header>
+
+<main class="card">
+  <div class="progress-track">
+    <div class="progress-step done">
+      <span class="dot"></span>
+      <span class="step-label">Account</span>
+    </div>
+    <div class="progress-line filled"></div>
+    <div class="progress-step active">
+      <span class="dot"></span>
+      <span class="step-label">Profile</span>
+    </div>
+    <div class="progress-line"></div>
+    <div class="progress-step">
+      <span class="dot"></span>
+      <span class="step-label">Dashboard</span>
+    </div>
+  </div>
+
+  <div class="card-header">
+    <h2>Complete your profile</h2>
+    <p>Tell us a few things about your studies so Lumina can personalize your learning experience.</p>
+  </div>
+
+  <form id="profileForm">
+
+    <!-- Name -->
+    <div class="field">
+      <label for="fullName"><span class="icon-badge">🌱</span>Name</label>
+      <input id="fullName" name="fullName" placeholder="Enter your name" required type="text"/>
+    </div>
+
+    <!-- Degree -->
+    <div class="field">
+      <label for="course"><span class="icon-badge">🎓</span>Degree</label>
+      <input id="course" name="course" placeholder="Enter your degree" required type="text"/>
+    </div>
+
+    <!-- Year & Semester -->
+    <div class="section">
+      <label><span class="icon-badge">📅</span>Year &amp; Semester</label>
+      <div class="sem-grid" id="semesterGrid">
+        <button class="sem-btn" data-val="1" type="button">Sem 1</button>
+        <button class="sem-btn" data-val="2" type="button">Sem 2</button>
+        <button class="sem-btn" data-val="3" type="button">Sem 3</button>
+        <button class="sem-btn" data-val="4" type="button">Sem 4</button>
+        <button class="sem-btn" data-val="5" type="button">Sem 5</button>
+        <button class="sem-btn" data-val="6" type="button">Sem 6</button>
+        <button class="sem-btn" data-val="7" type="button">Sem 7</button>
+        <button class="sem-btn" data-val="8" type="button">Sem 8</button>
+      </div>
+      <input id="selectedSemester" name="semester" type="hidden" value=""/>
+    </div>
+
+    <!-- Subjects -->
+    <div class="section">
+      <label><span class="icon-badge">📚</span>Subjects</label>
+      <p class="hint">Add the subjects you are currently studying.</p>
+      <div class="subjects-box">
+        <div id="subjectsContainer"></div>
+        <input id="subjectInput" placeholder="Enter a subject and press Enter" type="text"/>
+      </div>
+      <input id="subjectsList" name="subjects" type="hidden" value=""/>
+    </div>
+
+    <!-- Learning Goals -->
+    <div class="section">
+      <label><span class="icon-badge">🎯</span>Learning Goals</label>
+      <p class="hint">Choose up to 3 goals.</p>
+      <div class="goals">
+        <label class="goal-card">
+          <input class="goal-checkbox" name="goals" type="checkbox" value="understand"/>
+          <span>Understand concepts</span>
+        </label>
+        <label class="goal-card">
+          <input class="goal-checkbox" name="goals" type="checkbox" value="exams"/>
+          <span>Prepare for exams</span>
+        </label>
+        <label class="goal-card">
+          <input class="goal-checkbox" name="goals" type="checkbox" value="grades"/>
+          <span>Improve grades</span>
+        </label>
+        <label class="goal-card">
+          <input class="goal-checkbox" name="goals" type="checkbox" value="practice"/>
+          <span>Practice questions</span>
+        </label>
+        <label class="goal-card">
+          <input class="goal-checkbox" name="goals" type="checkbox" value="revise"/>
+          <span>Revise faster</span>
+        </label>
+        <label class="goal-card">
+          <input class="goal-checkbox" name="goals" type="checkbox" value="plan"/>
+          <span>Plan my studies</span>
+        </label>
+        <label class="goal-card">
+          <input class="goal-checkbox" name="goals" type="checkbox" value="fundamentals"/>
+          <span>Build strong fundamentals</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="footer-action">
+      <button class="primary-btn" type="submit">
+        Continue &#8594;
+      </button>
+    </div>
+
+  </form>
+</main>
+
+<script>
+  const semBtns = document.querySelectorAll('.sem-btn');
+  const semInput = document.getElementById('selectedSemester');
+  semBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      semBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      semInput.value = btn.dataset.val;
+    });
+  });
+
+  const subjectInput = document.getElementById('subjectInput');
+  const subjectsContainer = document.getElementById('subjectsContainer');
+  const subjectsHidden = document.getElementById('subjectsList');
+  let subjects = [];
+
+  function renderSubjects() {
+    subjectsContainer.innerHTML = '';
+    subjects.forEach((subj, index) => {
+      const span = document.createElement('span');
+      span.className = 'chip';
+      span.innerHTML = subj + ' <button type="button" data-index="' + index + '">&times;</button>';
+      subjectsContainer.appendChild(span);
+    });
+    subjectsHidden.value = subjects.join(',');
+  }
+
+  subjectInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = subjectInput.value.trim();
+      if (val && !subjects.includes(val)) {
+        subjects.push(val);
+        subjectInput.value = '';
+        renderSubjects();
+      }
+    }
+  });
+
+  subjectsContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn) {
+      const index = parseInt(btn.dataset.index);
+      subjects.splice(index, 1);
+      renderSubjects();
+    }
+  });
+
+  const goalCards = document.querySelectorAll('.goal-card');
+  goalCards.forEach(card => {
+    const checkbox = card.querySelector('input[type="checkbox"]');
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) {
+        card.classList.add('selected');
+      } else {
+        card.classList.remove('selected');
+      }
+      const checkedCount = document.querySelectorAll('input[name="goals"]:checked').length;
+      goalCards.forEach(c => {
+        const box = c.querySelector('input[type="checkbox"]');
+        if (checkedCount >= 3 && !box.checked) {
+          box.disabled = true;
+          c.classList.add('disabled');
+        } else {
+          box.disabled = false;
+          c.classList.remove('disabled');
+        }
+      });
+    });
+  });
+
+  document.getElementById('profileForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    window.location.href = 'dashboard.html';
+  });
+</script>
+
+</body>
+</html>

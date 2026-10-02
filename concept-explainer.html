@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina AI Coach - AI Concept Explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link rel="stylesheet" href="concept-explainer.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="logo">Lumina AI Coach</div>
+  <nav class="main-nav">
+    <a href="#" class="nav-link">Dashboard</a>
+    <a href="#" class="nav-link active">AI Concept<br>Explainer</a>
+    <a href="#" class="nav-link">AI Quiz<br>Generator</a>
+    <a href="#" class="nav-link">My<br>Notes</a>
+    <a href="#" class="nav-link">Study<br>Plan</a>
+    <a href="#" class="nav-link">Progress<br>Tracker</a>
+  </nav>
+  <div class="header-right">
+    <span class="material-icons settings-icon">settings</span>
+    <img class="avatar" src="https://i.pravatar.cc/40" alt="User avatar">
+  </div>
+</header>
+
+<!-- Main content -->
+<main class="page">
+  <h1 class="page-title">AI Concept Explainer</h1>
+  <p class="page-subtitle">Understand difficult concepts with simple, personalized explanations.</p>
+
+  <div class="panels">
+
+    <!-- Left Panel: Form -->
+    <section class="card form-card">
+      <h2><span class="material-icons">search</span> Explain a Concept</h2>
+      <p class="card-desc">Enter a topic and choose how you want Lumina to explain it.</p>
+
+      <label class="field-label">Subject Context <span class="optional">(Optional)</span></label>
+      <div class="input-with-icon">
+        <span class="material-icons">school</span>
+        <input type="text" id="subject-context" placeholder="e.g., Computer Science, Biology...">
+      </div>
+
+      <div class="label-row">
+        <label class="field-label">Concept or Topic</label>
+        <span class="char-count"><span id="char-current">0</span>/500</span>
+      </div>
+      <div class="textarea-wrap">
+        <textarea id="concept-input" maxlength="500" placeholder="e.g., Explain how neural networks learn from data..."></textarea>
+        <span class="material-icons mic-icon" id="mic-btn">mic</span>
+      </div>
+
+      <label class="field-label">Explanation Level</label>
+      <div class="btn-group">
+        <button class="pill-btn level-btn selected" type="button">Beginner</button>
+        <button class="pill-btn level-btn" type="button">Intermediate</button>
+        <button class="pill-btn level-btn" type="button">Advanced</button>
+      </div>
+
+      <label class="field-label">Style</label>
+      <div class="style-grid">
+        <button class="style-btn selected" type="button"><span class="material-icons">chat_bubble_outline</span> Simple</button>
+        <button class="style-btn" type="button"><span class="material-icons">format_list_numbered</span> Step-by-Step</button>
+        <button class="style-btn" type="button"><span class="material-icons">lightbulb_outline</span> With Examples</button>
+        <button class="style-btn" type="button"><span class="material-icons">assignment</span> Exam-Oriented</button>
+      </div>
+
+      <div class="action-row">
+        <button class="primary-btn" id="explain-btn" type="button"><span class="material-icons" id="explain-icon">auto_awesome</span> <span id="explain-text">Explain Concept</span></button>
+        <button class="secondary-btn" type="button"><span class="material-icons">auto_awesome</span> Summarize</button>
+      </div>
+    </section>
+
+    <!-- Right Panel: AI Explanation -->
+    <section class="card result-card">
+      <div class="result-header">
+        <h2><span class="material-icons">psychology</span> AI Explanation</h2>
+        <div class="result-actions">
+          <span class="material-icons icon-btn" id="listen-btn" title="Listen">volume_up</span>
+          <span class="material-icons icon-btn" id="copy-btn" title="Copy">content_copy</span>
+          <button class="save-btn" id="save-btn" type="button"><span class="material-icons">bookmark</span> Save to My Notes</button>
+        </div>
+      </div>
+      <hr>
+
+      <!-- Empty state (shown by default) -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon"><span class="material-icons">school</span></div>
+        <h3>Ready to explain your concept</h3>
+        <p>Enter a topic in the panel and Lumina will break it down into simple, understandable sections.</p>
+      </div>
+
+      <!-- Loading state (hidden by default) -->
+      <div class="loading-state hidden" id="loading-state">
+        <div class="spinner"></div>
+        <p>Lumina is thinking...</p>
+      </div>
+
+      <!-- Result state (hidden by default) -->
+      <div class="result-content hidden" id="result-content">
+        <p id="result-text"></p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script src="concept-explainer.js"></script>
+</body>
+</html>

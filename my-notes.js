@@ -1,0 +1,143 @@
+// ---------- INITIAL DATA ----------
+let subjects = [
+  {
+    name: "Artificial Intelligence",
+    icon: "🧠",
+    notes: [
+      "Neural networks mimic brain structure using layers of nodes.",
+      "Supervised learning requires labeled training data.",
+      "Reinforcement learning optimizes via reward signals."
+    ]
+  },
+  {
+    name: "Statistics",
+    icon: "📊",
+    notes: [
+      "Standard deviation measures spread around the mean.",
+      "P-values below 0.05 are commonly treated as significant."
+    ]
+  },
+  {
+    name: "Python",
+    icon: "🐍",
+    notes: [
+      "List comprehensions offer concise iteration syntax.",
+      "Use virtual environments to isolate dependencies.",
+      "Decorators wrap functions to extend behavior."
+    ]
+  }
+];
+
+let expandedIndex = null; // which subject card is currently expanded
+const grid = document.getElementById("subjectsGrid");
+
+// ---------- RENDER ----------
+function render(filter = "") {
+  grid.innerHTML = "";
+  const term = filter.trim().toLowerCase();
+
+  subjects
+    .filter(s => s.name.toLowerCase().includes(term))
+    .forEach((subject) => {
+      const realIndex = subjects.indexOf(subject);
+      const card = document.createElement("div");
+      card.className = "subject-card" + (expandedIndex === realIndex ? " expanded" : "");
+
+      card.innerHTML = `
+        <div class="subject-header">
+          <div class="subject-icon">${subject.icon}</div>
+          <div>
+            <h3>${subject.name}</h3>
+            <p class="note-count">${subject.notes.length} Notes</p>
+          </div>
+        </div>
+      `;
+
+      card.querySelector(".subject-header").addEventListener("click", () => {
+        expandedIndex = expandedIndex === realIndex ? null : realIndex;
+        render(document.getElementById("searchInput").value);
+      });
+
+      if (expandedIndex === realIndex) {
+        const detail = document.createElement("div");
+        detail.className = "subject-detail";
+
+        const list = document.createElement("ul");
+        list.className = "notes-list";
+        subject.notes.forEach((note, noteIdx) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<span>${note}</span>`;
+          const delBtn = document.createElement("button");
+          delBtn.className = "delete-note-btn";
+          delBtn.textContent = "✕";
+          delBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            subject.notes.splice(noteIdx, 1);
+            render(document.getElementById("searchInput").value);
+          });
+          li.appendChild(delBtn);
+          list.appendChild(li);
+        });
+
+        const addRow = document.createElement("div");
+        addRow.className = "add-note-row";
+        addRow.innerHTML = `
+          <input type="text" class="add-note-input" placeholder="Write a quick note...">
+          <button class="add-note-btn">Add</button>
+        `;
+        const input = addRow.querySelector(".add-note-input");
+        const addBtn = addRow.querySelector(".add-note-btn");
+
+        function addNote() {
+          const val = input.value.trim();
+          if (val !== "") {
+            subject.notes.push(val);
+            render(document.getElementById("searchInput").value);
+          }
+        }
+
+        addBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          addNote();
+        });
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") addNote();
+        });
+        input.addEventListener("click", (e) => e.stopPropagation());
+
+        detail.appendChild(list);
+        detail.appendChild(addRow);
+        card.appendChild(detail);
+      }
+
+      grid.appendChild(card);
+    });
+
+  if (subjects.filter(s => s.name.toLowerCase().includes(term)).length === 0) {
+    grid.innerHTML = `<p class="empty-state">No subjects match "${filter}".</p>`;
+  }
+}
+
+// ---------- SEARCH ----------
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  render(e.target.value);
+});
+
+// ---------- CREATE NEW SUBJECT ----------
+const icons = ["📘", "🧪", "🧮", "🌍", "💡", "🎨", "🧬", "📐"];
+
+document.getElementById("createNoteBtn").addEventListener("click", () => {
+  const name = prompt("Enter a subject name for your new note collection:");
+  if (name && name.trim() !== "") {
+    subjects.push({
+      name: name.trim(),
+      icon: icons[Math.floor(Math.random() * icons.length)],
+      notes: []
+    });
+    expandedIndex = subjects.length - 1;
+    render(document.getElementById("searchInput").value);
+  }
+});
+
+// ---------- INITIAL RENDER ----------
+render();
