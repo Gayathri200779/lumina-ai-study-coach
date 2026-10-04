@@ -8,6 +8,49 @@
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link rel="stylesheet" href="concept-explainer.css">
+<style>
+  /* Settings icon as a link */
+  .settings-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  /* Default profile icon (used when there is no photo) */
+  .avatar-default {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #dfeee0;
+    color: #2f5d3a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .avatar-default .material-icons {
+    font-size: 28px;
+  }
+
+  /* Move the mic to the top right of the box so it is easy to tap */
+  .textarea-wrap {
+    position: relative;
+  }
+  .textarea-wrap textarea {
+    padding-right: 52px;
+  }
+  .textarea-wrap .mic-icon {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    bottom: auto !important;
+    z-index: 5;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
 
@@ -15,16 +58,16 @@
 <header class="header">
   <div class="logo">Lumina AI Coach</div>
   <nav class="main-nav">
-    <a href="#" class="nav-link">Dashboard</a>
-    <a href="#" class="nav-link active">AI Concept<br>Explainer</a>
-    <a href="#" class="nav-link">AI Quiz<br>Generator</a>
-    <a href="#" class="nav-link">My<br>Notes</a>
-    <a href="#" class="nav-link">Study<br>Plan</a>
-    <a href="#" class="nav-link">Progress<br>Tracker</a>
+    <a href="dashboard.html" class="nav-link">Dashboard</a>
+    <a href="concept-explainer.html" class="nav-link active">AI Concept<br>Explainer</a>
+    <a href="quiz.html" class="nav-link">AI Quiz<br>Generator</a>
+    <a href="my-notes.html" class="nav-link">My<br>Notes</a>
+    <a href="study-planner.html" class="nav-link">Study<br>Plan</a>
+    <a href="dashboard.html" class="nav-link">Progress<br>Tracker</a>
   </nav>
   <div class="header-right">
-    <span class="material-icons settings-icon">settings</span>
-    <img class="avatar" src="https://i.pravatar.cc/40" alt="User avatar">
+    <a href="profile-setup.html" class="settings-link" title="Settings"><span class="material-icons settings-icon">settings</span></a>
+    <a href="profile-setup.html" class="avatar-default" title="Profile"><span class="material-icons">account_circle</span></a>
   </div>
 </header>
 
@@ -43,7 +86,7 @@
       <label class="field-label">Subject Context <span class="optional">(Optional)</span></label>
       <div class="input-with-icon">
         <span class="material-icons">school</span>
-        <input type="text" id="subject-context" placeholder="e.g., Computer Science, Biology...">
+        <input type="text" id="subject-context" placeholder="e.g., Computer Science, Biology..." data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false">
       </div>
 
       <div class="label-row">
@@ -51,7 +94,7 @@
         <span class="char-count"><span id="char-current">0</span>/500</span>
       </div>
       <div class="textarea-wrap">
-        <textarea id="concept-input" maxlength="500" placeholder="e.g., Explain how neural networks learn from data..."></textarea>
+        <textarea id="concept-input" maxlength="500" placeholder="e.g., Explain how neural networks learn from data..." data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false"></textarea>
         <span class="material-icons mic-icon" id="mic-btn">mic</span>
       </div>
 
