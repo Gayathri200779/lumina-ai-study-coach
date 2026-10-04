@@ -129,6 +129,7 @@
 </main>
 
 <script>
+  // ===== Semester Selection =====
   const semBtns = document.querySelectorAll('.sem-btn');
   const semInput = document.getElementById('selectedSemester');
   semBtns.forEach(btn => {
@@ -139,6 +140,7 @@
     });
   });
 
+  // ===== Subjects (tag input) =====
   const subjectInput = document.getElementById('subjectInput');
   const subjectsContainer = document.getElementById('subjectsContainer');
   const subjectsHidden = document.getElementById('subjectsList');
@@ -149,21 +151,30 @@
     subjects.forEach((subj, index) => {
       const span = document.createElement('span');
       span.className = 'chip';
-      span.innerHTML = subj + ' <button type="button" data-index="' + index + '">&times;</button>';
+      span.appendChild(document.createTextNode(subj + ' '));
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.dataset.index = index;
+      removeBtn.innerHTML = '&times;';
+      span.appendChild(removeBtn);
       subjectsContainer.appendChild(span);
     });
     subjectsHidden.value = subjects.join(',');
   }
 
+  function addTypedSubject() {
+    const val = subjectInput.value.trim();
+    if (val && !subjects.includes(val)) {
+      subjects.push(val);
+      subjectInput.value = '';
+      renderSubjects();
+    }
+  }
+
   subjectInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const val = subjectInput.value.trim();
-      if (val && !subjects.includes(val)) {
-        subjects.push(val);
-        subjectInput.value = '';
-        renderSubjects();
-      }
+      addTypedSubject();
     }
   });
 
@@ -176,6 +187,7 @@
     }
   });
 
+  // ===== Learning Goals (max 3) =====
   const goalCards = document.querySelectorAll('.goal-card');
   goalCards.forEach(card => {
     const checkbox = card.querySelector('input[type="checkbox"]');
@@ -199,8 +211,60 @@
     });
   });
 
+  // ===== Fill saved profile when the page opens =====
+  (function loadSavedProfile() {
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem('luminaProfile') || 'null');
+    } catch (err) {
+      saved = null;
+    }
+    if (!saved) return;
+
+    document.getElementById('fullName').value = saved.fullName || '';
+    document.getElementById('course').value = saved.course || '';
+
+    if (saved.semester) {
+      semInput.value = saved.semester;
+      semBtns.forEach(b => {
+        if (b.dataset.val === String(saved.semester)) b.classList.add('selected');
+      });
+    }
+
+    if (Array.isArray(saved.subjects)) {
+      subjects = saved.subjects.slice();
+      renderSubjects();
+    }
+
+    if (Array.isArray(saved.goals)) {
+      document.querySelectorAll('input[name="goals"]').forEach(box => {
+        if (saved.goals.includes(box.value)) {
+          box.checked = true;
+          box.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+  })();
+
+  // ===== Form Submission (save, then go to dashboard) =====
   document.getElementById('profileForm').addEventListener('submit', function (e) {
     e.preventDefault();
+
+    // Add the subject that is typed but not yet added with Enter
+    addTypedSubject();
+
+    const profileData = {
+      fullName: document.getElementById('fullName').value.trim(),
+      course: document.getElementById('course').value.trim(),
+      semester: semInput.value,
+      subjects: subjects,
+      goals: Array.from(document.querySelectorAll('input[name="goals"]:checked'))
+                   .map(cb => cb.value)
+    };
+
+    // Save so other pages (quiz, dashboard...) can read it
+    localStorage.setItem('luminaProfile', JSON.stringify(profileData));
+
     window.location.href = 'dashboard.html';
   });
 </script>
