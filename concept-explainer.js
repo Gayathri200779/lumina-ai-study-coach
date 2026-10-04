@@ -118,7 +118,7 @@ explainBtn.addEventListener('click', async () => {
       body: JSON.stringify({ message: prompt })
     });
     const data = await response.json();
-    resultText.textContent = data.reply || 'Sorry, no answer came. Please try again.';
+    resultText.textContent = data.reply || JSON.stringify(data);
   } catch (error) {
     resultText.textContent = 'Something went wrong. Please try again.';
   }
