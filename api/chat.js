@@ -5,8 +5,7 @@ export default async function handler(req, res) {
 
   try {
     const { message } = req.body;
-    const apiKey = process.env.LUMINA_API_KEY;
-
+    const apiKey = process.env.Lumina_API_Key;
     const response = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
       {
