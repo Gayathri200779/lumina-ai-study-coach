@@ -1,6 +1,6 @@
-export default function handler(request) {
-    return Response.json({
-        success: true,
-        message: "Lumina API is working!"
-    });
+export default function handler(req, res) {
+  res.status(200).json({
+    success: true,
+    message: "Lumina API is working!"
+  });
 }
