@@ -169,28 +169,51 @@ Rules:
   explainBtn.disabled = false;
 });
 
-// Placeholder explanation generator (swap this out for a real API call)
-function generateMockExplanation(topic, context, level, style) {
-  let intro = context
-    ? `Here's a ${level.toLowerCase()}-level explanation of "${topic}" in the context of ${context}:\n\n`
-    : `Here's a ${level.toLowerCase()}-level explanation of "${topic}":\n\n`;
+// ===== Summarize Button =====
+const summarizeBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Summarize'));
 
-  let body = '';
-  switch (style) {
-    case 'Step-by-Step':
-      body = `1. First, understand the basic definition of ${topic}.\n2. Next, look at how it works in practice.\n3. Finally, see how it connects to related concepts.`;
-      break;
-    case 'With Examples':
-      body = `${topic} can be understood through a simple example. Imagine a real-world scenario where this concept applies directly, then break down each part step by step.`;
-      break;
-    case 'Exam-Oriented':
-      body = `Key points to remember about ${topic} for exams:\n- Definition and core idea\n- Common formulas or rules\n- Typical exam questions and how to approach them`;
-      break;
-    default: // Simple
-      body = `${topic} is a concept that can be broken down into simple terms. At its core, it describes how something works or behaves, and understanding the fundamentals makes everything else easier to grasp.`;
-  }
+if (summarizeBtn) {
+  summarizeBtn.disabled = false;
 
-  return intro + body;
+  summarizeBtn.addEventListener('click', async () => {
+    const topic = conceptInput.value.trim();
+
+    if (!topic) {
+      alert('Please enter a concept or topic to summarize.');
+      return;
+    }
+
+    showState('loading');
+    summarizeBtn.disabled = true;
+
+    const context = subjectContext.value.trim();
+    const prompt = `Summarize "${topic}"${context ? ' in the context of ' + context : ''}. Level: ${selectedLevel}. Give exactly 3 short points. Each point starts with an emoji and is one short, fun sentence on its own line. Then add a last line that starts with "Remember:". Keep it under 50 words. Leave an empty line between points. Do not use symbols like * or #.`;
+
+    let text = 'Sorry, no answer came. Please try again.';
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt })
+      });
+      const data = await response.json();
+      if (data.reply) text = data.reply;
+    } catch (error) {
+      text = 'Something went wrong. Please try again.';
+    }
+
+    const pictureBox = document.getElementById('picture-box');
+    if (pictureBox) pictureBox.style.display = 'none';
+
+    resultText.textContent = text;
+    resultText.style.whiteSpace = 'pre-wrap';
+    resultText.style.lineHeight = '1.8';
+    resultText.style.fontSize = '16px';
+
+    showState('result');
+    summarizeBtn.disabled = false;
+  });
 }
 
 // ===== Copy Button =====
