@@ -109,7 +109,19 @@ explainBtn.addEventListener('click', async () => {
   explainBtn.disabled = true;
 
   const context = subjectContext.value.trim();
-  const prompt = `Explain "${topic}"${context ? ' in the context of ' + context : ''}. Level: ${selectedLevel}. Style: ${selectedStyle}. Use simple, clear words. Do not use symbols like * or #.`;
+  const prompt = `Explain "${topic}"${context ? ' in the context of ' + context : ''}. Level: ${selectedLevel}. Style: ${selectedStyle}.
+Rules:
+1. The very first line must start with "PICTURE:" followed by 4 to 6 emojis with arrows between them that show the idea step by step. Example: PICTURE: 🌞 → 💧 → 🌱 → 🍃
+2. Then leave an empty line.
+3. Write like a fun, friendly teacher. Start with one fun hook line.
+4. Then give 3 or 4 short parts. Each part has an emoji and a short title on its own line, then 1 or 2 short sentences.
+5. Add one funny, easy real-life example.
+6. End with a line that starts with "Remember:".
+7. Keep it under 150 words. Leave an empty line between parts.
+8. Do not use symbols like * or #.`;
+
+  let picture = '';
+  let text = 'Sorry, no answer came. Please try again.';
 
   try {
     const response = await fetch('/api/chat', {
@@ -118,10 +130,40 @@ explainBtn.addEventListener('click', async () => {
       body: JSON.stringify({ message: prompt })
     });
     const data = await response.json();
-    resultText.textContent = data.reply || JSON.stringify(data);
+
+    if (data.reply) {
+      const lines = data.reply.split('\n');
+      if (lines[0].toUpperCase().startsWith('PICTURE:')) {
+        picture = lines[0].replace(/^PICTURE:\s*/i, '').trim();
+        text = lines.slice(1).join('\n').trim();
+      } else {
+        text = data.reply;
+      }
+    }
   } catch (error) {
-    resultText.textContent = 'Something went wrong. Please try again.';
+    text = 'Something went wrong. Please try again.';
   }
+
+  // Picture strip above the text
+  let pictureBox = document.getElementById('picture-box');
+  if (!pictureBox) {
+    pictureBox = document.createElement('div');
+    pictureBox.id = 'picture-box';
+    resultText.parentNode.insertBefore(pictureBox, resultText);
+  }
+  pictureBox.textContent = picture;
+  pictureBox.style.display = picture ? 'block' : 'none';
+  pictureBox.style.fontSize = '40px';
+  pictureBox.style.textAlign = 'center';
+  pictureBox.style.padding = '16px';
+  pictureBox.style.marginBottom = '16px';
+  pictureBox.style.background = '#eef6ee';
+  pictureBox.style.borderRadius = '16px';
+
+  resultText.textContent = text;
+  resultText.style.whiteSpace = 'pre-wrap';
+  resultText.style.lineHeight = '1.8';
+  resultText.style.fontSize = '16px';
 
   showState('result');
   explainBtn.disabled = false;
