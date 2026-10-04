@@ -97,7 +97,7 @@ function showState(state) {
 const explainBtn = document.getElementById('explain-btn');
 const subjectContext = document.getElementById('subject-context');
 
-explainBtn.addEventListener('click', () => {
+explainBtn.addEventListener('click', async () => {
   const topic = conceptInput.value.trim();
 
   if (!topic) {
@@ -108,16 +108,23 @@ explainBtn.addEventListener('click', () => {
   showState('loading');
   explainBtn.disabled = true;
 
-  // Simulate an AI response.
-  // Replace this block with a real API call to your backend/AI service.
-  setTimeout(() => {
-    const context = subjectContext.value.trim();
-    const generatedExplanation = generateMockExplanation(topic, context, selectedLevel, selectedStyle);
+  const context = subjectContext.value.trim();
+  const prompt = `Explain "${topic}"${context ? ' in the context of ' + context : ''}. Level: ${selectedLevel}. Style: ${selectedStyle}. Use simple, clear words. Do not use symbols like * or #.`;
 
-    resultText.textContent = generatedExplanation;
-    showState('result');
-    explainBtn.disabled = false;
-  }, 1500);
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: prompt })
+    });
+    const data = await response.json();
+    resultText.textContent = data.reply || 'Sorry, no answer came. Please try again.';
+  } catch (error) {
+    resultText.textContent = 'Something went wrong. Please try again.';
+  }
+
+  showState('result');
+  explainBtn.disabled = false;
 });
 
 // Placeholder explanation generator (swap this out for a real API call)
