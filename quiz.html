@@ -5,6 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lumina AI Coach - AI Quiz Generator</title>
 <link rel="stylesheet" href="quiz.css">
+<style>
+  .settings-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  .avatar-default {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #dfeee0;
+    color: #2f5d3a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .avatar-default svg {
+    width: 28px;
+    height: 28px;
+    fill: currentColor;
+  }
+
+  /* Saved subject buttons */
+  .saved-subjects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .subject-chip {
+    border: 1px solid #b9d8bf;
+    background: #eef6ee;
+    color: #2f5d3a;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .subject-chip.selected {
+    background: #2f5d3a;
+    color: #ffffff;
+    border-color: #2f5d3a;
+  }
+  .subject-hint {
+    font-size: 13px;
+    color: #6b7a6e;
+    margin-top: 8px;
+  }
+  .subject-hint a {
+    color: #2f5d3a;
+    font-weight: 600;
+  }
+</style>
 </head>
 <body>
 
@@ -17,11 +73,13 @@
       <a href="quiz.html" class="active">AI Quiz Generator</a>
       <a href="my-notes.html">My Notes</a>
       <a href="study-planner.html">Study Plan</a>
-      <a href="progress-tracker.html">Progress Tracker</a>
+      <a href="dashboard.html">Progress Tracker</a>
     </nav>
     <div class="nav-icons">
-      <span class="icon">⚙️</span>
-      <img src="https://i.pravatar.cc/40" class="avatar" alt="profile">
+      <a href="profile-setup.html" class="settings-link" title="Settings"><span class="icon">⚙️</span></a>
+      <a href="profile-setup.html" class="avatar-default" title="Profile">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+      </a>
     </div>
   </header>
 
@@ -39,20 +97,15 @@
         </div>
 
         <div class="form-group">
-          <label for="subjectArea">Subject Area</label>
-          <select id="subjectArea">
-            <option>Computer Science</option>
-            <option>Mathematics</option>
-            <option>Physics</option>
-            <option>Biology</option>
-            <option>Chemistry</option>
-            <option>History</option>
-          </select>
+          <label for="subjectArea">Subject</label>
+          <input type="text" id="subjectArea" placeholder="Type your subject, e.g., Data Structures" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false">
+          <div class="saved-subjects" id="savedSubjects"></div>
+          <div class="subject-hint" id="subjectHint"></div>
         </div>
 
         <div class="form-group">
           <label for="specificTopic">Specific Topic (Optional)</label>
-          <input type="text" id="specificTopic" placeholder="e.g., Bayes' Theorem">
+          <input type="text" id="specificTopic" placeholder="e.g., Binary Trees" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false">
         </div>
 
         <div class="difficulty-block">
@@ -152,6 +205,49 @@
   let timerInterval = null;
   let secondsLeft = 0;
 
+  // ---------- SAVED PROFILE (subjects from profile page) ----------
+  let profile = null;
+  try {
+    profile = JSON.parse(localStorage.getItem("luminaProfile") || "null");
+  } catch (err) {
+    profile = null;
+  }
+
+  const subjectInput = document.getElementById("subjectArea");
+  const savedSubjectsBox = document.getElementById("savedSubjects");
+  const subjectHint = document.getElementById("subjectHint");
+
+  function highlightChips() {
+    const current = subjectInput.value.trim().toLowerCase();
+    document.querySelectorAll(".subject-chip").forEach(chip => {
+      chip.classList.toggle("selected", chip.textContent.toLowerCase() === current);
+    });
+  }
+
+  function renderSavedSubjects() {
+    savedSubjectsBox.innerHTML = "";
+
+    if (profile && Array.isArray(profile.subjects) && profile.subjects.length > 0) {
+      profile.subjects.forEach(subj => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "subject-chip";
+        chip.textContent = subj;
+        chip.addEventListener("click", () => {
+          subjectInput.value = subj;
+          highlightChips();
+        });
+        savedSubjectsBox.appendChild(chip);
+      });
+      subjectHint.textContent = "Tap one of your subjects, or type a new one.";
+    } else {
+      subjectHint.innerHTML = 'Tip: add your subjects in your <a href="profile-setup.html">profile</a> and they will show here.';
+    }
+  }
+
+  subjectInput.addEventListener("input", highlightChips);
+  renderSavedSubjects();
+
   // ---------- DIFFICULTY GAUGE ----------
   const needle = document.getElementById("needle");
   const gaugeLabel = document.getElementById("gaugeLabel");
@@ -186,59 +282,78 @@
     });
   });
 
-  // ---------- QUIZ GENERATION (mock, fully dynamic based on user input) ----------
-  const templates = [
-    (t) => `What is the core purpose of ${t} in this subject?`,
-    (t) => `Which statement best describes how ${t} is applied?`,
-    (t) => `Identify the correct outcome when using ${t} on a real-world example.`,
-    (t) => `Which of the following is a common mistake when applying ${t}?`,
-    (t) => `How does ${t} relate to other concepts in this subject area?`,
-    (t) => `What condition must be true for ${t} to hold?`,
-    (t) => `Which formula/approach is most closely tied to ${t}?`,
-    (t) => `What is a limitation of ${t}?`,
-    (t) => `Choose the best example illustrating ${t}.`,
-    (t) => `Why is ${t} considered important at this difficulty level?`,
-    (t) => `Which scenario would NOT use ${t}?`,
-    (t) => `What is the first step when solving a problem involving ${t}?`,
-    (t) => `Which term is most closely associated with ${t}?`,
-    (t) => `What result would you expect after correctly applying ${t}?`,
-    (t) => `Which of these best summarizes ${t}?`
-  ];
+  // ---------- QUIZ GENERATION (real AI) ----------
+  function parseQuiz(text) {
+    const cleaned = text.replace(/```json|```/g, "").trim();
+    const start = cleaned.indexOf("[");
+    const end = cleaned.lastIndexOf("]");
+    if (start === -1 || end === -1) throw new Error("No quiz found");
 
-  const optionPool = [
-    "It updates existing knowledge based on new evidence.",
-    "It calculates the probability of independent events.",
-    "It determines variance across a data set.",
-    "It has no real-world application.",
-    "It only applies to a single fixed scenario.",
-    "It combines prior information with new data.",
-    "It is unrelated to the subject entirely.",
-    "It simplifies complex relationships into a single rule."
-  ];
-
-  function shuffle(arr) {
-    return [...arr].sort(() => Math.random() - 0.5);
+    const arr = JSON.parse(cleaned.slice(start, end + 1));
+    return arr.filter(q =>
+      q && q.question &&
+      Array.isArray(q.options) && q.options.length >= 2 &&
+      Number.isInteger(q.correctIndex) &&
+      q.correctIndex >= 0 && q.correctIndex < q.options.length
+    );
   }
 
-  function generateQuiz(count, subject, topic, difficulty) {
-    const focus = topic && topic.trim() !== "" ? topic.trim() : subject;
-    const pool = shuffle(templates).slice(0, count);
-    return pool.map((tmpl, i) => {
-      const opts = shuffle(optionPool).slice(0, 4);
-      return {
-        question: `[${difficulty.toUpperCase()}] ${tmpl(focus)}`,
-        options: opts,
-        correctIndex: Math.floor(Math.random() * opts.length)
-      };
+  async function generateQuizWithAI(count, subject, topic, difficulty) {
+    const degree = profile && profile.course ? profile.course : "";
+    const audience = degree ? `college students studying ${degree}` : "college students";
+    const focus = topic ? `${topic} (subject: ${subject})` : subject;
+
+    const prompt = `Create a multiple choice quiz for ${audience}. Subject and topic: "${focus}". Difficulty: ${difficulty}. Number of questions: ${count}.
+Rules:
+1. Each question must have exactly 4 options.
+2. Only one option is correct. The other 3 must be believable but wrong.
+3. Use simple, clear words. Keep each question and option short.
+4. Put the correct answer in different positions across questions.
+5. Reply with ONLY a JSON array. No extra words, no markdown.
+Use exactly this format:
+[{"question":"...","options":["...","...","...","..."],"correctIndex":0}]
+correctIndex is the position of the correct option (0, 1, 2, or 3).`;
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: prompt })
     });
+    const data = await response.json();
+    if (!data.reply) throw new Error("No reply");
+
+    const questions = parseQuiz(data.reply);
+    if (questions.length === 0) throw new Error("Empty quiz");
+    return questions;
   }
 
   // ---------- GENERATE BUTTON ----------
-  document.getElementById("generateBtn").addEventListener("click", () => {
-    const subject = document.getElementById("subjectArea").value;
-    const topic = document.getElementById("specificTopic").value;
+  const generateBtn = document.getElementById("generateBtn");
 
-    quiz = generateQuiz(selectedCount, subject, topic, selectedDifficulty);
+  generateBtn.addEventListener("click", async () => {
+    const subject = subjectInput.value.trim();
+    const topic = document.getElementById("specificTopic").value.trim();
+
+    if (!subject && !topic) {
+      alert("Please type a subject or tap one of your subjects.");
+      return;
+    }
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = "⏳ Generating...";
+
+    try {
+      quiz = await generateQuizWithAI(selectedCount, subject || topic, topic, selectedDifficulty);
+    } catch (error) {
+      alert("Sorry, the quiz could not be made. Please try again in a moment.");
+      generateBtn.disabled = false;
+      generateBtn.textContent = "✨ Generate Quiz";
+      return;
+    }
+
+    generateBtn.disabled = false;
+    generateBtn.textContent = "✨ Generate Quiz";
+
     selectedAnswers = new Array(quiz.length).fill(null);
     currentIndex = 0;
 
@@ -270,12 +385,21 @@
       const div = document.createElement("div");
       div.className = "option";
       if (selectedAnswers[currentIndex] === i) div.classList.add("selected");
-      div.innerHTML = `
-        <span class="radio-dot"></span>
-        <div>
-          <strong>${letters[i]}</strong>
-          <p>${opt}</p>
-        </div>`;
+
+      const dot = document.createElement("span");
+      dot.className = "radio-dot";
+
+      const wrap = document.createElement("div");
+      const letter = document.createElement("strong");
+      letter.textContent = letters[i];
+      const text = document.createElement("p");
+      text.textContent = opt;
+      wrap.appendChild(letter);
+      wrap.appendChild(text);
+
+      div.appendChild(dot);
+      div.appendChild(wrap);
+
       div.addEventListener("click", () => {
         selectedAnswers[currentIndex] = i;
         renderQuestion();
