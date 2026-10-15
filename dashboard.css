@@ -1,3 +1,4 @@
+```css
 * {
   margin: 0;
   padding: 0;
@@ -39,20 +40,27 @@ body {
   border-bottom: 2px solid transparent;
 }
 
+/* Hover effect appears only while the cursor is over a link */
 .nav-links a:hover {
   color: #37563b;
   border-bottom: 2px solid #37563b;
 }
 
+/* Active Dashboard remains bold and highlighted */
 .nav-links a.active {
   color: #37563b;
+  font-weight: 700;
   border-bottom: 2px solid #37563b;
 }
 
+/* Profile Avatar */
 .nav-icons {
   display: flex;
   align-items: center;
-  gap: 16px;
+}
+
+.avatar-menu {
+  position: relative;
 }
 
 .avatar {
@@ -60,13 +68,10 @@ body {
   height: 36px;
   border-radius: 50%;
   cursor: pointer;
+  display: block;
 }
 
-/* Avatar dropdown (Profile + Settings) */
-.avatar-menu {
-  position: relative;
-}
-
+/* Avatar dropdown */
 .avatar-dropdown {
   display: none;
   position: absolute;
@@ -75,7 +80,7 @@ body {
   background: #fff;
   border: 1px solid #d7e6d9;
   border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   min-width: 150px;
   overflow: hidden;
   z-index: 100;
@@ -134,21 +139,6 @@ body {
   color: #121e16;
 }
 
-.edit-profile-btn {
-  border: 1px solid #37563b;
-  background: transparent;
-  color: #37563b;
-  padding: 8px 18px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.edit-profile-btn:hover {
-  background: #37563b;
-  color: #fff;
-}
-
 /* Tools */
 .tools-section h2 {
   margin-bottom: 16px;
@@ -175,7 +165,7 @@ body {
 
 .tool-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   border-color: #4f6f52;
 }
 
@@ -307,6 +297,7 @@ body {
   font-size: 13px;
 }
 
+/* Responsive layout */
 @media (max-width: 800px) {
   .tools-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -314,10 +305,17 @@ body {
 }
 
 @media (max-width: 500px) {
-  .navbar, .container {
+  .navbar,
+  .container {
     padding: 16px;
   }
+
+  .nav-links {
+    gap: 12px;
+  }
+
   .tools-grid {
     grid-template-columns: 1fr;
   }
 }
+```
