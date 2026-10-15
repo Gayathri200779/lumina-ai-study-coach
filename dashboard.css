@@ -1,9 +1,11 @@
 ```css
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: 'Comfortaa', sans-serif;
 }
 
 body {
@@ -61,6 +63,8 @@ body {
 
 .avatar-menu {
   position: relative;
+  padding-bottom: 10px;
+  margin-bottom: -10px;
 }
 
 .avatar {
@@ -71,7 +75,7 @@ body {
   display: block;
 }
 
-/* Avatar dropdown */
+/* Profile dropdown */
 .avatar-dropdown {
   display: none;
   position: absolute;
@@ -86,6 +90,8 @@ body {
   z-index: 100;
 }
 
+.avatar-menu:hover .avatar-dropdown,
+.avatar-menu:focus-within .avatar-dropdown,
 .avatar-dropdown.show {
   display: block;
 }
@@ -97,9 +103,11 @@ body {
   color: #121e16;
   font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
-.avatar-dropdown a:hover {
+.avatar-dropdown a:hover,
+.avatar-dropdown a:focus {
   background: #e3f2e4;
   color: #37563b;
 }
