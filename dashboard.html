@@ -1,30 +1,39 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lumina Academy - Dashboard</title>
-<link rel="stylesheet" href="dashboard.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina Academy - Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
 
   <!-- Header -->
   <header class="navbar">
     <div class="logo">Lumina Academy</div>
+
     <nav class="nav-links">
-      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="dashboard.html" class="active" aria-current="page">Dashboard</a>
       <a href="notes.html">My Notes</a>
     </nav>
-    <div class="nav-icons">
-      <span class="icon">🔔</span>
-      <span class="icon">❓</span>
 
-      <!-- Avatar with dropdown (replaces the old text Profile/Settings links) -->
+    <!-- Profile Avatar -->
+    <div class="nav-icons">
       <div class="avatar-menu">
-        <img src="https://i.pravatar.cc/40" alt="profile" class="avatar" id="avatarToggle">
+        <img
+          src="https://api.dicebear.com/9.x/initials/svg?seed=Alex&backgroundColor=e3f2e4&textColor=37563b"
+          alt="Default profile avatar"
+          class="avatar"
+          id="avatarToggle"
+          role="button"
+          tabindex="0"
+          aria-label="Open profile menu"
+          aria-expanded="false"
+        >
+
         <div class="avatar-dropdown" id="avatarDropdown">
-          <a href="profile.html">👤 Profile</a>
-          <a href="settings.html">⚙️ Settings</a>
+          <a href="profile.html">👤 Edit Profile</a>
         </div>
       </div>
     </div>
@@ -40,15 +49,21 @@
 
     <!-- Info Bar -->
     <section class="info-bar">
-      <div class="info-item" id="currentSemester">🎓 Current Semester: 5th Semester</div>
-      <div class="info-item" id="subjectCount">📖 Subjects: 6 Subjects</div>
-      <button class="edit-profile-btn" onclick="window.location.href='profile.html'">Edit Profile</button>
+      <div class="info-item" id="currentSemester">
+        🎓 Current Semester: 5th Semester
+      </div>
+
+      <div class="info-item" id="subjectCount">
+        📖 Subjects: 6 Subjects
+      </div>
     </section>
 
     <!-- Learning Tools -->
     <section class="tools-section">
       <h2>Your Learning Tools</h2>
+
       <div class="tools-grid">
+
         <a href="concept-explainer.html" class="tool-card">
           <div class="tool-icon">🧠</div>
           <h3>AI Concept Explainer</h3>
@@ -100,7 +115,9 @@
         <span class="tool-icon">📈</span>
         <h2>Progress Tracker</h2>
       </div>
+
       <p>Track your learning progress and study activity.</p>
+
       <div class="progress-empty">
         <div class="chart-icon">📊</div>
         <p><em>Your progress will appear here as you start learning.</em></p>
@@ -119,7 +136,11 @@
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-logo">Lumina Academy</div>
-    <div class="footer-text">© 2024 Lumina Academy. Supporting your academic journey.</div>
+
+    <div class="footer-text">
+      © 2024 Lumina Academy. Supporting your academic journey.
+    </div>
+
     <nav class="footer-links">
       <a href="#">Privacy Policy</a>
       <a href="#">Terms of Service</a>
@@ -127,43 +148,8 @@
     </nav>
   </footer>
 
-  <script>
-    // ----- Avatar dropdown toggle -----
-    const avatarToggle = document.getElementById('avatarToggle');
-    const avatarDropdown = document.getElementById('avatarDropdown');
-
-    avatarToggle.addEventListener('click', function (e) {
-      e.stopPropagation();
-      avatarDropdown.classList.toggle('show');
-    });
-
-    document.addEventListener('click', function () {
-      avatarDropdown.classList.remove('show');
-    });
-
-    // ----- Load semester/subject count from Profile Setup page -----
-    // On your profile setup page, save data like this when the user submits the form:
-    //
-    //   localStorage.setItem('luminaProfile', JSON.stringify({
-    //     semester: "3rd Semester",
-    //     subjects: 5
-    //   }));
-    //
-    document.addEventListener('DOMContentLoaded', function () {
-      const savedProfile = localStorage.getItem('luminaProfile');
-      if (savedProfile) {
-        const profile = JSON.parse(savedProfile);
-        if (profile.semester) {
-          document.getElementById('currentSemester').textContent =
-            `🎓 Current Semester: ${profile.semester}`;
-        }
-        if (profile.subjects) {
-          document.getElementById('subjectCount').textContent =
-            `📖 Subjects: ${profile.subjects} Subjects`;
-        }
-      }
-    });
-  </script>
+  <script src="dashboard.js"></script>
 
 </body>
 </html>
+```
