@@ -1,39 +1,39 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumina Academy - Dashboard</title>
+  <meta name="theme-color" content="#eefdef">
+  <title>Lumina Learning Hub</title>
   <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
 
   <!-- Header -->
   <header class="navbar">
-    <div class="logo">Lumina Academy</div>
+    <a href="dashboard.html" class="logo">🌿 Lumina AI</a>
 
-    <nav class="nav-links">
-      <a href="dashboard.html" class="active" aria-current="page">Dashboard</a>
-      <a href="notes.html">My Notes</a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html" class="active" aria-current="page">Home</a>
+      <a href="my-notes.html">My Notes</a>
+      <a href="study-planner.html">Study Planner</a>
     </nav>
 
-    <!-- Profile Avatar -->
     <div class="nav-icons">
       <div class="avatar-menu">
-        <img
-          src="https://api.dicebear.com/9.x/initials/svg?seed=Alex&backgroundColor=e3f2e4&textColor=37563b"
-          alt="Default profile avatar"
+        <button
           class="avatar"
           id="avatarToggle"
-          role="button"
-          tabindex="0"
+          type="button"
           aria-label="Open profile menu"
           aria-expanded="false"
-        >
+          aria-controls="avatarDropdown">
+          👤
+        </button>
 
         <div class="avatar-dropdown" id="avatarDropdown">
-          <a href="profile.html">👤 Edit Profile</a>
+          <a href="profile-setup.html">Edit Profile</a>
         </div>
       </div>
     </div>
@@ -41,115 +41,152 @@
 
   <main class="container">
 
-    <!-- Welcome Section -->
+    <!-- Welcome -->
     <section class="welcome">
-      <h1>Welcome back, Alex 👋</h1>
-      <p>What would you like to learn today?</p>
+      <p class="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
+      <h1>Welcome back, <span id="welcomeName">Learner</span>! 🌱</h1>
+      <p>Small steps today, stronger knowledge tomorrow.</p>
     </section>
 
-    <!-- Info Bar -->
-    <section class="info-bar">
+    <!-- Profile summary -->
+    <section class="info-bar" aria-label="Study profile">
+      <div class="info-item" id="currentCourse">
+        🎓 Your Degree
+      </div>
       <div class="info-item" id="currentSemester">
-        🎓 Current Semester: 5th Semester
+        📚 Current Semester: Not set
       </div>
-
       <div class="info-item" id="subjectCount">
-        📖 Subjects: 6 Subjects
+        📝 Subjects: 0
       </div>
     </section>
 
-    <!-- Learning Tools -->
-    <section class="tools-section">
-      <h2>Your Learning Tools</h2>
+    <!-- Subjects -->
+    <section class="section-block" id="subjectsSection">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">LEARN YOUR WAY</p>
+          <h2>My Subjects</h2>
+          <p>Keep your current studies organized in one place.</p>
+        </div>
+      </div>
+
+      <div class="subject-grid" id="subjectGrid">
+        <div class="empty-state">
+          <span>📚</span>
+          <p>Your subjects will appear here after you complete your profile.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Learning tools -->
+    <section class="section-block">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">YOUR STUDY COMPANION</p>
+          <h2>Learning Tools</h2>
+          <p>Choose a tool to make studying easier.</p>
+        </div>
+      </div>
 
       <div class="tools-grid">
 
         <a href="concept-explainer.html" class="tool-card">
-          <div class="tool-icon">🧠</div>
+          <span class="tool-icon">🧠</span>
           <h3>AI Concept Explainer</h3>
-          <p>Understand difficult concepts with simple AI-powered explanations.</p>
-          <span class="open-link">Open →</span>
+          <p>Understand difficult concepts through simple explanations.</p>
+          <span class="open-link">Explore concepts →</span>
         </a>
 
         <a href="quiz.html" class="tool-card">
-          <div class="tool-icon">❓</div>
+          <span class="tool-icon">✏️</span>
           <h3>AI Quiz Generator</h3>
-          <p>Generate personalized quizzes to test your understanding.</p>
-          <span class="open-link">Open →</span>
+          <p>Practice questions and check your understanding.</p>
+          <span class="open-link">Practice now →</span>
         </a>
 
         <a href="my-notes.html" class="tool-card">
-          <div class="tool-icon">📝</div>
-          <h3>AI Notes Summarizer</h3>
-          <p>Turn study material into clear and concise notes.</p>
-          <span class="open-link">Open →</span>
-        </a>
-
-        <a href="my-notes.html" class="tool-card">
-          <div class="tool-icon">🔖</div>
+          <span class="tool-icon">📝</span>
           <h3>My Notes</h3>
-          <p>Save and revisit your notes whenever you need them.</p>
-          <span class="open-link">Open →</span>
+          <p>Keep your study notes organized and easy to revisit.</p>
+          <span class="open-link">View notes →</span>
+        </a>
+
+        <a href="my-notes.html" class="tool-card">
+          <span class="tool-icon">✨</span>
+          <h3>AI Notes Summarizer</h3>
+          <p>Prepare concise study notes from your learning material.</p>
+          <span class="open-link">Open notes →</span>
         </a>
 
         <a href="study-planner.html" class="tool-card">
-          <div class="tool-icon">📅</div>
+          <span class="tool-icon">📅</span>
           <h3>Study Planner</h3>
-          <p>Organize your study time and stay on track.</p>
-          <span class="open-link">Open →</span>
+          <p>Organize study tasks and plan your learning time.</p>
+          <span class="open-link">Plan my study →</span>
         </a>
 
-        <a href="exam-prep.html" class="tool-card">
-          <div class="tool-icon">✅</div>
-          <h3>Exam Preparation</h3>
-          <p>Prepare smarter with focused exam preparation tools.</p>
-          <span class="open-link">Open →</span>
+        <a href="#progressSection" class="tool-card">
+          <span class="tool-icon">📈</span>
+          <h3>Learning Progress</h3>
+          <p>Review your progress as you complete study activities.</p>
+          <span class="open-link">View progress →</span>
         </a>
 
       </div>
     </section>
 
-    <!-- Progress Tracker -->
-    <section class="progress-tracker">
-      <div class="progress-header">
-        <span class="tool-icon">📈</span>
-        <h2>Progress Tracker</h2>
+    <!-- Study goals -->
+    <section class="section-block goals-section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">YOUR NEXT STEPS</p>
+          <h2>My Learning Goals</h2>
+          <p>Goals you selected during profile setup.</p>
+        </div>
       </div>
 
-      <p>Track your learning progress and study activity.</p>
-
-      <div class="progress-empty">
-        <div class="chart-icon">📊</div>
-        <p><em>Your progress will appear here as you start learning.</em></p>
+      <div class="goals-list" id="learningGoals">
+        <p>Your selected learning goals will appear here.</p>
       </div>
     </section>
 
-    <!-- Start Learning CTA -->
-    <section class="cta-section">
-      <h2>Start Learning</h2>
-      <p>Ready to dive into a new topic or need help with a difficult concept? Ask Lumina AI directly.</p>
-      <button class="ask-btn">Ask Lumina AI →</button>
+    <!-- Study planner shortcut -->
+    <section class="planner-panel">
+      <div class="planner-copy">
+        <p class="eyebrow">MAKE TIME FOR LEARNING</p>
+        <h2>Plan your next study session</h2>
+        <p>Break your learning into manageable tasks and stay consistent.</p>
+        <a class="primary-link" href="study-planner.html">Open Study Planner →</a>
+      </div>
+      <div class="planner-illustration" aria-hidden="true">🗓️</div>
+    </section>
+
+    <!-- Progress -->
+    <section class="section-block" id="progressSection">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">EVERY STEP COUNTS</p>
+          <h2>My Learning Progress</h2>
+          <p>Your progress summary will appear as tracking data becomes available.</p>
+        </div>
+      </div>
+
+      <div class="progress-panel">
+        <div class="progress-illustration">🌱</div>
+        <h3>Your learning journey starts here</h3>
+        <p>Complete study activities to begin building your progress record.</p>
+      </div>
     </section>
 
   </main>
 
   <!-- Footer -->
   <footer class="footer">
-    <div class="footer-logo">Lumina Academy</div>
-
-    <div class="footer-text">
-      © 2024 Lumina Academy. Supporting your academic journey.
-    </div>
-
-    <nav class="footer-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Service</a>
-      <a href="#">Help Center</a>
-    </nav>
+    <div class="footer-logo">🌿 Lumina AI</div>
+    <p class="footer-text">Supporting your learning journey, one step at a time.</p>
   </footer>
 
   <script src="dashboard.js"></script>
-
 </body>
 </html>
-```
