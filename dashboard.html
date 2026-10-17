@@ -10,7 +10,7 @@
 
   <link rel="stylesheet" href="./dashboard.css">
 
-  <!-- Theme fallback if the CSS file fails to load -->
+  <!-- Theme fallback -->
   <style>
     html {
       background-color: #eefdef;
@@ -35,8 +35,6 @@
     .subject-card,
     .empty-state,
     .tool-card,
-    .goal-empty,
-    .goal-chip,
     .progress-panel,
     .avatar-dropdown {
       background-color: #ffffff;
@@ -57,18 +55,51 @@
     }
 
     .eyebrow,
-    .open-link,
-    .goal-chip {
+    .open-link {
       color: #4f6f52;
     }
 
+    /* Clearer subject-card hover */
+    .subject-card:hover {
+      background-color: #e8f8ea;
+      border: 2px solid #4f6f52;
+      box-shadow: 0 8px 20px rgba(55, 86, 59, 0.16);
+      transform: translateY(-4px);
+    }
+
+    /* Softer Manage My Subjects button */
     .primary-link {
-      background-color: #4f6f52;
-      color: #ffffff;
+      display: inline-block;
+      background-color: transparent;
+      color: #37563b;
+      border: 1px solid #8eaa92;
+      border-radius: 10px;
+      padding: 10px 18px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+    }
+
+    .primary-link:hover {
+      background-color: #e8f8ea;
+      color: #37563b;
+      border-color: #4f6f52;
+      transform: none;
     }
 
     .footer {
       background-color: #e8f8ea;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .subject-card,
+      .primary-link {
+        transition: none;
+      }
     }
   </style>
 </head>
@@ -161,6 +192,7 @@
       </div>
 
       <div class="tools-grid">
+
         <a href="concept-explainer.html" class="tool-card">
           <span class="tool-icon">🧠</span>
           <h3>AI Concept Explainer</h3>
@@ -181,6 +213,7 @@
           <p>Turn study material into concise revision notes.</p>
           <span class="open-link">Summarize material →</span>
         </a>
+
       </div>
     </section>
 
@@ -195,6 +228,7 @@
       </div>
 
       <div class="tools-grid">
+
         <a href="my-notes.html" class="tool-card">
           <span class="tool-icon">📝</span>
           <h3>My Notes</h3>
@@ -208,25 +242,11 @@
           <p>Organize tasks and plan your study time.</p>
           <span class="open-link">Plan my studies →</span>
         </a>
+
       </div>
     </section>
 
-    <!-- 6. Learning Goals -->
-    <section class="section-block goals-section">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">YOUR NEXT STEPS</p>
-          <h2>My Learning Goals</h2>
-          <p>Keep your personal learning goals in view.</p>
-        </div>
-      </div>
-
-      <div class="goals-list" id="learningGoals">
-        <p>Your selected learning goals will appear here.</p>
-      </div>
-    </section>
-
-    <!-- 7. Learning Progress -->
+    <!-- 6. Learning Progress -->
     <section class="section-block" id="progressSection">
       <div class="section-heading">
         <div>
