@@ -568,4 +568,41 @@ button:focus-visible {
   transform: none;
 }
 
+```css
+/* Same clear hover design for all dashboard cards */
+.subject-card,
+.tool-card {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Subject cards, AI Learning Tools and My Study Space */
+.subject-card:hover,
+.tool-card:hover {
+  background-color: #e8f8ea;
+  border: 2px solid #4f6f52;
+  box-shadow: 0 8px 20px rgba(55, 86, 59, 0.16);
+  transform: translateY(-4px);
+}
+
+/* Make Manage My Subjects hover clearly visible */
+.primary-link {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.primary-link:hover {
+  background-color: #d7e6d9;
+  color: #37563b;
+  border: 1px solid #4f6f52;
+  box-shadow: 0 5px 12px rgba(55, 86, 59, 0.15);
+  transform: translateY(-2px);
+}
+```
 ```
