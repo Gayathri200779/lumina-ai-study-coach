@@ -1,13 +1,78 @@
-html
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#eefdef">
+
   <title>Lumina AI Study Coach</title>
-  <link rel="stylesheet" href="dashboard.css">
+
+  <link rel="stylesheet" href="./dashboard.css">
+
+  <!-- Theme fallback if the CSS file fails to load -->
+  <style>
+    html {
+      background-color: #eefdef;
+    }
+
+    body {
+      background-color: #eefdef;
+      color: #121e16;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .navbar {
+      background-color: #eefdef;
+    }
+
+    .logo,
+    .nav-links a.active {
+      color: #37563b;
+    }
+
+    .info-item,
+    .subject-card,
+    .empty-state,
+    .tool-card,
+    .goal-empty,
+    .goal-chip,
+    .progress-panel,
+    .avatar-dropdown {
+      background-color: #ffffff;
+    }
+
+    .info-item,
+    .subject-card,
+    .empty-state,
+    .tool-card,
+    .progress-panel {
+      border-color: #d7e6d9;
+    }
+
+    .tool-icon,
+    .subject-symbol,
+    .avatar {
+      background-color: #e8f8ea;
+    }
+
+    .eyebrow,
+    .open-link,
+    .goal-chip {
+      color: #4f6f52;
+    }
+
+    .primary-link {
+      background-color: #4f6f52;
+      color: #ffffff;
+    }
+
+    .footer {
+      background-color: #e8f8ea;
+    }
+  </style>
 </head>
+
 <body>
 
   <!-- Header -->
@@ -48,14 +113,16 @@ html
       <p>What would you like to learn today?</p>
     </section>
 
-    <!-- 2. Study profile summary -->
+    <!-- 2. Study Profile Summary -->
     <section class="info-bar" aria-label="Study profile">
       <div class="info-item" id="currentCourse">
         🎓 Your Degree
       </div>
+
       <div class="info-item" id="currentSemester">
         📚 Current Semester: Not set
       </div>
+
       <div class="info-item" id="subjectCount">
         📝 Subjects: 0
       </div>
@@ -94,7 +161,6 @@ html
       </div>
 
       <div class="tools-grid">
-
         <a href="concept-explainer.html" class="tool-card">
           <span class="tool-icon">🧠</span>
           <h3>AI Concept Explainer</h3>
@@ -115,7 +181,6 @@ html
           <p>Turn study material into concise revision notes.</p>
           <span class="open-link">Summarize material →</span>
         </a>
-
       </div>
     </section>
 
@@ -130,7 +195,6 @@ html
       </div>
 
       <div class="tools-grid">
-
         <a href="my-notes.html" class="tool-card">
           <span class="tool-icon">📝</span>
           <h3>My Notes</h3>
@@ -144,7 +208,6 @@ html
           <p>Organize tasks and plan your study time.</p>
           <span class="open-link">Plan my studies →</span>
         </a>
-
       </div>
     </section>
 
@@ -190,6 +253,7 @@ html
     </p>
   </footer>
 
-  <script src="dashboard.js"></script>
+  <script src="./dashboard.js"></script>
 </body>
 </html>
+```
