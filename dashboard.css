@@ -524,4 +524,48 @@ button:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Clearer hover effect for subject cards */
+.subject-card {
+  background-color: #ffffff;
+  border: 1px solid #d7e6d9;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.subject-card:hover {
+  background-color: #e8f8ea;
+  border: 2px solid #4f6f52;
+  box-shadow: 0 8px 20px rgba(55, 86, 59, 0.16);
+  transform: translateY(-4px);
+}
+
+/* Softer Manage My Subjects link */
+.primary-link {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 18px;
+  background-color: transparent;
+  color: #37563b;
+  border: 1px solid #8eaa92;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.primary-link:hover {
+  background-color: #e8f8ea;
+  color: #37563b;
+  border-color: #4f6f52;
+  transform: none;
+}
+
 ```
