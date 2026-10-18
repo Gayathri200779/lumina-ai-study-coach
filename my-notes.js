@@ -322,7 +322,7 @@ function saveReaderEdit() {
     return;
   }
 
-  // Step 1 & 2: ask for the title, with the current title pre-filled
+  // Ask for the title, with the current title pre-filled
   const newTitle = prompt("Enter or confirm the note title:", note.title);
 
   // User pressed Cancel on the prompt -> stay in edit mode, nothing saved
@@ -333,7 +333,7 @@ function saveReaderEdit() {
     return;
   }
 
-  // Step 3: save both title and answer
+  // Save both title and answer
   note.title = newTitle.trim();
   note.content = newContent;
   note.updatedAt = new Date().toISOString();
@@ -343,11 +343,11 @@ function saveReaderEdit() {
     return;
   }
 
-  // Step 5: show updated title + answer
+  // Show updated title + answer
   render();
   openNoteReader(note, false);
 
-  // Step 4: success message
+  // Success message
   showReaderToast("✓ Note updated successfully!");
 }
 
