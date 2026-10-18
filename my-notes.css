@@ -420,3 +420,133 @@ body.note-reader-open {
     flex: 1;
   }
 }
+
+
+/* FIX: Use the full screen for reading and editing notes */
+
+#noteReader {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  background: #F6FAF7 !important;
+}
+
+#noteReader .note-reader-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 20px 32px 14px !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#noteReader .reader-heading {
+  flex: 0 0 auto !important;
+  padding: 0 42px 12px 0 !important;
+  margin: 0 !important;
+}
+
+#noteReader #noteReaderSubject {
+  margin: 0 0 3px !important;
+  font-size: 12px !important;
+}
+
+#noteReader #noteReaderTitle {
+  margin: 0 !important;
+  font-size: 19px !important;
+  line-height: 1.4 !important;
+}
+
+#noteReader .reader-content {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 16px 2px !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 16px !important;
+  line-height: 1.8 !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+}
+
+#noteReader .reader-textarea {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 12px 14px !important;
+  resize: none !important;
+  overflow-y: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.8 !important;
+}
+
+#noteReader .reader-footer {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  padding: 10px 0 0 !important;
+  margin: 0 !important;
+  border-top: 1px solid #D7E6D9 !important;
+}
+
+#noteReader .reader-footer button {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+}
+
+#noteReader .reader-close {
+  top: 14px !important;
+  right: 18px !important;
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 21px !important;
+}
+
+@media (max-width: 600px) {
+  #noteReader .note-reader-panel {
+    padding: 16px 16px 12px !important;
+  }
+
+  #noteReader #noteReaderTitle {
+    font-size: 17px !important;
+  }
+
+  #noteReader .reader-content,
+  #noteReader .reader-textarea {
+    font-size: 15px !important;
+  }
+
+  #noteReader .reader-footer button {
+    padding: 8px 10px !important;
+  }
+}
+
