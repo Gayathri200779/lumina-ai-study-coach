@@ -1,3 +1,4 @@
+
 "use strict";
 
 const STORAGE_KEY = "luminaNotes";
@@ -26,6 +27,238 @@ const subjectIcons = [
   "🧮", "🌍", "💡", "🎨", "🧬", "📐"
 ];
 
+/* Create the large note reader popup. */
+function createReader() {
+  if (document.getElementById("noteReaderModal")) return;
+
+  const style = document.createElement("style");
+  style.id = "noteReaderStyles";
+  style.textContent = `
+    #noteReaderModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(20, 35, 27, 0.60);
+      padding: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #noteReaderModal.show {
+      display: flex;
+    }
+
+    #noteReaderModal .reader-panel {
+      width: min(850px, 100%);
+      max-height: 90vh;
+      background: #FBFCFA;
+      color: #26382C;
+      border-radius: 18px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #noteReaderModal .reader-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 26px;
+      border-bottom: 1px solid #E1EAE3;
+    }
+
+    #noteReaderModal .reader-heading {
+      min-width: 0;
+    }
+
+    #noteReaderModal .reader-heading h2 {
+      margin: 0 0 8px;
+      font-size: 23px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    #noteReaderModal .reader-subject {
+      margin: 0;
+      color: #6B9080;
+      font-size: 14px;
+    }
+
+    #noteReaderModal .reader-close {
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 9px;
+      background: #EEF5EF;
+      color: #37563B;
+      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+    }
+
+    #noteReaderModal .reader-close:hover {
+      background: #DDEBE0;
+    }
+
+    #noteReaderModal .reader-body {
+      padding: 26px;
+      overflow-y: auto;
+      font-size: 16px;
+      line-height: 1.9;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    #noteReaderModal .reader-footer {
+      padding: 14px 26px;
+      border-top: 1px solid #E1EAE3;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    #noteReaderModal .reader-action {
+      padding: 10px 17px;
+      border: 1px solid #6B9080;
+      border-radius: 9px;
+      background: #6B9080;
+      color: white;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    #noteReaderModal .reader-action.secondary {
+      background: transparent;
+      color: #37563B;
+    }
+
+    .note-title-button {
+      display: block;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      background: transparent;
+      color: #37563B;
+      font: inherit;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      overflow-wrap: anywhere;
+    }
+
+    .note-title-button:hover {
+      color: #6B9080;
+      text-decoration: underline;
+    }
+
+    .note-title-button:focus-visible {
+      outline: 2px solid #6B9080;
+      outline-offset: 4px;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 600px) {
+      #noteReaderModal {
+        padding: 10px;
+      }
+
+      #noteReaderModal .reader-panel {
+        max-height: 94vh;
+        border-radius: 14px;
+      }
+
+      #noteReaderModal .reader-header,
+      #noteReaderModal .reader-body {
+        padding: 18px;
+      }
+
+      #noteReaderModal .reader-heading h2 {
+        font-size: 20px;
+      }
+
+      #noteReaderModal .reader-body {
+        font-size: 15px;
+      }
+
+      #noteReaderModal .reader-footer {
+        padding: 12px 18px;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const reader = document.createElement("div");
+  reader.id = "noteReaderModal";
+  reader.setAttribute("role", "dialog");
+  reader.setAttribute("aria-modal", "true");
+  reader.setAttribute("aria-labelledby", "readerNoteTitle");
+
+  reader.innerHTML = `
+    <section class="reader-panel">
+      <header class="reader-header">
+        <div class="reader-heading">
+          <h2 id="readerNoteTitle"></h2>
+          <p class="reader-subject" id="readerNoteSubject"></p>
+        </div>
+        <button type="button" class="reader-close"
+                id="readerCloseBtn" aria-label="Close note">&times;</button>
+      </header>
+
+      <div class="reader-body" id="readerNoteContent"></div>
+
+      <footer class="reader-footer">
+        <button type="button" class="reader-action secondary"
+                id="readerEditBtn">Edit Note</button>
+        <button type="button" class="reader-action"
+                id="readerDoneBtn">Close</button>
+      </footer>
+    </section>
+  `;
+
+  document.body.appendChild(reader);
+
+  document.getElementById("readerCloseBtn")
+    .addEventListener("click", closeReader);
+
+  document.getElementById("readerDoneBtn")
+    .addEventListener("click", closeReader);
+
+  reader.addEventListener("click", event => {
+    if (event.target === reader) closeReader();
+  });
+
+  document.getElementById("readerEditBtn")
+    .addEventListener("click", () => {
+      const id = reader.dataset.noteId;
+      closeReader();
+      if (id) openEditModal(id);
+    });
+}
+
+function openReader(id) {
+  const note = notes.find(item => item.id === id);
+  if (!note) return;
+
+  createReader();
+
+  const reader = document.getElementById("noteReaderModal");
+  document.getElementById("readerNoteTitle").textContent = note.title;
+  document.getElementById("readerNoteSubject").textContent = note.subject;
+  document.getElementById("readerNoteContent").textContent = note.content;
+  reader.dataset.noteId = note.id;
+  reader.classList.add("show");
+
+  document.getElementById("readerCloseBtn").focus();
+}
+
+function closeReader() {
+  const reader = document.getElementById("noteReaderModal");
+  if (reader) reader.classList.remove("show");
+}
+
 function createId() {
   if (window.crypto && window.crypto.randomUUID) {
     return window.crypto.randomUUID();
@@ -52,7 +285,6 @@ function loadNotes() {
       return Array.isArray(parsed) ? parsed.filter(isValidNote) : [];
     }
 
-    // Import sample notes only once.
     if (localStorage.getItem(LEGACY_KEY) !== "true") {
       const examples = [
         {
@@ -291,9 +523,12 @@ function render() {
           const content = document.createElement("div");
           content.className = "note-content";
 
-          const title = document.createElement("span");
-          title.className = "note-title";
+          // Clicking the title opens the full note in the large reader.
+          const title = document.createElement("button");
+          title.type = "button";
+          title.className = "note-title note-title-button";
           title.textContent = note.title;
+          title.addEventListener("click", () => openReader(note.id));
 
           const body = document.createElement("p");
           body.className = "note-text";
@@ -333,7 +568,6 @@ function render() {
 
         detail.appendChild(list);
 
-        // Quick note input inside each subject.
         const quickAdd = document.createElement("div");
         quickAdd.className = "add-note-row";
         quickAdd.innerHTML = `
@@ -367,8 +601,9 @@ function render() {
             updatedAt: now
           });
 
-          saveNotes();
-          render();
+          if (saveNotes()) {
+            render();
+          }
         }
 
         quickAdd.querySelector("button")
@@ -507,8 +742,12 @@ modal.addEventListener("click", event => {
 });
 
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && modal.classList.contains("show")) {
-    closeModal();
+  if (event.key === "Escape") {
+    if (modal.classList.contains("show")) {
+      closeModal();
+    } else {
+      closeReader();
+    }
   }
 });
 
@@ -524,7 +763,7 @@ subjectFilter.addEventListener("change", event => {
 
 /*
   Shared format for notes created by AI pages.
-  The AI pages can save to localStorage using the same key and fields.
+  AI explanations and summaries use the same subject-based collections.
 */
 window.LuminaNotes = {
   save(noteData) {
@@ -595,4 +834,5 @@ window.LuminaNotes = {
   }
 };
 
+createReader();
 render();
