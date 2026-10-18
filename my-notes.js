@@ -46,7 +46,7 @@ function isValidNote(note) {
     typeof note.content === "string";
 }
 
-/* Load saved notes without overwriting existing data. */
+/* Load existing notes without overwriting saved data. */
 function loadNotes() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -58,10 +58,6 @@ function loadNotes() {
         : [];
     }
 
-    /*
-      Import example notes only if this storage key has never
-      been created and the legacy import has not run.
-    */
     if (localStorage.getItem(LEGACY_KEY) !== "true") {
       const examples = [
         {
@@ -118,7 +114,6 @@ function loadNotes() {
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(examples));
       localStorage.setItem(LEGACY_KEY, "true");
-
       return examples;
     }
 
@@ -132,12 +127,20 @@ function loadNotes() {
 function saveNotes() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-    saveStatus.textContent = "Notes saved on this device.";
+
+    if (saveStatus) {
+      saveStatus.textContent = "Notes saved on this device.";
+    }
+
     return true;
   } catch (error) {
     console.error("Unable to save notes:", error);
-    saveStatus.textContent =
-      "Unable to save notes. Please try again.";
+
+    if (saveStatus) {
+      saveStatus.textContent =
+        "Unable to save notes. Please try again.";
+    }
+
     return false;
   }
 }
@@ -183,7 +186,7 @@ function getIcon(subject) {
   return subjectIcons[total % subjectIcons.length];
 }
 
-/* Add popup styles while preserving the existing page styles. */
+/* Create popup styling without replacing the page's original styles. */
 function addPopupStyles() {
   if (document.getElementById("luminaNotesPopupStyles")) return;
 
@@ -211,6 +214,7 @@ function addPopupStyles() {
 
     #luminaReaderOverlay {
       z-index: 9001;
+      padding: 0;
     }
 
     .lumina-popup-panel {
@@ -239,6 +243,7 @@ function addPopupStyles() {
 
     .lumina-popup-heading {
       min-width: 0;
+      flex: 1;
     }
 
     .lumina-popup-heading h2 {
@@ -254,6 +259,7 @@ function addPopupStyles() {
       margin: 5px 0 0;
       color: #718174;
       font-size: 13px;
+      overflow-wrap: anywhere;
     }
 
     .lumina-popup-close {
@@ -387,55 +393,55 @@ function addPopupStyles() {
       font-size: 14px;
     }
 
+    /* Full-screen note reader */
     .lumina-reader-panel {
-      width: min(1050px, 100%);
-      height: 91vh;
-      max-height: 94vh;
-      border-radius: 18px;
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      border: 0;
+      border-radius: 0;
     }
 
     .lumina-reader-header {
-      padding: 20px 26px;
+      flex-shrink: 0;
+      padding: 12px 24px;
+    }
+
+    .lumina-reader-header .lumina-popup-heading h2 {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .lumina-reader-header .lumina-popup-subtitle {
+      margin-top: 2px;
+      font-size: 11px;
     }
 
     .lumina-reader-content {
       flex: 1;
       min-height: 0;
       overflow-y: auto;
-      padding: 30px clamp(20px, 5vw, 58px);
+      padding: 28px clamp(20px, 7vw, 90px);
       background: #FBFCFA;
       overscroll-behavior: contain;
     }
 
-    .lumina-reader-subject {
-      margin: 0 0 10px;
-      color: #6B9080;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .lumina-reader-title {
-      margin: 0 0 24px;
-      color: #4F6F52;
-      font-family: inherit;
-      font-size: clamp(23px, 3vw, 32px);
-      font-weight: 600;
-      line-height: 1.4;
-      overflow-wrap: anywhere;
-    }
-
     .lumina-reader-answer {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
       color: #344638;
       font-family: inherit;
       font-size: 16px;
-      line-height: 1.95;
+      line-height: 2;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
 
     .lumina-reader-source {
       display: inline-block;
-      margin-top: 22px;
+      margin: 22px auto 0;
       padding: 6px 10px;
       border-radius: 8px;
       background: #EEF8F3;
@@ -445,10 +451,11 @@ function addPopupStyles() {
 
     .lumina-reader-footer {
       display: flex;
+      flex-shrink: 0;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      padding: 14px 22px;
+      padding: 12px 20px;
       border-top: 1px solid #E4EEE6;
       background: #F6FAF7;
     }
@@ -485,6 +492,73 @@ function addPopupStyles() {
       outline-offset: 3px;
     }
 
+    /* Full-screen create/edit form */
+    .modal.show {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 10000 !important;
+      display: flex !important;
+      align-items: stretch !important;
+      justify-content: stretch !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .modal.show .modal-card {
+      display: flex;
+      flex-direction: column;
+      width: 100vw !important;
+      max-width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      max-height: 100vh !important;
+      max-height: 100dvh !important;
+      margin: 0 !important;
+      padding: 22px clamp(18px, 5vw, 64px) !important;
+      overflow-y: auto !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .modal.show .modal-heading {
+      flex-shrink: 0;
+      margin-bottom: 18px !important;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #D7E6D9;
+    }
+
+    .modal.show .modal-heading h2 {
+      font-size: 19px !important;
+    }
+
+    .modal.show .modal-heading p {
+      font-size: 11px !important;
+      overflow-wrap: anywhere;
+    }
+
+    .modal.show .form-group {
+      margin-bottom: 14px;
+    }
+
+    .modal.show .form-group textarea {
+      min-height: 40vh;
+      min-height: 40dvh;
+      resize: vertical;
+      font-size: 14px;
+      line-height: 1.9;
+    }
+
+    .modal.show .modal-actions {
+      flex-shrink: 0;
+      margin-top: 12px;
+      padding-bottom: 8px;
+    }
+
+    .modal.show .save-status {
+      flex-shrink: 0;
+    }
+
     @media (max-width: 600px) {
       .lumina-popup-overlay {
         padding: 10px;
@@ -515,23 +589,32 @@ function addPopupStyles() {
         padding: 7px;
       }
 
-      .lumina-reader-panel {
+      #luminaReaderOverlay {
+        padding: 0;
+      }
+
+      #luminaReaderOverlay .lumina-reader-panel {
         width: 100%;
-        height: 94vh;
-        max-height: 96vh;
+        height: 100%;
+        max-height: 100%;
+        border-radius: 0;
       }
 
-      .lumina-reader-content {
-        padding: 23px 19px;
+      #luminaReaderOverlay .lumina-reader-header {
+        padding: 10px 14px;
       }
 
-      .lumina-reader-answer {
+      #luminaReaderOverlay .lumina-reader-content {
+        padding: 20px 16px;
+      }
+
+      #luminaReaderOverlay .lumina-reader-answer {
         font-size: 15px;
         line-height: 1.9;
       }
 
       .lumina-reader-footer {
-        padding: 12px;
+        padding: 10px;
         flex-wrap: wrap;
       }
 
@@ -539,13 +622,22 @@ function addPopupStyles() {
         padding: 9px 11px;
         font-size: 13px;
       }
+
+      .modal.show .modal-card {
+        padding: 16px !important;
+      }
+
+      .modal.show .form-group textarea {
+        min-height: 35vh;
+        min-height: 35dvh;
+      }
     }
   `;
 
   document.head.appendChild(style);
 }
 
-/* Create both popup elements before attaching their event handlers. */
+/* Create topic and reader screens before attaching their handlers. */
 function createPopupElements() {
   if (!document.getElementById("luminaTopicsOverlay")) {
     const topicsOverlay = document.createElement("div");
@@ -592,8 +684,8 @@ function createPopupElements() {
                aria-labelledby="luminaReaderTitle">
         <header class="lumina-popup-header lumina-reader-header">
           <div class="lumina-popup-heading">
-            <h2>My Notes</h2>
-            <p class="lumina-popup-subtitle" id="luminaReaderSubtitle"></p>
+            <h2 id="luminaReaderTitle">Note Title</h2>
+            <p class="lumina-popup-subtitle" id="luminaReaderSubtitle">Subject Name</p>
           </div>
           <button type="button" class="lumina-popup-close"
                   id="luminaReaderClose" aria-label="Close note">&times;</button>
@@ -620,14 +712,12 @@ function createPopupElements() {
   }
 }
 
-/*
-  IMPORTANT: initialize popups here, before any code attaches
-  event listeners to their buttons.
-*/
 addPopupStyles();
 createPopupElements();
 
 function updateSubjectControls() {
+  if (!subjectFilter) return;
+
   const selected = subjectFilter.value;
   const subjects = getSubjectNames();
 
@@ -664,8 +754,10 @@ function getFilteredNotes() {
   });
 }
 
-/* Main page displays subject cards. */
+/* Main page shows subject cards. */
 function render() {
+  if (!grid) return;
+
   updateSubjectControls();
 
   const grouped = new Map();
@@ -734,7 +826,7 @@ function render() {
     });
 }
 
-/* First popup: topic titles only. */
+/* Subject screen displays topic titles only. */
 function openTopicsModal(subjectName) {
   activeSubject = subjectName;
   quickAddVisible = false;
@@ -749,6 +841,7 @@ function openTopicsModal(subjectName) {
 
   quickForm.classList.remove("visible");
   quickInput.value = "";
+
   document.getElementById("luminaQuickAddToggle").textContent =
     "+ Add a quick note";
 
@@ -817,7 +910,7 @@ function closeTopicsModal() {
   quickAddVisible = false;
 }
 
-/* Second popup: large reading window with the full answer. */
+/* Full-screen reader: small topic heading, subject underneath, answer below. */
 function openReader(noteId) {
   const note = notes.find(item => item.id === noteId);
   if (!note) return;
@@ -827,25 +920,15 @@ function openReader(noteId) {
   const overlay = document.getElementById("luminaReaderOverlay");
   const content = document.getElementById("luminaReaderContent");
 
-  document.getElementById("luminaReaderSubtitle").textContent =
-    note.subject;
+  document.getElementById("luminaReaderTitle").textContent = note.title;
+  document.getElementById("luminaReaderSubtitle").textContent = note.subject;
 
   content.innerHTML = "";
-
-  const subject = document.createElement("p");
-  subject.className = "lumina-reader-subject";
-  subject.textContent = note.subject;
-
-  const title = document.createElement("h1");
-  title.className = "lumina-reader-title";
-  title.id = "luminaReaderTitle";
-  title.textContent = note.title;
 
   const answer = document.createElement("div");
   answer.className = "lumina-reader-answer";
   answer.textContent = note.content;
-
-  content.append(subject, title, answer);
+  content.appendChild(answer);
 
   if (note.source === "ai-chat" || note.source === "ai-summary") {
     const source = document.createElement("span");
@@ -858,6 +941,7 @@ function openReader(noteId) {
 
   overlay.classList.add("lumina-popup-open");
   overlay.setAttribute("aria-hidden", "false");
+  content.scrollTop = 0;
   document.getElementById("luminaReaderClose").focus();
 }
 
@@ -873,7 +957,7 @@ function closeReader() {
   }
 }
 
-/* Create and edit note form. */
+/* Create note using the existing form, now shown full-screen. */
 function openCreateModal() {
   editingNoteId = null;
   noteForm.reset();
@@ -881,6 +965,9 @@ function openCreateModal() {
   modalTitle.textContent = "Create a Note";
   saveNoteBtn.textContent = "Save Note";
   saveStatus.textContent = "";
+
+  const description = modal.querySelector(".modal-heading p");
+  if (description) description.textContent = "Create and save your study note.";
 
   if (currentFilter) {
     noteSubject.value = currentFilter;
@@ -892,6 +979,7 @@ function openCreateModal() {
   noteTitle.focus();
 }
 
+/* Edit note using the same full-screen form. */
 function openEditModal(id) {
   const note = notes.find(item => item.id === id);
   if (!note) return;
@@ -909,6 +997,11 @@ function openEditModal(id) {
   saveNoteBtn.textContent = "Save Changes";
   saveStatus.textContent = "";
 
+  const description = modal.querySelector(".modal-heading p");
+  if (description) {
+    description.textContent = note.subject + " · " + note.title;
+  }
+
   modal.classList.add("show");
   noteTitle.focus();
 }
@@ -918,6 +1011,11 @@ function closeModal() {
   noteForm.reset();
   editingNoteId = null;
   saveStatus.textContent = "";
+
+  const description = modal.querySelector(".modal-heading p");
+  if (description) {
+    description.textContent = "Create and save your study note.";
+  }
 }
 
 function deleteNote(id) {
@@ -952,6 +1050,7 @@ function deleteNote(id) {
   }
 }
 
+/* Save edits or create a new note. */
 noteForm.addEventListener("submit", event => {
   event.preventDefault();
 
@@ -993,16 +1092,29 @@ noteForm.addEventListener("submit", event => {
   }
 
   if (saveNotes()) {
+    const savedSubject = subject;
     closeModal();
     render();
 
+    if (activeSubject && activeSubject !== savedSubject) {
+      activeSubject = savedSubject;
+      document.getElementById("luminaTopicsTitle").textContent =
+        savedSubject;
+    } else if (!activeSubject && savedSubject) {
+      activeSubject = savedSubject;
+    }
+
     if (activeSubject) {
       renderTopicsList();
+
+      const topics = document.getElementById("luminaTopicsOverlay");
+      topics.classList.add("lumina-popup-open");
+      topics.setAttribute("aria-hidden", "false");
     }
   }
 });
 
-/* Quick-add note within the subject popup. */
+/* Quick-add note inside a subject's topic list. */
 document.getElementById("luminaQuickAddToggle")
   .addEventListener("click", () => {
     quickAddVisible = !quickAddVisible;
@@ -1054,7 +1166,7 @@ document.getElementById("luminaQuickAddForm")
     }
   });
 
-/* Popup navigation and close buttons. */
+/* Popup buttons. */
 document.getElementById("luminaTopicsClose")
   .addEventListener("click", closeTopicsModal);
 
@@ -1107,17 +1219,17 @@ modal.addEventListener("click", event => {
   }
 });
 
-/* Escape closes the topmost open popup. */
+/* Escape closes the topmost open screen. */
 document.addEventListener("keydown", event => {
   if (event.key !== "Escape") return;
 
   const reader = document.getElementById("luminaReaderOverlay");
   const topics = document.getElementById("luminaTopicsOverlay");
 
-  if (reader.classList.contains("lumina-popup-open")) {
-    closeReader();
-  } else if (modal.classList.contains("show")) {
+  if (modal.classList.contains("show")) {
     closeModal();
+  } else if (reader.classList.contains("lumina-popup-open")) {
+    closeReader();
   } else if (topics.classList.contains("lumina-popup-open")) {
     closeTopicsModal();
   }
@@ -1150,7 +1262,7 @@ subjectFilter.addEventListener("change", event => {
   }
 });
 
-/* Keep the AI feature's existing save connection. */
+/* Preserve the AI feature's existing save connection. */
 window.LuminaNotes = {
   save(noteData) {
     if (
@@ -1200,10 +1312,8 @@ window.LuminaNotes = {
       }
 
       existing.push(newNote);
-
       localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
 
-      /* Update the page's in-memory notes after saving. */
       notes = existing.filter(isValidNote);
       render();
 
@@ -1226,5 +1336,5 @@ window.LuminaNotes = {
   }
 };
 
-/* Display saved notes on page load. */
+/* Show saved notes when the page loads. */
 render();
