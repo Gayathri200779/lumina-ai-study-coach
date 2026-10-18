@@ -21,6 +21,7 @@ let editingNoteId = null;
 let currentSearch = "";
 let currentFilter = "";
 let activeReaderNoteId = null;
+let toastTimer = null;
 
 const subjectIcons = [
   "📘", "🧠", "📊", "🐍", "🧪",
@@ -174,7 +175,9 @@ function updateSubjectControls() {
   }
 }
 
-/* LARGE NOTE READING SCREEN */
+/* =========================================================
+   LARGE FULL-SCREEN NOTE READER / EDITOR
+   ========================================================= */
 
 let noteReader = null;
 
@@ -191,6 +194,9 @@ function ensureNoteReader() {
     <section class="note-reader-panel">
       <button type="button" class="reader-close"
         id="noteReaderClose" aria-label="Close note">×</button>
+
+      <div id="noteReaderToast" class="reader-toast" role="status"
+        aria-live="polite" hidden></div>
 
       <div class="reader-heading">
         <p id="noteReaderSubject"></p>
@@ -231,11 +237,26 @@ function ensureNoteReader() {
   noteReader.querySelector("#noteReaderCancel")
     .addEventListener("click", cancelReaderEdit);
 
-  noteReader.addEventListener("click", event => {
-    if (event.target === noteReader) closeNoteReader();
-  });
-
   return noteReader;
+}
+
+function showReaderToast(message) {
+  const toast = document.getElementById("noteReaderToast");
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.hidden = false;
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.hidden = true;
+  }, 3500);
+}
+
+function hideReaderToast() {
+  const toast = document.getElementById("noteReaderToast");
+  clearTimeout(toastTimer);
+  if (toast) toast.hidden = true;
 }
 
 function openNoteReader(note, editMode = false) {
@@ -247,26 +268,22 @@ function openNoteReader(note, editMode = false) {
   document.getElementById("noteReaderSubject").textContent = note.subject;
   document.getElementById("noteReaderTitle").textContent = note.title;
 
-  const content = document.getElementById("noteReaderContent");
-  content.textContent = note.content;
-
   noteReader.style.display = "flex";
   document.body.classList.add("note-reader-open");
 
-  if (editMode) {
-    enterReaderEditMode();
-  } else {
-    setReaderMode(false);
-  }
+  setReaderMode(editMode);
 }
 
 function setReaderMode(editing) {
   const content = document.getElementById("noteReaderContent");
+  const note = notes.find(n => n.id === activeReaderNoteId);
 
   document.getElementById("noteReaderEdit").hidden = editing;
   document.getElementById("noteReaderSave").hidden = !editing;
   document.getElementById("noteReaderCancel").hidden = !editing;
   document.getElementById("noteReaderDone").hidden = editing;
+
+  content.classList.toggle("editing", editing);
 
   if (editing) {
     content.innerHTML = "";
@@ -275,19 +292,19 @@ function setReaderMode(editing) {
     textarea.id = "noteReaderTextarea";
     textarea.className = "reader-textarea";
     textarea.setAttribute("aria-label", "Edit note answer");
-
-    const note = notes.find(n => n.id === activeReaderNoteId);
     textarea.value = note ? note.content : "";
 
     content.appendChild(textarea);
     textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
   } else {
-    const note = notes.find(n => n.id === activeReaderNoteId);
-    if (note) content.textContent = note.content;
+    content.textContent = note ? note.content : "";
+    content.scrollTop = 0;
   }
 }
 
 function enterReaderEditMode() {
+  hideReaderToast();
   setReaderMode(true);
 }
 
@@ -305,8 +322,10 @@ function saveReaderEdit() {
     return;
   }
 
+  // Step 1 & 2: ask for the title, with the current title pre-filled
   const newTitle = prompt("Enter or confirm the note title:", note.title);
 
+  // User pressed Cancel on the prompt -> stay in edit mode, nothing saved
   if (newTitle === null) return;
 
   if (!newTitle.trim()) {
@@ -314,15 +333,22 @@ function saveReaderEdit() {
     return;
   }
 
+  // Step 3: save both title and answer
   note.title = newTitle.trim();
   note.content = newContent;
   note.updatedAt = new Date().toISOString();
 
-  if (!saveNotes()) return;
+  if (!saveNotes()) {
+    alert("Unable to save the note. Please try again.");
+    return;
+  }
 
+  // Step 5: show updated title + answer
   render();
   openNoteReader(note, false);
-  alert("Note updated successfully!");
+
+  // Step 4: success message
+  showReaderToast("✓ Note updated successfully!");
 }
 
 function cancelReaderEdit() {
@@ -333,12 +359,15 @@ function cancelReaderEdit() {
 function closeNoteReader() {
   if (!noteReader) return;
 
+  hideReaderToast();
   noteReader.style.display = "none";
   document.body.classList.remove("note-reader-open");
   activeReaderNoteId = null;
 }
 
-/* SUBJECT CARDS AND NOTE LIST */
+/* =========================================================
+   SUBJECT CARDS AND NOTE TITLE LIST
+   ========================================================= */
 
 function render() {
   if (!grid) return;
@@ -426,6 +455,7 @@ function render() {
           const item = document.createElement("li");
           item.className = "note-item";
 
+          // Clickable TITLE only -> opens the large reading screen
           const noteButton = document.createElement("button");
           noteButton.type = "button";
           noteButton.className = "note-content";
@@ -434,12 +464,8 @@ function render() {
           const title = document.createElement("span");
           title.className = "note-title";
           title.textContent = note.title;
+          noteButton.appendChild(title);
 
-          const preview = document.createElement("p");
-          preview.className = "note-text";
-          preview.textContent = note.content;
-
-          noteButton.append(title, preview);
           noteButton.addEventListener("click", () => openNoteReader(note));
 
           if (note.source === "ai-chat" || note.source === "ai-summary") {
@@ -528,7 +554,9 @@ function render() {
     });
 }
 
-/* CREATE AND DELETE NOTES */
+/* =========================================================
+   CREATE AND DELETE NOTES
+   ========================================================= */
 
 function openCreateModal() {
   if (!noteForm || !modal) return;
@@ -634,10 +662,19 @@ modal?.addEventListener("click", event => {
 });
 
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape") {
-    if (noteReader?.style.display === "flex") closeNoteReader();
-    if (modal?.classList.contains("show")) closeModal();
+  if (event.key !== "Escape") return;
+
+  // Reader open: Esc cancels editing first, then closes the reader
+  if (noteReader && noteReader.style.display === "flex") {
+    if (document.getElementById("noteReaderTextarea")) {
+      cancelReaderEdit();
+    } else {
+      closeNoteReader();
+    }
+    return;
   }
+
+  if (modal?.classList.contains("show")) closeModal();
 });
 
 searchInput?.addEventListener("input", event => {
