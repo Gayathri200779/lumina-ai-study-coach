@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#eefdef">
+  <title>Lumina AI Coach - AI Study Assistant</title>
+
+  <link rel="stylesheet" href="./dashboard.css">
+
+  <style>
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 6px;
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 14px;
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      color: var(--text-muted);
+      background: transparent;
+      border: 0;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      background: var(--soft-green);
+    }
+
+    .tab-btn[aria-selected="true"] {
+      color: var(--white);
+      background: var(--accent);
+    }
+
+    .assistant-panel {
+      padding: 24px;
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 15px;
+    }
+
+    .assistant-panel[hidden] {
+      display: none;
+    }
+
+    .assistant-panel h2 {
+      margin-bottom: 4px;
+      font-size: 20px;
+    }
+
+    .assistant-panel .panel-desc {
+      margin-bottom: 18px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--dark-green);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .field,
+    .field-area {
+      width: 100%;
+      padding: 12px 14px;
+      color: var(--text-main);
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .field-area {
+      min-height: 200px;
+      resize: vertical;
+      line-height: 1.7;
+    }
+
+    .field:focus,
+    .field-area:focus {
+      outline: 2px solid #719b76;
+      outline-offset: 1px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      color: var(--white);
+      background: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: var(--dark-green);
+    }
+
+    .btn-secondary {
+      color: var(--dark-green);
+      background: var(--white);
+      border: 1px solid #8eaa92;
+    }
+
+    .btn-secondary:hover {
+      background: var(--soft-green);
+    }
+
+    .result-box {
+      margin-top: 20px;
+      padding: 18px;
+      background: #f7fbf7;
+      border: 1px solid var(--border-green);
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .save-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-top: 14px;
+      align-items: end;
+    }
+
+    .status-msg {
+      margin-top: 10px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .tabs {
+        width: 100%;
+      }
+
+      .tab-btn {
+        flex: 1;
+        padding: 10px 8px;
+        font-size: 13px;
+      }
+
+      .assistant-panel {
+        padding: 18px;
+      }
+
+      .save-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="dashboard.html" class="logo">🌿 Lumina AI</a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="dashboard.html">Home</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="welcome">
+      <p class="eyebrow">YOUR AI STUDY COMPANION</p>
+      <h1>AI Study Assistant 🧠</h1>
+      <p>Choose a tool below: explain a concept, or summarize your study material.</p>
+    </section>
+
+    <div class="tabs" role="tablist" aria-label="AI Study Assistant tools">
+      <button class="tab-btn" id="tab-explainer" role="tab"
+              aria-selected="true" aria-controls="panel-explainer"
+              type="button">💡 Concept Explainer</button>
+      <button class="tab-btn" id="tab-summarizer" role="tab"
+              aria-selected="false" aria-controls="panel-summarizer"
+              type="button">✨ Notes Summarizer</button>
+    </div>
+
+    <!-- TOOL 1: CONCEPT EXPLAINER -->
+    <section class="assistant-panel" id="panel-explainer"
+             role="tabpanel" aria-labelledby="tab-explainer">
+      <h2>Concept Explainer</h2>
+      <p class="panel-desc">Type a topic or question and get a simple explanation.</p>
+
+      <label class="field-label" for="explainerInput">Topic or question</label>
+      <textarea class="field-area" id="explainerInput" style="min-height:110px"
+        placeholder="e.g. Explain how neural networks learn"></textarea>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="explainBtn" type="button">Explain</button>
+        <button class="btn btn-secondary" id="explainClear" type="button">Clear</button>
+      </div>
+
+      <div class="result-box" id="explainerResult" hidden></div>
+
+      <div class="save-row" id="explainerSave" hidden>
+        <div>
+          <label class="field-label" for="explainerSubject">Save to My Notes under subject</label>
+          <input class="field" id="explainerSubject" type="text"
+                 list="subjectOptions" placeholder="e.g. Artificial Intelligence">
+        </div>
+        <button class="btn btn-secondary" id="explainerSaveBtn" type="button">
+          Save to My Notes
+        </button>
+      </div>
+      <p class="status-msg" id="explainerStatus" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- TOOL 2: NOTES SUMMARIZER -->
+    <section class="assistant-panel" id="panel-summarizer"
+             role="tabpanel" aria-labelledby="tab-summarizer" hidden>
+      <h2>Notes Summarizer</h2>
+      <p class="panel-desc">Paste your study material and get concise revision notes.</p>
+
+      <label class="field-label" for="summarizerInput">Study material</label>
+      <textarea class="field-area" id="summarizerInput"
+        placeholder="Paste your notes, textbook text or lecture material here..."></textarea>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="summarizeBtn" type="button">Summarize</button>
+        <button class="btn btn-secondary" id="summarizeClear" type="button">Clear</button>
+      </div>
+
+      <div class="result-box" id="summarizerResult" hidden></div>
+
+      <div class="save-row" id="summarizerSave" hidden>
+        <div>
+          <label class="field-label" for="summarizerSubject">Save to My Notes under subject</label>
+          <input class="field" id="summarizerSubject" type="text"
+                 list="subjectOptions" placeholder="e.g. Statistics">
+        </div>
+        <button class="btn btn-secondary" id="summarizerSaveBtn" type="button">
+          Save to My Notes
+        </button>
+      </div>
+      <p class="status-msg" id="summarizerStatus" role="status" aria-live="polite"></p>
+    </section>
+
+    <datalist id="subjectOptions"></datalist>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-logo">🌿 Lumina AI</div>
+    <p class="footer-text">
+      Supporting your learning journey, one step at a time.
+    </p>
+  </footer>
+
+  <script>
+  "use strict";
+
+  /* =========================================================
+     CONNECT YOUR AI HERE
+     Replace the body of this function with your existing AI call
+     (the one your concept-explainer page uses).
+     mode  = "explain" or "summarize"
+     input = the text the user typed
+     It must return the answer text (a string).
+     ========================================================= */
+  async function askAI(mode, input) {
+    if (typeof window.LuminaAI === "function") {
+      return await window.LuminaAI(mode, input);
+    }
+    throw new Error("AI is not connected yet. Add your AI call inside askAI().");
+  }
+
+  const NOTES_KEY = "luminaNotes";
+
+  const tabs = {
+    explainer: {
+      tab: document.getElementById("tab-explainer"),
+      panel: document.getElementById("panel-explainer")
+    },
+    summarizer: {
+      tab: document.getElementById("tab-summarizer"),
+      panel: document.getElementById("panel-summarizer")
+    }
+  };
+
+  function showTab(name) {
+    if (!tabs[name]) name = "explainer";
+
+    Object.entries(tabs).forEach(([key, item]) => {
+      const active = key === name;
+      item.tab.setAttribute("aria-selected", String(active));
+      item.panel.hidden = !active;
+    });
+
+    history.replaceState(null, "", "#" + name);
+  }
+
+  tabs.explainer.tab.addEventListener("click", () => showTab("explainer"));
+  tabs.summarizer.tab.addEventListener("click", () => showTab("summarizer"));
+
+  showTab(location.hash.replace("#", "") || "explainer");
+
+  /* ---------- Subject suggestions from existing notes ---------- */
+  function readNotes() {
+    try {
+      const data = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  (function fillSubjects() {
+    const subjects = [...new Set(readNotes().map(n => n.subject).filter(Boolean))];
+    document.getElementById("subjectOptions").innerHTML =
+      subjects.map(s => {
+        const option = document.createElement("option");
+        option.value = s;
+        return option.outerHTML;
+      }).join("");
+  })();
+
+  /* ---------- Save a result into My Notes ---------- */
+  function saveToNotes(title, subject, content, source) {
+    const notes = readNotes();
+    const now = new Date().toISOString();
+
+    notes.push({
+      id: window.crypto?.randomUUID?.() ||
+        "note-" + Date.now() + "-" + Math.random().toString(36).slice(2),
+      title,
+      subject,
+      content,
+      source,
+      createdAt: now,
+      updatedAt: now
+    });
+
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+  }
+
+  /* ---------- Wire up one tool ---------- */
+  function setupTool(config) {
+    const input = document.getElementById(config.inputId);
+    const runBtn = document.getElementById(config.runId);
+    const clearBtn = document.getElementById(config.clearId);
+    const result = document.getElementById(config.resultId);
+    const saveRow = document.getElementById(config.saveRowId);
+    const subjectInput = document.getElementById(config.subjectId);
+    const saveBtn = document.getElementById(config.saveBtnId);
+    const status = document.getElementById(config.statusId);
+
+    let lastAnswer = "";
+
+    runBtn.addEventListener("click", async () => {
+      const text = input.value.trim();
+      status.textContent = "";
+
+      if (!text) {
+        status.textContent = config.emptyMessage;
+        input.focus();
+        return;
+      }
+
+      runBtn.disabled = true;
+      runBtn.textContent = "Working...";
+
+      try {
+        lastAnswer = String(await askAI(config.mode, text)).trim();
+        result.textContent = lastAnswer;
+        result.hidden = false;
+        saveRow.hidden = !lastAnswer;
+      } catch (error) {
+        console.error(error);
+        result.hidden = true;
+        saveRow.hidden = true;
+        status.textContent = error.message || "Something went wrong. Please try again.";
+      } finally {
+        runBtn.disabled = false;
+        runBtn.textContent = config.runLabel;
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      result.textContent = "";
+      result.hidden = true;
+      saveRow.hidden = true;
+      status.textContent = "";
+      lastAnswer = "";
+      input.focus();
+    });
+
+    saveBtn.addEventListener("click", () => {
+      const subject = subjectInput.value.trim();
+
+      if (!lastAnswer) return;
+
+      if (!subject) {
+        status.textContent = "Please enter a subject to save this note.";
+        subjectInput.focus();
+        return;
+      }
+
+      const raw = input.value.trim().replace(/\s+/g, " ");
+      const title = config.titlePrefix +
+        (raw.length > 40 ? raw.slice(0, 40).trim() + "..." : raw);
+
+      try {
+        saveToNotes(title, subject, lastAnswer, config.source);
+        status.textContent = "✓ Saved to My Notes under " + subject + ".";
+      } catch (error) {
+        console.error(error);
+        status.textContent = "Unable to save the note. Please try again.";
+      }
+    });
+  }
+
+  setupTool({
+    mode: "explain",
+    inputId: "explainerInput",
+    runId: "explainBtn",
+    clearId: "explainClear",
+    resultId: "explainerResult",
+    saveRowId: "explainerSave",
+    subjectId: "explainerSubject",
+    saveBtnId: "explainerSaveBtn",
+    statusId: "explainerStatus",
+    runLabel: "Explain",
+    emptyMessage: "Please type a topic or question first.",
+    titlePrefix: "",
+    source: "ai-chat"
+  });
+
+  setupTool({
+    mode: "summarize",
+    inputId: "summarizerInput",
+    runId: "summarizeBtn",
+    clearId: "summarizeClear",
+    resultId: "summarizerResult",
+    saveRowId: "summarizerSave",
+    subjectId: "summarizerSubject",
+    saveBtnId: "summarizerSaveBtn",
+    statusId: "summarizerStatus",
+    runLabel: "Summarize",
+    emptyMessage: "Please paste some study material first.",
+    titlePrefix: "Summary: ",
+    source: "ai-summary"
+  });
+  </script>
+</body>
+</html>
