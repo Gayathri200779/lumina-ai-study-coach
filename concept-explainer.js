@@ -1,3 +1,4 @@
+
 // ===== Character Counter =====
 const conceptInput = document.getElementById('concept-input');
 const charCurrent = document.getElementById('char-current');
@@ -11,8 +12,8 @@ const micBtn = document.getElementById('mic-btn');
 let isListening = false;
 let recognition = null;
 
-// Check if browser supports Speech Recognition
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
 if (SpeechRecognition) {
   recognition = new SpeechRecognition();
@@ -22,7 +23,9 @@ if (SpeechRecognition) {
 
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
-    conceptInput.value += (conceptInput.value ? ' ' : '') + transcript;
+    conceptInput.value +=
+      (conceptInput.value ? ' ' : '') + transcript;
+
     charCurrent.textContent = conceptInput.value.length;
   };
 
@@ -42,6 +45,7 @@ micBtn.addEventListener('click', () => {
     alert('Voice input is not supported in this browser. Try Chrome or Edge.');
     return;
   }
+
   if (isListening) {
     recognition.stop();
     isListening = false;
@@ -88,10 +92,21 @@ function showState(state) {
   loadingState.classList.add('hidden');
   resultContent.classList.add('hidden');
 
-  if (state === 'empty') emptyState.classList.remove('hidden');
-  if (state === 'loading') loadingState.classList.remove('hidden');
-  if (state === 'result') resultContent.classList.remove('hidden');
+  if (state === 'empty') {
+    emptyState.classList.remove('hidden');
+  }
+
+  if (state === 'loading') {
+    loadingState.classList.remove('hidden');
+  }
+
+  if (state === 'result') {
+    resultContent.classList.remove('hidden');
+  }
 }
+
+// ===== Track Generated Content Type =====
+let lastGeneratedType = 'ai-chat';
 
 // ===== Explain Button =====
 const explainBtn = document.getElementById('explain-btn');
@@ -109,7 +124,9 @@ explainBtn.addEventListener('click', async () => {
   explainBtn.disabled = true;
 
   const context = subjectContext.value.trim();
-  const prompt = `Explain "${topic}"${context ? ' in the context of ' + context : ''}. Level: ${selectedLevel}. Style: ${selectedStyle}.
+
+  const prompt =
+    `Explain "${topic}"${context ? ' in the context of ' + context : ''}. Level: ${selectedLevel}. Style: ${selectedStyle}.
 Rules:
 1. The very first line must start with "PICTURE:" followed by 4 to 6 emojis with arrows between them that show the idea step by step. Example: PICTURE: 🌞 → 💧 → 🌱 → 🍃
 2. Then leave an empty line.
@@ -129,10 +146,12 @@ Rules:
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: prompt })
     });
+
     const data = await response.json();
 
     if (data.reply) {
       const lines = data.reply.split('\n');
+
       if (lines[0].toUpperCase().startsWith('PICTURE:')) {
         picture = lines[0].replace(/^PICTURE:\s*/i, '').trim();
         text = lines.slice(1).join('\n').trim();
@@ -141,16 +160,18 @@ Rules:
       }
     }
   } catch (error) {
+    console.error('Explanation error:', error);
     text = 'Something went wrong. Please try again.';
   }
 
-  // Picture strip above the text
   let pictureBox = document.getElementById('picture-box');
+
   if (!pictureBox) {
     pictureBox = document.createElement('div');
     pictureBox.id = 'picture-box';
     resultText.parentNode.insertBefore(pictureBox, resultText);
   }
+
   pictureBox.textContent = picture;
   pictureBox.style.display = picture ? 'block' : 'none';
   pictureBox.style.fontSize = '40px';
@@ -165,12 +186,15 @@ Rules:
   resultText.style.lineHeight = '1.8';
   resultText.style.fontSize = '16px';
 
+  lastGeneratedType = 'ai-chat';
+
   showState('result');
   explainBtn.disabled = false;
 });
 
 // ===== Summarize Button =====
-const summarizeBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Summarize'));
+const summarizeBtn = Array.from(document.querySelectorAll('button'))
+  .find(button => button.textContent.includes('Summarize'));
 
 if (summarizeBtn) {
   summarizeBtn.disabled = false;
@@ -187,7 +211,9 @@ if (summarizeBtn) {
     summarizeBtn.disabled = true;
 
     const context = subjectContext.value.trim();
-    const prompt = `Summarize "${topic}"${context ? ' in the context of ' + context : ''}. Level: ${selectedLevel}. Give exactly 3 short points. Each point starts with an emoji and is one short, fun sentence on its own line. Then add a last line that starts with "Remember:". Keep it under 50 words. Leave an empty line between points. Do not use symbols like * or #.`;
+
+    const prompt =
+      `Summarize "${topic}"${context ? ' in the context of ' + context : ''}. Level: ${selectedLevel}. Give exactly 3 short points. Each point starts with an emoji and is one short, fun sentence on its own line. Then add a last line that starts with "Remember:". Keep it under 50 words. Leave an empty line between points. Do not use symbols like * or #.`;
 
     let text = 'Sorry, no answer came. Please try again.';
 
@@ -197,19 +223,29 @@ if (summarizeBtn) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: prompt })
       });
+
       const data = await response.json();
-      if (data.reply) text = data.reply;
+
+      if (data.reply) {
+        text = data.reply;
+      }
     } catch (error) {
+      console.error('Summary error:', error);
       text = 'Something went wrong. Please try again.';
     }
 
     const pictureBox = document.getElementById('picture-box');
-    if (pictureBox) pictureBox.style.display = 'none';
+
+    if (pictureBox) {
+      pictureBox.style.display = 'none';
+    }
 
     resultText.textContent = text;
     resultText.style.whiteSpace = 'pre-wrap';
     resultText.style.lineHeight = '1.8';
     resultText.style.fontSize = '16px';
+
+    lastGeneratedType = 'ai-summary';
 
     showState('result');
     summarizeBtn.disabled = false;
@@ -221,10 +257,14 @@ const copyBtn = document.getElementById('copy-btn');
 
 copyBtn.addEventListener('click', () => {
   const text = resultText.textContent;
-  if (!text) return;
+
+  if (!text.trim()) {
+    return;
+  }
 
   navigator.clipboard.writeText(text).then(() => {
     copyBtn.textContent = 'check';
+
     setTimeout(() => {
       copyBtn.textContent = 'content_copy';
     }, 1500);
@@ -233,13 +273,16 @@ copyBtn.addEventListener('click', () => {
   });
 });
 
-// ===== Listen Button (text-to-speech) =====
+// ===== Listen Button (Text-to-Speech) =====
 const listenBtn = document.getElementById('listen-btn');
 let isSpeaking = false;
 
 listenBtn.addEventListener('click', () => {
   const text = resultText.textContent;
-  if (!text) return;
+
+  if (!text.trim()) {
+    return;
+  }
 
   if (isSpeaking) {
     window.speechSynthesis.cancel();
@@ -249,7 +292,13 @@ listenBtn.addEventListener('click', () => {
   }
 
   const utterance = new SpeechSynthesisUtterance(text);
+
   utterance.onend = () => {
+    isSpeaking = false;
+    listenBtn.textContent = 'volume_up';
+  };
+
+  utterance.onerror = () => {
     isSpeaking = false;
     listenBtn.textContent = 'volume_up';
   };
@@ -259,30 +308,80 @@ listenBtn.addEventListener('click', () => {
   listenBtn.textContent = 'volume_off';
 });
 
-// ===== Save to My Notes Button =====
+// ===== Save Explanation or Summary to My Notes =====
 const saveBtn = document.getElementById('save-btn');
 
-saveBtn.addEventListener('click', () => {
-  const text = resultText.textContent;
-  const topic = conceptInput.value.trim();
+if (saveBtn) {
+  saveBtn.addEventListener('click', () => {
+    const content = resultText.textContent.trim();
+    const title = conceptInput.value.trim();
 
-  if (!text) {
-    alert('Generate an explanation first before saving.');
-    return;
-  }
+    if (!content) {
+      alert('Generate an explanation or summary before saving.');
+      return;
+    }
 
-  const notes = JSON.parse(localStorage.getItem('luminaNotes') || '[]');
-  notes.push({
-    topic: topic,
-    content: text,
-    level: selectedLevel,
-    style: selectedStyle,
-    savedAt: new Date().toISOString()
+    if (!title) {
+      alert('Please enter a topic first.');
+      return;
+    }
+
+    // Use the subject field, or ask for one if it is empty.
+    let subject = subjectContext.value.trim();
+
+    if (!subject) {
+      subject = prompt('Enter the subject name for this note:');
+
+      if (subject === null || !subject.trim()) {
+        alert('Please enter a subject name to save this note.');
+        return;
+      }
+
+      subject = subject.trim();
+    }
+
+    try {
+      const storedNotes = JSON.parse(
+        localStorage.getItem('luminaNotes') || '[]'
+      );
+
+      if (!Array.isArray(storedNotes)) {
+        throw new Error('Saved notes are not in the expected format.');
+      }
+
+      const now = new Date().toISOString();
+
+      const newNote = {
+        id: window.crypto && window.crypto.randomUUID
+          ? window.crypto.randomUUID()
+          : 'note-' + Date.now() + '-' +
+            Math.random().toString(36).slice(2),
+        title: title,
+        subject: subject,
+        content: content,
+        source: lastGeneratedType,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      storedNotes.push(newNote);
+
+      localStorage.setItem(
+        'luminaNotes',
+        JSON.stringify(storedNotes)
+      );
+
+      saveBtn.innerHTML =
+        '<span class="material-icons">check</span> Saved!';
+
+      setTimeout(() => {
+        saveBtn.innerHTML =
+          '<span class="material-icons">bookmark</span> Save to My Notes';
+      }, 1500);
+
+    } catch (error) {
+      console.error('Unable to save note:', error);
+      alert('Unable to save the note. Please try again.');
+    }
   });
-  localStorage.setItem('luminaNotes', JSON.stringify(notes));
-
-  saveBtn.innerHTML = '<span class="material-icons">check</span> Saved!';
-  setTimeout(() => {
-    saveBtn.innerHTML = '<span class="material-icons">bookmark</span> Save to My Notes';
-  }, 1500);
-});
+}
