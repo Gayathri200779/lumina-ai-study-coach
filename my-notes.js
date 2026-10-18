@@ -20,6 +20,7 @@ let expandedSubject = null;
 let editingNoteId = null;
 let currentSearch = "";
 let currentFilter = "";
+let activeReaderNoteId = null;
 
 const subjectIcons = [
   "📘", "🧠", "📊", "🐍", "🧪",
@@ -27,19 +28,8 @@ const subjectIcons = [
 ];
 
 function createId() {
-  if (window.crypto && window.crypto.randomUUID) {
-    return window.crypto.randomUUID();
-  }
-
-  return "note-" + Date.now() + "-" +
-    Math.random().toString(36).slice(2);
-}
-
-function isValidNote(note) {
-  return note &&
-    typeof note === "object" &&
-    typeof (note.title || note.topic) === "string" &&
-    typeof note.content === "string";
+  return window.crypto?.randomUUID?.() ||
+    "note-" + Date.now() + "-" + Math.random().toString(36).slice(2);
 }
 
 function normalizeNote(note) {
@@ -64,12 +54,10 @@ function loadNotes() {
 
     if (saved !== null) {
       const parsed = JSON.parse(saved);
-      if (!Array.isArray(parsed)) return [];
-
-      const normalized = parsed.filter(isValidNote).map(normalizeNote);
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-      return normalized;
+      return Array.isArray(parsed)
+        ? parsed.filter(n => n && typeof n === "object" &&
+            typeof n.content === "string").map(normalizeNote)
+        : [];
     }
 
     if (localStorage.getItem(LEGACY_KEY) !== "true") {
@@ -77,17 +65,12 @@ function loadNotes() {
         {
           title: "Neural Networks",
           subject: "Artificial Intelligence",
-          content: "Neural networks mimic brain structure using layers of nodes."
+          content: "Neural networks use connected nodes arranged in layers."
         },
         {
           title: "Supervised Learning",
           subject: "Artificial Intelligence",
-          content: "Supervised learning requires labelled training data."
-        },
-        {
-          title: "Reinforcement Learning",
-          subject: "Artificial Intelligence",
-          content: "Reinforcement learning improves actions using rewards."
+          content: "Supervised learning uses labelled training data."
         },
         {
           title: "Standard Deviation",
@@ -95,36 +78,11 @@ function loadNotes() {
           content: "Standard deviation measures how spread out values are."
         },
         {
-          title: "P-values",
-          subject: "Statistics",
-          content: "A p-value helps evaluate evidence against a statistical hypothesis."
-        },
-        {
           title: "List Comprehensions",
           subject: "Python",
           content: "List comprehensions provide a concise way to create lists."
-        },
-        {
-          title: "Virtual Environments",
-          subject: "Python",
-          content: "Virtual environments isolate project dependencies."
-        },
-        {
-          title: "Decorators",
-          subject: "Python",
-          content: "Decorators modify or extend the behaviour of functions."
         }
-      ].map(note => {
-        const now = new Date().toISOString();
-
-        return {
-          id: createId(),
-          ...note,
-          source: "manual",
-          createdAt: now,
-          updatedAt: now
-        };
-      });
+      ].map(n => normalizeNote(n));
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(examples));
       localStorage.setItem(LEGACY_KEY, "true");
@@ -159,19 +117,18 @@ function saveNotes() {
 }
 
 function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, character => ({
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
     "'": "&#39;"
-  })[character]);
+  })[char]);
 }
 
 function getSubjectNames() {
-  return [...new Set(
-    notes.map(note => note.subject.trim()).filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b));
+  return [...new Set(notes.map(n => n.subject).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
 }
 
 function getIcon(subject) {
@@ -189,22 +146,21 @@ function getIcon(subject) {
   if (icons[subject]) return icons[subject];
 
   let total = 0;
-
-  for (const character of subject) {
-    total += character.charCodeAt(0);
-  }
+  for (const char of subject) total += char.charCodeAt(0);
 
   return subjectIcons[total % subjectIcons.length];
 }
 
 function updateSubjectControls() {
+  if (!subjectFilter) return;
+
   const selected = subjectFilter.value;
   const subjects = getSubjectNames();
 
   subjectFilter.innerHTML =
     '<option value="">All Subjects</option>' +
-    subjects.map(subject =>
-      `<option value="${escapeHTML(subject)}">${escapeHTML(subject)}</option>`
+    subjects.map(s =>
+      `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`
     ).join("");
 
   subjectFilter.value = subjects.includes(selected) ? selected : "";
@@ -212,17 +168,15 @@ function updateSubjectControls() {
   const subjectOptions = document.getElementById("subjectOptions");
 
   if (subjectOptions) {
-    subjectOptions.innerHTML = subjects.map(subject =>
-      `<option value="${escapeHTML(subject)}"></option>`
+    subjectOptions.innerHTML = subjects.map(s =>
+      `<option value="${escapeHTML(s)}"></option>`
     ).join("");
   }
 }
 
-/* =========================================
-   FULL-SCREEN NOTE READER AND EDITOR
-========================================= */
+/* LARGE NOTE READING SCREEN */
 
-let noteReader = document.getElementById("noteReader");
+let noteReader = null;
 
 function ensureNoteReader() {
   if (noteReader) return noteReader;
@@ -233,390 +187,189 @@ function ensureNoteReader() {
   noteReader.setAttribute("aria-modal", "true");
   noteReader.setAttribute("aria-labelledby", "noteReaderTitle");
 
-  Object.assign(noteReader.style, {
-    display: "none",
-    position: "fixed",
-    inset: "0",
-    zIndex: "9999",
-    background: "#eefdef",
-    padding: "0",
-    boxSizing: "border-box",
-    alignItems: "stretch",
-    justifyContent: "stretch"
-  });
+  noteReader.innerHTML = `
+    <section class="note-reader-panel">
+      <button type="button" class="reader-close"
+        id="noteReaderClose" aria-label="Close note">×</button>
 
-  const panel = document.createElement("section");
-  panel.id = "noteReaderPanel";
+      <div class="reader-heading">
+        <p id="noteReaderSubject"></p>
+        <h2 id="noteReaderTitle"></h2>
+      </div>
 
-  Object.assign(panel.style, {
-    position: "relative",
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    height: "100%",
-    maxHeight: "100%",
-    overflow: "hidden",
-    background: "#FBFCFA",
-    color: "#121e16",
-    border: "0",
-    borderRadius: "0",
-    padding: "clamp(16px, 3vw, 32px)",
-    boxSizing: "border-box",
-    boxShadow: "none",
-    fontFamily: "Poppins, sans-serif"
-  });
+      <div id="noteReaderContent" class="reader-content"></div>
 
-  const close = document.createElement("button");
-  close.type = "button";
-  close.id = "noteReaderClose";
-  close.textContent = "✕";
-  close.setAttribute("aria-label", "Close note");
+      <div class="reader-footer">
+        <button type="button" id="noteReaderEdit" class="reader-edit">
+          Edit Note
+        </button>
+        <button type="button" id="noteReaderSave" class="reader-save"
+          hidden>Save Edit</button>
+        <button type="button" id="noteReaderCancel" class="reader-cancel"
+          hidden>Cancel</button>
+        <button type="button" id="noteReaderDone" class="reader-done">
+          Close
+        </button>
+      </div>
+    </section>
+  `;
 
-  Object.assign(close.style, {
-    position: "sticky",
-    top: "0",
-    float: "right",
-    alignSelf: "flex-end",
-    flexShrink: "0",
-    border: "0",
-    borderRadius: "10px",
-    width: "40px",
-    height: "40px",
-    background: "#e8f8ea",
-    color: "#37563b",
-    fontSize: "20px",
-    cursor: "pointer"
-  });
+  document.body.appendChild(noteReader);
 
-  close.addEventListener("click", closeNoteReader);
+  noteReader.querySelector("#noteReaderClose")
+    .addEventListener("click", closeNoteReader);
 
-  const subject = document.createElement("p");
-  subject.id = "noteReaderSubject";
+  noteReader.querySelector("#noteReaderDone")
+    .addEventListener("click", closeNoteReader);
 
-  Object.assign(subject.style, {
-    margin: "8px 50px 2px 0",
-    color: "#4f6f52",
-    fontWeight: "600",
-    fontSize: "12px"
-  });
+  noteReader.querySelector("#noteReaderEdit")
+    .addEventListener("click", enterReaderEditMode);
 
-  const title = document.createElement("h2");
-  title.id = "noteReaderTitle";
+  noteReader.querySelector("#noteReaderSave")
+    .addEventListener("click", saveReaderEdit);
 
-  Object.assign(title.style, {
-    margin: "0 50px 14px 0",
-    color: "#37563b",
-    fontSize: "clamp(16px, 2vw, 20px)",
-    fontWeight: "600",
-    lineHeight: "1.4",
-    overflowWrap: "anywhere"
-  });
-
-  const content = document.createElement("div");
-  content.id = "noteReaderContent";
-
-  Object.assign(content.style, {
-    flex: "1",
-    minHeight: "0",
-    width: "100%",
-    overflowY: "auto",
-    whiteSpace: "pre-wrap",
-    overflowWrap: "anywhere",
-    fontSize: "16px",
-    lineHeight: "1.9",
-    color: "#25352a",
-    padding: "18px 0",
-    boxSizing: "border-box"
-  });
-
-  const footer = document.createElement("div");
-
-  Object.assign(footer.style, {
-    display: "flex",
-    gap: "10px",
-    justifyContent: "flex-end",
-    flexWrap: "wrap",
-    flexShrink: "0",
-    marginTop: "10px",
-    paddingTop: "14px",
-    borderTop: "1px solid #d7e6d9"
-  });
-
-  const edit = document.createElement("button");
-  edit.type = "button";
-  edit.id = "noteReaderEdit";
-  edit.textContent = "Edit Note";
-
-  Object.assign(edit.style, {
-    border: "0",
-    borderRadius: "10px",
-    padding: "11px 18px",
-    background: "#4f6f52",
-    color: "#fff",
-    font: "inherit",
-    fontWeight: "600",
-    cursor: "pointer"
-  });
-
-  const done = document.createElement("button");
-  done.type = "button";
-  done.textContent = "Close";
-
-  Object.assign(done.style, {
-    border: "1px solid #cbdccb",
-    borderRadius: "10px",
-    padding: "11px 18px",
-    background: "#fff",
-    color: "#37563b",
-    font: "inherit",
-    cursor: "pointer"
-  });
-
-  done.addEventListener("click", closeNoteReader);
-
-  footer.append(edit, done);
-  panel.append(close, subject, title, content, footer);
-  noteReader.appendChild(panel);
+  noteReader.querySelector("#noteReaderCancel")
+    .addEventListener("click", cancelReaderEdit);
 
   noteReader.addEventListener("click", event => {
     if (event.target === noteReader) closeNoteReader();
   });
 
-  document.body.appendChild(noteReader);
-
   return noteReader;
 }
 
-function openNoteReader(note, startInEditMode = false) {
+function openNoteReader(note, editMode = false) {
   if (!note) return;
 
   ensureNoteReader();
+  activeReaderNoteId = note.id;
 
-  const subject = document.getElementById("noteReaderSubject");
-  const title = document.getElementById("noteReaderTitle");
-  const editButton = document.getElementById("noteReaderEdit");
-  const closeButton = document.getElementById("noteReaderClose");
+  document.getElementById("noteReaderSubject").textContent = note.subject;
+  document.getElementById("noteReaderTitle").textContent = note.title;
 
-  subject.textContent = "📚 " + note.subject;
-  title.textContent = note.title;
-
-  function showReadMode(updatedNote) {
-    subject.textContent = "📚 " + updatedNote.subject;
-    title.textContent = updatedNote.title;
-
-    const answer = document.createElement("div");
-    answer.id = "noteReaderContent";
-    answer.textContent = updatedNote.content;
-
-    Object.assign(answer.style, {
-      flex: "1",
-      minHeight: "0",
-      width: "100%",
-      overflowY: "auto",
-      whiteSpace: "pre-wrap",
-      overflowWrap: "anywhere",
-      fontSize: "16px",
-      lineHeight: "1.9",
-      color: "#25352a",
-      padding: "18px 0",
-      boxSizing: "border-box"
-    });
-
-    const currentContent = document.getElementById("noteReaderContent");
-
-    if (currentContent) {
-      currentContent.replaceWith(answer);
-    }
-
-    editButton.textContent = "Edit Note";
-    editButton.onclick = () => openNoteReader(updatedNote, true);
-  }
-
-  function showEditMode(currentNote) {
-    const currentContent = document.getElementById("noteReaderContent");
-
-    if (!currentContent) return;
-
-    const editor = document.createElement("textarea");
-    editor.id = "noteReaderContent";
-    editor.value = currentNote.content;
-    editor.setAttribute("aria-label", "Edit note answer");
-    editor.placeholder = "Edit your note here...";
-
-    Object.assign(editor.style, {
-      flex: "1",
-      minHeight: "0",
-      width: "100%",
-      resize: "none",
-      overflowY: "auto",
-      padding: "18px",
-      border: "1px solid #d7e6d9",
-      borderRadius: "12px",
-      background: "#ffffff",
-      color: "#25352a",
-      font: "inherit",
-      fontSize: "16px",
-      lineHeight: "1.9",
-      outlineColor: "#4f6f52",
-      boxSizing: "border-box"
-    });
-
-    currentContent.replaceWith(editor);
-
-    editButton.textContent = "Save Edit";
-
-    editButton.onclick = () => {
-      const editedContent = editor.value.trim();
-
-      if (!editedContent) {
-        window.alert("Please enter the note answer before saving.");
-        editor.focus();
-        return;
-      }
-
-      // Ask for the title with the current title already filled in.
-      const enteredTitle = window.prompt(
-        "Enter or confirm the note title:",
-        currentNote.title
-      );
-
-      if (enteredTitle === null) return;
-
-      const editedTitle = enteredTitle.trim();
-
-      if (!editedTitle) {
-        window.alert("The note title cannot be empty.");
-        return;
-      }
-
-      const index = notes.findIndex(item => item.id === currentNote.id);
-
-      if (index === -1) {
-        window.alert(
-          "This note could not be found. Please reopen it and try again."
-        );
-        return;
-      }
-
-      const originalNote = notes[index];
-
-      const updatedNote = {
-        ...originalNote,
-        title: editedTitle,
-        content: editedContent,
-        updatedAt: new Date().toISOString()
-      };
-
-      notes[index] = updatedNote;
-
-      if (!saveNotes()) {
-        notes[index] = originalNote;
-        window.alert("Unable to save the note. Please try again.");
-        return;
-      }
-
-      expandedSubject = updatedNote.subject;
-      render();
-      showReadMode(updatedNote);
-
-      window.alert("Note updated successfully!");
-    };
-
-    editor.focus();
-  }
-
-  // Rebuild the answer area in read mode when opening a note.
-  const oldContent = document.getElementById("noteReaderContent");
-
-  if (oldContent) {
-    const answer = document.createElement("div");
-    answer.id = "noteReaderContent";
-    answer.textContent = note.content;
-
-    Object.assign(answer.style, {
-      flex: "1",
-      minHeight: "0",
-      width: "100%",
-      overflowY: "auto",
-      whiteSpace: "pre-wrap",
-      overflowWrap: "anywhere",
-      fontSize: "16px",
-      lineHeight: "1.9",
-      color: "#25352a",
-      padding: "18px 0",
-      boxSizing: "border-box"
-    });
-
-    oldContent.replaceWith(answer);
-  }
-
-  editButton.textContent = "Edit Note";
-  editButton.onclick = () => showEditMode(note);
+  const content = document.getElementById("noteReaderContent");
+  content.textContent = note.content;
 
   noteReader.style.display = "flex";
-  document.body.style.overflow = "hidden";
+  document.body.classList.add("note-reader-open");
 
-  if (startInEditMode) {
-    showEditMode(note);
+  if (editMode) {
+    enterReaderEditMode();
   } else {
-    closeButton.focus();
+    setReaderMode(false);
   }
+}
+
+function setReaderMode(editing) {
+  const content = document.getElementById("noteReaderContent");
+
+  document.getElementById("noteReaderEdit").hidden = editing;
+  document.getElementById("noteReaderSave").hidden = !editing;
+  document.getElementById("noteReaderCancel").hidden = !editing;
+  document.getElementById("noteReaderDone").hidden = editing;
+
+  if (editing) {
+    content.innerHTML = "";
+
+    const textarea = document.createElement("textarea");
+    textarea.id = "noteReaderTextarea";
+    textarea.className = "reader-textarea";
+    textarea.setAttribute("aria-label", "Edit note answer");
+
+    const note = notes.find(n => n.id === activeReaderNoteId);
+    textarea.value = note ? note.content : "";
+
+    content.appendChild(textarea);
+    textarea.focus();
+  } else {
+    const note = notes.find(n => n.id === activeReaderNoteId);
+    if (note) content.textContent = note.content;
+  }
+}
+
+function enterReaderEditMode() {
+  setReaderMode(true);
+}
+
+function saveReaderEdit() {
+  const note = notes.find(n => n.id === activeReaderNoteId);
+  const textarea = document.getElementById("noteReaderTextarea");
+
+  if (!note || !textarea) return;
+
+  const newContent = textarea.value.trim();
+
+  if (!newContent) {
+    alert("The note answer cannot be empty.");
+    textarea.focus();
+    return;
+  }
+
+  const newTitle = prompt("Enter or confirm the note title:", note.title);
+
+  if (newTitle === null) return;
+
+  if (!newTitle.trim()) {
+    alert("The note title cannot be empty.");
+    return;
+  }
+
+  note.title = newTitle.trim();
+  note.content = newContent;
+  note.updatedAt = new Date().toISOString();
+
+  if (!saveNotes()) return;
+
+  render();
+  openNoteReader(note, false);
+  alert("Note updated successfully!");
+}
+
+function cancelReaderEdit() {
+  const note = notes.find(n => n.id === activeReaderNoteId);
+  if (note) openNoteReader(note, false);
 }
 
 function closeNoteReader() {
-  if (noteReader) {
-    noteReader.style.display = "none";
-  }
+  if (!noteReader) return;
 
-  document.body.style.overflow = "";
+  noteReader.style.display = "none";
+  document.body.classList.remove("note-reader-open");
+  activeReaderNoteId = null;
 }
 
-/* =========================================
-   DISPLAY SUBJECT CARDS AND TOPIC TITLES
-========================================= */
+/* SUBJECT CARDS AND NOTE LIST */
 
 function render() {
+  if (!grid) return;
+
   updateSubjectControls();
+  grid.innerHTML = "";
 
-  const term = currentSearch.trim().toLowerCase();
-
-  const filteredNotes = notes.filter(note => {
+  const filtered = notes.filter(note => {
     const matchesSearch =
-      note.title.toLowerCase().includes(term) ||
-      note.subject.toLowerCase().includes(term) ||
-      note.content.toLowerCase().includes(term);
+      (note.title + " " + note.content + " " + note.subject)
+        .toLowerCase().includes(currentSearch.toLowerCase());
 
-    const matchesSubject =
+    const matchesFilter =
       !currentFilter || note.subject === currentFilter;
 
-    return matchesSearch && matchesSubject;
+    return matchesSearch && matchesFilter;
   });
 
   const grouped = new Map();
 
-  filteredNotes.forEach(note => {
-    if (!grouped.has(note.subject)) {
-      grouped.set(note.subject, []);
-    }
-
+  filtered.forEach(note => {
+    if (!grouped.has(note.subject)) grouped.set(note.subject, []);
     grouped.get(note.subject).push(note);
   });
 
-  grid.innerHTML = "";
-
-  if (grouped.size === 0) {
+  if (!grouped.size) {
     const empty = document.createElement("div");
-    empty.className = "empty-state";
-
-    const message = document.createElement("p");
-    const icon = document.createElement("span");
-
-    icon.textContent = "📚";
-    message.textContent = notes.length === 0
-      ? "You haven't saved any notes yet. Click Create Note to get started."
-      : "No notes match your search or selected subject.";
-
-    empty.append(icon, message);
+    empty.className = "empty-notes";
+    empty.textContent = currentSearch || currentFilter
+      ? "No notes match your search."
+      : "No notes yet. Create your first note.";
     grid.appendChild(empty);
     return;
   }
@@ -631,10 +384,8 @@ function render() {
       header.className = "subject-header";
       header.tabIndex = 0;
       header.setAttribute("role", "button");
-      header.setAttribute(
-        "aria-expanded",
-        String(expandedSubject === subjectName)
-      );
+      header.setAttribute("aria-expanded",
+        String(expandedSubject === subjectName));
 
       header.innerHTML = `
         <div class="subject-icon">${getIcon(subjectName)}</div>
@@ -675,34 +426,21 @@ function render() {
           const item = document.createElement("li");
           item.className = "note-item";
 
-          const content = document.createElement("div");
-          content.className = "note-content";
+          const noteButton = document.createElement("button");
+          noteButton.type = "button";
+          noteButton.className = "note-content";
+          noteButton.setAttribute("aria-label", "Read note: " + note.title);
 
           const title = document.createElement("span");
           title.className = "note-title";
           title.textContent = note.title;
 
-          const body = document.createElement("p");
-          body.className = "note-text";
-          body.textContent = note.content;
+          const preview = document.createElement("p");
+          preview.className = "note-text";
+          preview.textContent = note.content;
 
-          content.append(title, body);
-          content.tabIndex = 0;
-          content.setAttribute("role", "button");
-          content.setAttribute(
-            "aria-label",
-            "Read full note: " + note.title
-          );
-          content.style.cursor = "pointer";
-
-          content.addEventListener("click", () => openNoteReader(note));
-
-          content.addEventListener("keydown", event => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              openNoteReader(note);
-            }
-          });
+          noteButton.append(title, preview);
+          noteButton.addEventListener("click", () => openNoteReader(note));
 
           if (note.source === "ai-chat" || note.source === "ai-summary") {
             const source = document.createElement("span");
@@ -710,8 +448,7 @@ function render() {
             source.textContent = note.source === "ai-chat"
               ? "✦ AI Chat Explanation"
               : "✦ AI Summary";
-
-            content.appendChild(source);
+            noteButton.appendChild(source);
           }
 
           const actions = document.createElement("div");
@@ -720,36 +457,29 @@ function render() {
           const editButton = document.createElement("button");
           editButton.type = "button";
           editButton.className = "small-action";
-          editButton.textContent = "Edit";
-
-          editButton.addEventListener("click", () => {
-            openNoteReader(note, true);
-          });
+          editButton.textContent = "Edit Note";
+          editButton.addEventListener("click", () =>
+            openNoteReader(note, true));
 
           const deleteButton = document.createElement("button");
           deleteButton.type = "button";
           deleteButton.className = "small-action delete";
-          deleteButton.textContent = "✕";
-          deleteButton.setAttribute("aria-label", "Delete " + note.title);
-
+          deleteButton.textContent = "Delete";
           deleteButton.addEventListener("click", () => deleteNote(note.id));
 
           actions.append(editButton, deleteButton);
-          item.append(content, actions);
+          item.append(noteButton, actions);
           list.appendChild(item);
         });
 
         detail.appendChild(list);
 
-        // Quick note input inside each subject.
         const quickAdd = document.createElement("div");
         quickAdd.className = "add-note-row";
-
         quickAdd.innerHTML = `
           <input class="add-note-input" type="text"
-                 maxlength="50000"
-                 placeholder="Write a quick note..."
-                 aria-label="Quick note content">
+            maxlength="50000" placeholder="Write a quick note..."
+            aria-label="Quick note content">
           <button class="add-note-btn" type="button">Add</button>
         `;
 
@@ -757,7 +487,6 @@ function render() {
 
         function addQuickNote() {
           const content = quickInput.value.trim();
-
           if (!content) {
             quickInput.focus();
             return;
@@ -777,9 +506,8 @@ function render() {
             updatedAt: now
           });
 
-          if (saveNotes()) {
-            render();
-          }
+          saveNotes();
+          render();
         }
 
         quickAdd.querySelector("button")
@@ -800,11 +528,11 @@ function render() {
     });
 }
 
-/* =========================================
-   CREATE NOTE POPUP
-========================================= */
+/* CREATE AND DELETE NOTES */
 
 function openCreateModal() {
+  if (!noteForm || !modal) return;
+
   editingNoteId = null;
   noteForm.reset();
 
@@ -812,159 +540,124 @@ function openCreateModal() {
   saveNoteBtn.textContent = "Save Note";
   saveStatus.textContent = "";
 
-  if (currentFilter) {
-    noteSubject.value = currentFilter;
-  }
-
-  modal.classList.add("show");
-  noteTitle.focus();
-}
-
-function openEditModal(id) {
-  const note = notes.find(item => item.id === id);
-  if (!note) return;
-
-  editingNoteId = id;
-  noteTitle.value = note.title;
-  noteSubject.value = note.subject;
-  noteContent.value = note.content;
-
-  modalTitle.textContent = "Edit Note";
-  saveNoteBtn.textContent = "Save Changes";
-  saveStatus.textContent = "";
+  if (currentFilter) noteSubject.value = currentFilter;
 
   modal.classList.add("show");
   noteTitle.focus();
 }
 
 function closeModal() {
+  if (!modal || !noteForm) return;
+
   modal.classList.remove("show");
   noteForm.reset();
   editingNoteId = null;
-  saveStatus.textContent = "";
+
+  if (saveStatus) saveStatus.textContent = "";
 }
 
-/* =========================================
-   DELETE NOTE
-========================================= */
-
 function deleteNote(id) {
-  const note = notes.find(item => item.id === id);
+  const note = notes.find(n => n.id === id);
   if (!note) return;
 
-  if (!window.confirm(`Delete "${note.title}"? This cannot be undone.`)) {
-    return;
-  }
+  if (!confirm(`Delete "${note.title}"? This cannot be undone.`)) return;
 
-  notes = notes.filter(item => item.id !== id);
+  notes = notes.filter(n => n.id !== id);
 
-  if (!notes.some(item => item.subject === expandedSubject)) {
+  if (activeReaderNoteId === id) closeNoteReader();
+
+  if (!notes.some(n => n.subject === expandedSubject)) {
     expandedSubject = null;
   }
 
-  if (saveNotes()) {
-    render();
-  }
+  saveNotes();
+  render();
 }
 
-/* =========================================
-   CREATE AND SAVE NOTE FORM
-========================================= */
+if (noteForm) {
+  noteForm.addEventListener("submit", event => {
+    event.preventDefault();
 
-noteForm.addEventListener("submit", event => {
-  event.preventDefault();
+    const title = noteTitle.value.trim();
+    const subject = noteSubject.value.trim();
+    const content = noteContent.value.trim();
 
-  const title = noteTitle.value.trim();
-  const subject = noteSubject.value.trim();
-  const content = noteContent.value.trim();
+    if (!title || !subject || !content) {
+      saveStatus.textContent = "Please fill in all three fields.";
+      return;
+    }
 
-  if (!title || !subject || !content) {
-    saveStatus.textContent = "Please fill in all three fields.";
-    return;
-  }
+    const now = new Date().toISOString();
 
-  const now = new Date().toISOString();
+    if (editingNoteId) {
+      const index = notes.findIndex(n => n.id === editingNoteId);
+      if (index < 0) return;
 
-  if (editingNoteId) {
-    const index = notes.findIndex(note => note.id === editingNoteId);
-    if (index === -1) return;
+      notes[index] = {
+        ...notes[index],
+        title,
+        subject,
+        content,
+        updatedAt: now
+      };
+    } else {
+      notes.push({
+        id: createId(),
+        title,
+        subject,
+        content,
+        source: "manual",
+        createdAt: now,
+        updatedAt: now
+      });
+    }
 
-    notes[index] = {
-      ...notes[index],
-      title,
-      subject,
-      content,
-      updatedAt: now
-    };
-  } else {
-    notes.push({
-      id: createId(),
-      title,
-      subject,
-      content,
-      source: "manual",
-      createdAt: now,
-      updatedAt: now
-    });
-  }
+    expandedSubject = subject;
 
-  expandedSubject = subject;
+    if (saveNotes()) closeModal();
 
-  if (saveNotes()) {
-    closeModal();
     render();
-  }
-});
+  });
+}
 
 document.getElementById("createNoteBtn")
-  .addEventListener("click", openCreateModal);
+  ?.addEventListener("click", openCreateModal);
 
 document.getElementById("closeModalBtn")
-  .addEventListener("click", closeModal);
+  ?.addEventListener("click", closeModal);
 
 document.getElementById("cancelModalBtn")
-  .addEventListener("click", closeModal);
+  ?.addEventListener("click", closeModal);
 
-modal.addEventListener("click", event => {
-  if (event.target === modal) {
-    closeModal();
-  }
+modal?.addEventListener("click", event => {
+  if (event.target === modal) closeModal();
 });
 
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") {
-    if (noteReader && noteReader.style.display === "flex") {
-      closeNoteReader();
-    }
-
-    if (modal.classList.contains("show")) {
-      closeModal();
-    }
+    if (noteReader?.style.display === "flex") closeNoteReader();
+    if (modal?.classList.contains("show")) closeModal();
   }
 });
 
-searchInput.addEventListener("input", event => {
+searchInput?.addEventListener("input", event => {
   currentSearch = event.target.value;
   render();
 });
 
-subjectFilter.addEventListener("change", event => {
+subjectFilter?.addEventListener("change", event => {
   currentFilter = event.target.value;
   render();
 });
 
-/* =========================================
-   SAVE NOTES FROM AI PAGES
-========================================= */
+/* AI PAGES CAN SAVE NOTES THROUGH window.LuminaNotes.save() */
 
 window.LuminaNotes = {
   save(noteData) {
-    if (
-      !noteData ||
-      typeof noteData.title !== "string" ||
-      typeof noteData.subject !== "string" ||
-      typeof noteData.content !== "string"
-    ) {
+    if (!noteData ||
+        typeof noteData.title !== "string" ||
+        typeof noteData.subject !== "string" ||
+        typeof noteData.content !== "string") {
       return {
         success: false,
         message: "A title, subject and content are required."
@@ -982,11 +675,6 @@ window.LuminaNotes = {
       };
     }
 
-    const allowedSources = ["manual", "ai-chat", "ai-summary"];
-    const source = allowedSources.includes(noteData.source)
-      ? noteData.source
-      : "manual";
-
     const now = new Date().toISOString();
 
     const newNote = {
@@ -994,22 +682,23 @@ window.LuminaNotes = {
       title,
       subject,
       content,
-      source,
+      source: ["manual", "ai-chat", "ai-summary"].includes(noteData.source)
+        ? noteData.source
+        : "manual",
       createdAt: now,
       updatedAt: now
     };
 
     try {
-      const existing = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]"
-      );
+      const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
-      if (!Array.isArray(existing)) {
-        throw new Error("Stored notes are not in the expected format.");
-      }
+      if (!Array.isArray(existing)) throw new Error("Invalid saved notes.");
 
       existing.push(newNote);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+
+      notes = loadNotes();
+      render();
 
       return {
         success: true,
