@@ -61,7 +61,6 @@ button {
   white-space: nowrap;
 }
 
-/* Bold and clear Home button */
 .home-btn {
   display: inline-flex;
   align-items: center;
@@ -273,7 +272,7 @@ h1 {
   font-size: 12px;
 }
 
-/* Notes inside each subject */
+/* Existing note-related styles */
 .subject-detail {
   margin-top: 18px;
   padding-top: 15px;
@@ -358,7 +357,6 @@ h1 {
   background: #fff2f2;
 }
 
-/* Add note inside a subject */
 .add-note-row {
   display: flex;
   gap: 8px;
@@ -429,7 +427,7 @@ h1 {
   font-size: 12px;
 }
 
-/* Create and edit popup */
+/* Original create/edit form: full-screen layout overrides below */
 .modal {
   position: fixed;
   inset: 0;
@@ -489,7 +487,7 @@ h1 {
   background: #d9f0dd;
 }
 
-/* Note form */
+/* Note form fields */
 .form-group {
   display: grid;
   gap: 7px;
@@ -574,6 +572,379 @@ textarea:focus-visible {
   outline-offset: 3px;
 }
 
+/* =========================================
+   FULL-SCREEN NOTE READER
+   ========================================= */
+
+#luminaReaderOverlay {
+  z-index: 9001;
+  padding: 0;
+}
+
+#luminaReaderOverlay.lumina-popup-open {
+  display: flex;
+}
+
+.lumina-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(31, 47, 37, .42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.lumina-popup-overlay.lumina-popup-open {
+  display: flex;
+}
+
+.lumina-popup-panel {
+  width: min(540px, 100%);
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #FBFCFA;
+  color: #344638;
+  border: 1px solid #DDE9DF;
+  border-radius: 20px;
+  box-shadow: 0 20px 65px rgba(30, 55, 37, .22);
+  font-family: inherit;
+}
+
+.lumina-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px 22px;
+  background: #F6FAF7;
+  border-bottom: 1px solid #E4EEE6;
+}
+
+.lumina-popup-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.lumina-popup-heading h2 {
+  margin: 0;
+  color: #4F6F52;
+  font-size: 20px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.lumina-popup-subtitle {
+  margin: 5px 0 0;
+  color: #718174;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.lumina-popup-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #DCE8DE;
+  border-radius: 50%;
+  background: #FFFFFF;
+  color: #4F6F52;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lumina-popup-close:hover {
+  background: #EAF4EC;
+}
+
+/* Subject topic list */
+.lumina-topics-list {
+  padding: 12px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.lumina-topic-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid #EAF0EB;
+}
+
+.lumina-topic-title {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #344638;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.lumina-topic-title:hover {
+  background: #EEF8F3;
+  color: #4F6F52;
+}
+
+.lumina-topic-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.lumina-topic-action {
+  padding: 7px 9px;
+  border: 1px solid #DCE8DE;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #4F6F52;
+  font-size: 12px;
+}
+
+.lumina-topic-action:hover {
+  background: #EEF8F3;
+}
+
+.lumina-topic-action.delete {
+  color: #B24A4A;
+}
+
+.lumina-topics-footer {
+  padding: 13px 18px;
+  border-top: 1px solid #E4EEE6;
+  background: #F6FAF7;
+}
+
+.lumina-quick-add-toggle {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px dashed #A9C4AD;
+  border-radius: 10px;
+  background: transparent;
+  color: #4F6F52;
+  font-size: 14px;
+}
+
+.lumina-quick-add-form {
+  display: none;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.lumina-quick-add-form.visible {
+  display: flex;
+}
+
+.lumina-quick-add-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #D5E3D8;
+  border-radius: 9px;
+  outline-color: #6B9080;
+}
+
+.lumina-quick-add-form button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: #6B9080;
+  color: white;
+}
+
+.lumina-topic-empty {
+  padding: 26px 12px;
+  color: #718174;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Reader fills the entire screen */
+.lumina-reader-panel {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.lumina-reader-header {
+  flex-shrink: 0;
+  padding: 12px 24px;
+}
+
+.lumina-reader-header .lumina-popup-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.lumina-reader-header .lumina-popup-subtitle {
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.lumina-reader-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 28px clamp(20px, 7vw, 90px);
+  background: #FBFCFA;
+  overscroll-behavior: contain;
+}
+
+.lumina-reader-answer {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  color: #344638;
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  line-height: 2;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lumina-reader-source {
+  display: inline-block;
+  margin-top: 22px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #EEF8F3;
+  color: #4F6F52;
+  font-size: 12px;
+}
+
+.lumina-reader-footer {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid #E4EEE6;
+  background: #F6FAF7;
+}
+
+.lumina-reader-footer button {
+  padding: 10px 17px;
+  border: 1px solid #D5E3D8;
+  border-radius: 9px;
+  background: #FFFFFF;
+  color: #4F6F52;
+}
+
+.lumina-reader-footer .lumina-reader-edit {
+  background: #6B9080;
+  color: #FFFFFF;
+  border-color: #6B9080;
+}
+
+.lumina-reader-footer .lumina-reader-delete {
+  color: #B24A4A;
+}
+
+.lumina-reader-left,
+.lumina-reader-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lumina-popup-overlay button:focus-visible {
+  outline: 2px solid #6B9080;
+  outline-offset: 3px;
+}
+
+/* =========================================
+   FULL-SCREEN CREATE AND EDIT NOTE FORM
+   ========================================= */
+
+.modal.show {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10000 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.modal.show .modal-card {
+  display: flex;
+  flex-direction: column;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 22px clamp(18px, 5vw, 64px) !important;
+  overflow-y: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.modal.show .modal-heading {
+  flex-shrink: 0;
+  margin-bottom: 18px !important;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-green);
+}
+
+.modal.show .modal-heading h2 {
+  font-size: 19px !important;
+}
+
+.modal.show .modal-heading p {
+  font-size: 11px !important;
+  overflow-wrap: anywhere;
+}
+
+.modal.show .form-group {
+  margin-bottom: 14px;
+}
+
+.modal.show .form-group label {
+  font-size: 12px;
+}
+
+.modal.show .form-group input,
+.modal.show .form-group select {
+  min-height: 44px;
+}
+
+.modal.show .form-group textarea {
+  min-height: 40vh;
+  min-height: 40dvh;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.modal.show .modal-actions {
+  flex-shrink: 0;
+  margin-top: 12px;
+  padding-bottom: 8px;
+}
+
+.modal.show .save-status {
+  flex-shrink: 0;
+}
+
 /* Tablet layout */
 @media (max-width: 1000px) {
   .navbar {
@@ -628,16 +999,84 @@ textarea:focus-visible {
     font-size: 19px;
   }
 
-  .modal-card {
-    padding: 20px;
-  }
-
   .footer {
     padding: 22px 16px;
   }
 
   .note-item {
     flex-wrap: wrap;
+  }
+
+  .lumina-popup-overlay {
+    padding: 10px;
+  }
+
+  .lumina-popup-panel {
+    max-height: 88vh;
+    border-radius: 15px;
+  }
+
+  .lumina-popup-header {
+    padding: 16px;
+  }
+
+  .lumina-popup-heading h2 {
+    font-size: 18px;
+  }
+
+  .lumina-topic-row {
+    gap: 5px;
+  }
+
+  .lumina-topic-actions {
+    gap: 4px;
+  }
+
+  .lumina-topic-action {
+    padding: 7px;
+  }
+
+  #luminaReaderOverlay {
+    padding: 0;
+  }
+
+  #luminaReaderOverlay .lumina-reader-panel {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  #luminaReaderOverlay .lumina-reader-header {
+    padding: 10px 14px;
+  }
+
+  #luminaReaderOverlay .lumina-reader-content {
+    padding: 20px 16px;
+  }
+
+  #luminaReaderOverlay .lumina-reader-answer {
+    font-size: 15px;
+    line-height: 1.9;
+  }
+
+  .lumina-reader-footer {
+    padding: 10px;
+    flex-wrap: wrap;
+  }
+
+  .lumina-reader-footer button {
+    padding: 9px 11px;
+    font-size: 13px;
+  }
+
+  .modal.show .modal-card {
+    padding: 16px !important;
+  }
+
+  .modal.show .form-group textarea {
+    min-height: 35vh;
+    min-height: 35dvh;
   }
 }
 
