@@ -97,7 +97,7 @@ button {
 
 .note-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 12px;
@@ -119,25 +119,13 @@ button {
 
 .note-title {
   display: block;
-  margin-bottom: 5px;
   color: var(--lumina-dark);
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
-.note-text {
-  display: -webkit-box;
-  overflow: hidden;
-  margin: 0;
-  color: #647469;
-  font-size: 12px;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.note-content:hover .note-title {
+.note-content:hover .note-title,
+.note-content:focus-visible .note-title {
   text-decoration: underline;
 }
 
@@ -210,18 +198,20 @@ button {
   border-radius: var(--lumina-radius);
 }
 
-/* Large note-reading screen */
+/* =========================================================
+   FULL-SCREEN NOTE READER / EDITOR
+   ========================================================= */
 
 #noteReader {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  display: none;
-  align-items: stretch;
-  justify-content: stretch;
+  display: none;               /* JS switches this to flex */
+  width: 100%;
+  height: 100dvh;
   padding: 0;
-  background: #EEF8F3;
-  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--lumina-bg);
 }
 
 #noteReader,
@@ -229,81 +219,73 @@ button {
   box-sizing: border-box;
 }
 
-.note-reader-panel {
+#noteReader .note-reader-panel {
   position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: clamp(18px, 4vw, 48px);
+  margin: 0;
+  padding: 20px 32px 14px;
   overflow: hidden;
   color: var(--lumina-text);
   background: var(--lumina-card);
   font-family: "Poppins", sans-serif;
 }
 
-.reader-close {
-  position: absolute;
-  top: 18px;
-  right: 20px;
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  color: var(--lumina-dark);
-  background: #E8F3E9;
-  border: 1px solid var(--lumina-border);
-  border-radius: 12px;
-  font-size: 25px;
-  line-height: 1;
-}
-
-.reader-close:hover {
-  background: #DCEDE0;
-}
-
-.reader-heading {
-  flex-shrink: 0;
-  padding-right: 48px;
-  padding-bottom: 18px;
+/* Small header area: subject + title */
+#noteReader .reader-heading {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 48px 12px 0;
   border-bottom: 1px solid var(--lumina-border);
 }
 
-#noteReaderSubject {
-  margin: 0 0 5px;
+#noteReader #noteReaderSubject {
+  margin: 0 0 3px;
   color: var(--lumina-accent);
   font-size: 12px;
   font-weight: 600;
 }
 
-#noteReaderTitle {
+#noteReader #noteReaderTitle {
   margin: 0;
   color: var(--lumina-dark);
-  font-size: clamp(17px, 2vw, 22px);
+  font-size: 19px;
   font-weight: 600;
-  line-height: 1.45;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
-.reader-content {
-  flex: 1;
+/* Large main area: the full note answer (scrolls when long) */
+#noteReader .reader-content {
+  flex: 1 1 0;
   min-height: 0;
   width: 100%;
-  padding: 24px 2px;
+  margin: 0;
+  padding: 20px 2px;
   overflow-y: auto;
   color: var(--lumina-text);
-  font-size: clamp(15px, 1.4vw, 18px);
-  line-height: 1.9;
+  font-size: 17px;
+  line-height: 1.85;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.reader-textarea {
+/* While editing, the textarea fills the area and scrolls itself */
+#noteReader .reader-content.editing {
+  padding: 14px 0;
+  overflow: hidden;
+}
+
+#noteReader .reader-textarea {
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 250px;
-  padding: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 16px 18px;
+  overflow-y: auto;
   color: var(--lumina-text);
   background: #FFFFFF;
   border: 1px solid var(--lumina-border);
@@ -312,48 +294,88 @@ button {
   resize: none;
   font-family: "Poppins", sans-serif;
   font-size: 16px;
-  line-height: 1.9;
+  line-height: 1.8;
 }
 
-.reader-footer {
+#noteReader .reader-footer {
+  flex: 0 0 auto;
   display: flex;
-  flex-shrink: 0;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 16px;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 0 0;
   border-top: 1px solid var(--lumina-border);
 }
 
-.reader-footer button {
-  padding: 11px 19px;
-  border-radius: 10px;
-  font-size: 14px;
+#noteReader .reader-footer button {
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 500;
 }
 
-.reader-edit,
-.reader-save {
+#noteReader .reader-edit,
+#noteReader .reader-save {
   color: white;
   background: var(--lumina-green);
   border: 1px solid var(--lumina-green);
 }
 
-.reader-edit:hover,
-.reader-save:hover {
+#noteReader .reader-edit:hover,
+#noteReader .reader-save:hover {
   background: var(--lumina-dark);
 }
 
-.reader-cancel,
-.reader-done {
+#noteReader .reader-cancel,
+#noteReader .reader-done {
   color: var(--lumina-dark);
   background: white;
   border: 1px solid var(--lumina-border);
 }
 
-.reader-cancel:hover,
-.reader-done:hover {
+#noteReader .reader-cancel:hover,
+#noteReader .reader-done:hover {
   background: var(--lumina-soft);
+}
+
+#noteReader .reader-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--lumina-dark);
+  background: #E8F3E9;
+  border: 1px solid var(--lumina-border);
+  border-radius: 10px;
+  font-size: 21px;
+  line-height: 1;
+}
+
+#noteReader .reader-close:hover {
+  background: #DCEDE0;
+}
+
+/* Success message shown after Save Edit */
+#noteReader .reader-toast {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  max-width: calc(100% - 120px);
+  padding: 9px 18px;
+  color: #1F4D2B;
+  background: #DDF1E1;
+  border: 1px solid #A9D4B3;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(55, 86, 59, 0.15);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
 }
 
 [hidden] {
@@ -393,160 +415,25 @@ body.note-reader-open {
     flex-direction: column;
   }
 
-  .note-reader-panel {
-    padding: 18px;
-  }
-
-  .reader-close {
-    top: 12px;
-    right: 12px;
-    width: 38px;
-    height: 38px;
-  }
-
-  .reader-heading {
-    padding-right: 42px;
-  }
-
-  .reader-content {
-    padding: 18px 0;
-  }
-
-  .reader-footer {
-    justify-content: stretch;
-  }
-
-  .reader-footer button {
-    flex: 1;
-  }
-}
-
-
-/* FIX: Use the full screen for reading and editing notes */
-
-#noteReader {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100dvh !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  align-items: stretch !important;
-  justify-content: stretch !important;
-  background: #F6FAF7 !important;
-}
-
-#noteReader .note-reader-panel {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  max-width: none !important;
-  height: 100% !important;
-  max-height: none !important;
-  margin: 0 !important;
-  padding: 20px 32px 14px !important;
-  overflow: hidden !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-#noteReader .reader-heading {
-  flex: 0 0 auto !important;
-  padding: 0 42px 12px 0 !important;
-  margin: 0 !important;
-}
-
-#noteReader #noteReaderSubject {
-  margin: 0 0 3px !important;
-  font-size: 12px !important;
-}
-
-#noteReader #noteReaderTitle {
-  margin: 0 !important;
-  font-size: 19px !important;
-  line-height: 1.4 !important;
-}
-
-#noteReader .reader-content {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
-  height: auto !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 16px 2px !important;
-  overflow: hidden !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  font-size: 16px !important;
-  line-height: 1.8 !important;
-  white-space: pre-wrap !important;
-  overflow-wrap: anywhere !important;
-}
-
-#noteReader .reader-textarea {
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 12px 14px !important;
-  resize: none !important;
-  overflow-y: auto !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  outline: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  font-family: "Poppins", sans-serif !important;
-  font-size: 16px !important;
-  line-height: 1.8 !important;
-}
-
-#noteReader .reader-footer {
-  flex: 0 0 auto !important;
-  display: flex !important;
-  justify-content: flex-end !important;
-  gap: 8px !important;
-  padding: 10px 0 0 !important;
-  margin: 0 !important;
-  border-top: 1px solid #D7E6D9 !important;
-}
-
-#noteReader .reader-footer button {
-  flex: 0 0 auto !important;
-  min-width: 0 !important;
-  padding: 8px 14px !important;
-  border-radius: 8px !important;
-  font-size: 13px !important;
-}
-
-#noteReader .reader-close {
-  top: 14px !important;
-  right: 18px !important;
-  width: 34px !important;
-  height: 34px !important;
-  font-size: 21px !important;
-}
-
-@media (max-width: 600px) {
   #noteReader .note-reader-panel {
-    padding: 16px 16px 12px !important;
+    padding: 16px 16px 12px;
   }
 
   #noteReader #noteReaderTitle {
-    font-size: 17px !important;
+    font-size: 17px;
   }
 
   #noteReader .reader-content,
   #noteReader .reader-textarea {
-    font-size: 15px !important;
+    font-size: 15px;
   }
 
   #noteReader .reader-footer button {
-    padding: 8px 10px !important;
+    padding: 8px 12px;
+  }
+
+  #noteReader .reader-toast {
+    max-width: calc(100% - 80px);
+    font-size: 12px;
   }
 }
-
