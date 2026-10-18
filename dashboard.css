@@ -1,4 +1,3 @@
-```css
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
@@ -21,6 +20,7 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: var(--page-bg);
 }
 
 body {
@@ -56,6 +56,8 @@ a {
   display: flex;
   align-items: center;
   gap: 24px;
+  margin-right: auto;
+  margin-left: 12px;
 }
 
 .nav-links a {
@@ -223,14 +225,8 @@ a {
   min-width: 0;
   padding: 20px;
   background: var(--white);
-  border: 1px solid var(--border-green);
+  border: 2px solid var(--border-green);
   border-radius: 14px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.subject-card:hover {
-  border-color: var(--accent);
-  box-shadow: 0 6px 18px rgba(55, 86, 59, 0.07);
 }
 
 .subject-card h3 {
@@ -280,19 +276,27 @@ a {
 .primary-link {
   display: inline-block;
   margin-top: 20px;
-  padding: 11px 19px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--white);
+  padding: 10px 18px;
+  background-color: transparent;
+  color: var(--dark-green);
+  border: 1px solid #8eaa92;
+  border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .primary-link:hover {
-  background: var(--dark-green);
-  transform: translateY(-1px);
+  background-color: #d7e6d9;
+  color: var(--dark-green);
+  border-color: var(--accent);
+  box-shadow: 0 5px 12px rgba(55, 86, 59, 0.15);
+  transform: translateY(-2px);
 }
 
 /* AI Learning Tools and My Study Space */
@@ -302,24 +306,24 @@ a {
   gap: 18px;
 }
 
+.tools-grid-single {
+  grid-template-columns: 1fr;
+}
+
+.tools-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .tool-card {
   display: flex;
   flex-direction: column;
   min-width: 0;
   padding: 22px;
   background: var(--white);
-  border: 1px solid var(--border-green);
+  border: 2px solid var(--border-green);
   border-radius: 15px;
   color: inherit;
   text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.tool-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--accent);
-  box-shadow: 0 8px 22px rgba(55, 86, 59, 0.09);
 }
 
 .tool-icon {
@@ -347,11 +351,51 @@ a {
   flex-grow: 1;
 }
 
+/* The two functions shown inside the AI Study Assistant card */
+.tool-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.feature-chip {
+  padding: 6px 12px;
+  background: var(--soft-green);
+  border: 1px solid var(--border-green);
+  border-radius: 999px;
+  color: var(--dark-green);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .open-link {
   margin-top: 18px;
   color: var(--dark-green);
   font-size: 12px;
   font-weight: 700;
+}
+
+/* Same clear hover design for all dashboard cards */
+.subject-card,
+.tool-card {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.subject-card:hover,
+.tool-card:hover {
+  background-color: var(--soft-green);
+  border-color: var(--accent);
+  box-shadow: 0 8px 20px rgba(55, 86, 59, 0.16);
+  transform: translateY(-4px);
+}
+
+.tool-card:hover .feature-chip {
+  background: var(--white);
 }
 
 /* Learning goals */
@@ -447,6 +491,10 @@ button:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .tools-grid-single {
+    grid-template-columns: 1fr;
+  }
+
   .nav-links {
     gap: 14px;
   }
@@ -455,20 +503,12 @@ button:focus-visible {
 /* Mobile */
 @media (max-width: 600px) {
   .navbar {
-    flex-wrap: wrap;
     gap: 14px;
     padding: 14px 16px;
   }
 
   .logo {
     font-size: 18px;
-  }
-
-  .nav-links {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-    gap: 22px;
   }
 
   .nav-links a {
@@ -490,6 +530,7 @@ button:focus-visible {
   }
 
   .tools-grid,
+  .tools-grid-two,
   .subject-grid {
     grid-template-columns: 1fr;
   }
@@ -523,86 +564,10 @@ button:focus-visible {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
-}
 
-/* Clearer hover effect for subject cards */
-.subject-card {
-  background-color: #ffffff;
-  border: 1px solid #d7e6d9;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+  .subject-card:hover,
+  .tool-card:hover,
+  .primary-link:hover {
+    transform: none;
+  }
 }
-
-.subject-card:hover {
-  background-color: #e8f8ea;
-  border: 2px solid #4f6f52;
-  box-shadow: 0 8px 20px rgba(55, 86, 59, 0.16);
-  transform: translateY(-4px);
-}
-
-/* Softer Manage My Subjects link */
-.primary-link {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 10px 18px;
-  background-color: transparent;
-  color: #37563b;
-  border: 1px solid #8eaa92;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.primary-link:hover {
-  background-color: #e8f8ea;
-  color: #37563b;
-  border-color: #4f6f52;
-  transform: none;
-}
-
-```css
-/* Same clear hover design for all dashboard cards */
-.subject-card,
-.tool-card {
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-/* Subject cards, AI Learning Tools and My Study Space */
-.subject-card:hover,
-.tool-card:hover {
-  background-color: #e8f8ea;
-  border: 2px solid #4f6f52;
-  box-shadow: 0 8px 20px rgba(55, 86, 59, 0.16);
-  transform: translateY(-4px);
-}
-
-/* Make Manage My Subjects hover clearly visible */
-.primary-link {
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-.primary-link:hover {
-  background-color: #d7e6d9;
-  color: #37563b;
-  border: 1px solid #4f6f52;
-  box-shadow: 0 5px 12px rgba(55, 86, 59, 0.15);
-  transform: translateY(-2px);
-}
-```
-```
