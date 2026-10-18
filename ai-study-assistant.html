@@ -95,6 +95,11 @@
       outline-offset: 1px;
     }
 
+    .option-row {
+      margin-top: 14px;
+      max-width: 260px;
+    }
+
     .btn-row {
       display: flex;
       flex-wrap: wrap;
@@ -110,13 +115,18 @@
       cursor: pointer;
     }
 
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .btn-primary {
       color: var(--white);
       background: var(--accent);
       border: 1px solid var(--accent);
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       background: var(--dark-green);
     }
 
@@ -126,7 +136,7 @@
       border: 1px solid #8eaa92;
     }
 
-    .btn-secondary:hover {
+    .btn-secondary:hover:not(:disabled) {
       background: var(--soft-green);
     }
 
@@ -136,10 +146,15 @@
       background: #f7fbf7;
       border: 1px solid var(--border-green);
       border-radius: 12px;
-      font-size: 14px;
-      line-height: 1.8;
+      font-size: 15px;
+      line-height: 1.9;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
+    }
+
+    .result-box[hidden],
+    .save-row[hidden] {
+      display: none;
     }
 
     .save-row {
@@ -157,6 +172,10 @@
       font-weight: 600;
     }
 
+    .status-msg.error {
+      color: #b54747;
+    }
+
     @media (max-width: 600px) {
       .tabs {
         width: 100%;
@@ -170,6 +189,10 @@
 
       .assistant-panel {
         padding: 18px;
+      }
+
+      .option-row {
+        max-width: none;
       }
 
       .save-row {
@@ -208,11 +231,21 @@
     <section class="assistant-panel" id="panel-explainer"
              role="tabpanel" aria-labelledby="tab-explainer">
       <h2>Concept Explainer</h2>
-      <p class="panel-desc">Type a topic or question and get a simple explanation.</p>
+      <p class="panel-desc">Type a topic or question and get a simple, friendly explanation.</p>
 
       <label class="field-label" for="explainerInput">Topic or question</label>
       <textarea class="field-area" id="explainerInput" style="min-height:110px"
+        maxlength="500"
         placeholder="e.g. Explain how neural networks learn"></textarea>
+
+      <div class="option-row">
+        <label class="field-label" for="explainerLevel">Explanation level</label>
+        <select class="field" id="explainerLevel">
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
+      </div>
 
       <div class="btn-row">
         <button class="btn btn-primary" id="explainBtn" type="button">Explain</button>
@@ -238,10 +271,10 @@
     <section class="assistant-panel" id="panel-summarizer"
              role="tabpanel" aria-labelledby="tab-summarizer" hidden>
       <h2>Notes Summarizer</h2>
-      <p class="panel-desc">Paste your study material and get concise revision notes.</p>
+      <p class="panel-desc">Paste your study material and get short, clear revision notes.</p>
 
       <label class="field-label" for="summarizerInput">Study material</label>
-      <textarea class="field-area" id="summarizerInput"
+      <textarea class="field-area" id="summarizerInput" maxlength="20000"
         placeholder="Paste your notes, textbook text or lecture material here..."></textarea>
 
       <div class="btn-row">
@@ -278,18 +311,67 @@
   "use strict";
 
   /* =========================================================
-     CONNECT YOUR AI HERE
-     Replace the body of this function with your existing AI call
-     (the one your concept-explainer page uses).
-     mode  = "explain" or "summarize"
-     input = the text the user typed
-     It must return the answer text (a string).
+     AI CONNECTION  (uses your existing /api/chat)
      ========================================================= */
   async function askAI(mode, input) {
-    if (typeof window.LuminaAI === "function") {
-      return await window.LuminaAI(mode, input);
+    let prompt;
+
+    if (mode === "explain") {
+      const level = document.getElementById("explainerLevel").value;
+
+      prompt =
+        `Explain "${input}". Level: ${level}. Style: Simple.
+Rules:
+1. The very first line must start with "PICTURE:" followed by 4 to 6 emojis with arrows between them that show the idea step by step. Example: PICTURE: 🌞 → 💧 → 🌱 → 🍃
+2. Then leave an empty line.
+3. Write like a fun, friendly teacher. Start with one fun hook line.
+4. Then give 3 or 4 short parts. Each part has an emoji and a short title on its own line, then 1 or 2 short sentences.
+5. Add one funny, easy real-life example.
+6. End with a line that starts with "Remember:".
+7. Keep it under 150 words. Leave an empty line between parts.
+8. Do not use symbols like * or #.`;
+    } else {
+      prompt =
+        `Summarize the study material below into short revision notes for a college student.
+Rules:
+1. Start with one short title line.
+2. Then give the key points as short lines. Each line starts with an emoji and has one clear sentence.
+3. Group related points together and leave an empty line between groups.
+4. Keep important terms, definitions, formulas and numbers exactly as they are.
+5. End with a line that starts with "Remember:" and gives the single most important idea.
+6. Keep the summary much shorter than the original.
+7. Do not use symbols like * or #.
+
+Study material:
+${input}`;
     }
-    throw new Error("AI is not connected yet. Add your AI call inside askAI().");
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: prompt })
+    });
+
+    let data = null;
+
+    try {
+      data = await response.json();
+    } catch (error) {
+      data = null;
+    }
+
+    if (!response.ok || !data || !data.reply) {
+      throw new Error("No answer came. Please try again in a moment.");
+    }
+
+    let reply = String(data.reply).trim();
+
+    // Show the emoji "picture" line without the word PICTURE:
+    if (mode === "explain") {
+      reply = reply.replace(/^PICTURE:\s*/i, "");
+    }
+
+    return reply;
   }
 
   const NOTES_KEY = "luminaNotes";
@@ -333,13 +415,14 @@
   }
 
   (function fillSubjects() {
+    const list = document.getElementById("subjectOptions");
     const subjects = [...new Set(readNotes().map(n => n.subject).filter(Boolean))];
-    document.getElementById("subjectOptions").innerHTML =
-      subjects.map(s => {
-        const option = document.createElement("option");
-        option.value = s;
-        return option.outerHTML;
-      }).join("");
+
+    subjects.forEach(subject => {
+      const option = document.createElement("option");
+      option.value = subject;
+      list.appendChild(option);
+    });
   })();
 
   /* ---------- Save a result into My Notes ---------- */
@@ -374,29 +457,34 @@
 
     let lastAnswer = "";
 
+    function setStatus(message, isError) {
+      status.textContent = message;
+      status.classList.toggle("error", Boolean(isError));
+    }
+
     runBtn.addEventListener("click", async () => {
       const text = input.value.trim();
-      status.textContent = "";
+      setStatus("");
 
       if (!text) {
-        status.textContent = config.emptyMessage;
+        setStatus(config.emptyMessage, true);
         input.focus();
         return;
       }
 
       runBtn.disabled = true;
       runBtn.textContent = "Working...";
+      result.hidden = true;
+      saveRow.hidden = true;
 
       try {
-        lastAnswer = String(await askAI(config.mode, text)).trim();
+        lastAnswer = (await askAI(config.mode, text)).trim();
         result.textContent = lastAnswer;
         result.hidden = false;
         saveRow.hidden = !lastAnswer;
       } catch (error) {
         console.error(error);
-        result.hidden = true;
-        saveRow.hidden = true;
-        status.textContent = error.message || "Something went wrong. Please try again.";
+        setStatus(error.message || "Something went wrong. Please try again.", true);
       } finally {
         runBtn.disabled = false;
         runBtn.textContent = config.runLabel;
@@ -408,7 +496,7 @@
       result.textContent = "";
       result.hidden = true;
       saveRow.hidden = true;
-      status.textContent = "";
+      setStatus("");
       lastAnswer = "";
       input.focus();
     });
@@ -419,7 +507,7 @@
       if (!lastAnswer) return;
 
       if (!subject) {
-        status.textContent = "Please enter a subject to save this note.";
+        setStatus("Please enter a subject to save this note.", true);
         subjectInput.focus();
         return;
       }
@@ -430,10 +518,10 @@
 
       try {
         saveToNotes(title, subject, lastAnswer, config.source);
-        status.textContent = "✓ Saved to My Notes under " + subject + ".";
+        setStatus("✓ Saved to My Notes under " + subject + ".", false);
       } catch (error) {
         console.error(error);
-        status.textContent = "Unable to save the note. Please try again.";
+        setStatus("Unable to save the note. Please try again.", true);
       }
     });
   }
