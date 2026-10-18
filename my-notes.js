@@ -46,6 +46,7 @@ function isValidNote(note) {
     typeof note.content === "string";
 }
 
+/* Load saved notes without overwriting existing data. */
 function loadNotes() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -57,55 +58,51 @@ function loadNotes() {
         : [];
     }
 
+    /*
+      Import example notes only if this storage key has never
+      been created and the legacy import has not run.
+    */
     if (localStorage.getItem(LEGACY_KEY) !== "true") {
       const examples = [
         {
           title: "Neural Networks",
           subject: "Artificial Intelligence",
-          content:
-            "Neural networks mimic brain structure using layers of nodes."
+          content: "Neural networks mimic brain structure using layers of nodes."
         },
         {
           title: "Supervised Learning",
           subject: "Artificial Intelligence",
-          content:
-            "Supervised learning requires labelled training data."
+          content: "Supervised learning requires labelled training data."
         },
         {
           title: "Reinforcement Learning",
           subject: "Artificial Intelligence",
-          content:
-            "Reinforcement learning improves actions using rewards."
+          content: "Reinforcement learning improves actions using rewards."
         },
         {
           title: "Standard Deviation",
           subject: "Statistics",
-          content:
-            "Standard deviation measures how spread out values are."
+          content: "Standard deviation measures how spread out values are."
         },
         {
           title: "P-values",
           subject: "Statistics",
-          content:
-            "A p-value helps evaluate evidence against a statistical hypothesis."
+          content: "A p-value helps evaluate evidence against a statistical hypothesis."
         },
         {
           title: "List Comprehensions",
           subject: "Python",
-          content:
-            "List comprehensions provide a concise way to create lists."
+          content: "List comprehensions provide a concise way to create lists."
         },
         {
           title: "Virtual Environments",
           subject: "Python",
-          content:
-            "Virtual environments isolate project dependencies."
+          content: "Virtual environments isolate project dependencies."
         },
         {
           title: "Decorators",
           subject: "Python",
-          content:
-            "Decorators modify or extend the behaviour of functions."
+          content: "Decorators modify or extend the behaviour of functions."
         }
       ].map(note => {
         const now = new Date().toISOString();
@@ -119,11 +116,7 @@ function loadNotes() {
         };
       });
 
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(examples)
-      );
-
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(examples));
       localStorage.setItem(LEGACY_KEY, "true");
 
       return examples;
@@ -138,11 +131,7 @@ function loadNotes() {
 
 function saveNotes() {
   try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(notes)
-    );
-
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
     saveStatus.textContent = "Notes saved on this device.";
     return true;
   } catch (error) {
@@ -194,7 +183,7 @@ function getIcon(subject) {
   return subjectIcons[total % subjectIcons.length];
 }
 
-/* Popup styles: existing page styles and fonts are preserved. */
+/* Add popup styles while preserving the existing page styles. */
 function addPopupStyles() {
   if (document.getElementById("luminaNotesPopupStyles")) return;
 
@@ -205,11 +194,12 @@ function addPopupStyles() {
     .lumina-popup-overlay {
       position: fixed;
       inset: 0;
+      z-index: 9000;
       display: none;
       align-items: center;
       justify-content: center;
       padding: 18px;
-      background: rgba(31, 47, 37, 0.42);
+      background: rgba(31, 47, 37, .42);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
       box-sizing: border-box;
@@ -217,10 +207,6 @@ function addPopupStyles() {
 
     .lumina-popup-overlay.lumina-popup-open {
       display: flex;
-    }
-
-    #luminaTopicsOverlay {
-      z-index: 9000;
     }
 
     #luminaReaderOverlay {
@@ -237,7 +223,7 @@ function addPopupStyles() {
       color: #344638;
       border: 1px solid #DDE9DF;
       border-radius: 20px;
-      box-shadow: 0 20px 65px rgba(30, 55, 37, 0.22);
+      box-shadow: 0 20px 65px rgba(30, 55, 37, .22);
       font-family: inherit;
     }
 
@@ -324,7 +310,6 @@ function addPopupStyles() {
 
     .lumina-topic-actions {
       display: flex;
-      align-items: center;
       gap: 6px;
     }
 
@@ -427,7 +412,6 @@ function addPopupStyles() {
       color: #6B9080;
       font-size: 13px;
       font-weight: 600;
-      letter-spacing: 0.3px;
     }
 
     .lumina-reader-title {
@@ -489,8 +473,8 @@ function addPopupStyles() {
       color: #B24A4A;
     }
 
-    .lumina-reader-footer .lumina-reader-left,
-    .lumina-reader-footer .lumina-reader-right {
+    .lumina-reader-left,
+    .lumina-reader-right {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -561,7 +545,7 @@ function addPopupStyles() {
   document.head.appendChild(style);
 }
 
-/* Create the two popups without changing my-notes.html. */
+/* Create both popup elements before attaching their event handlers. */
 function createPopupElements() {
   if (!document.getElementById("luminaTopicsOverlay")) {
     const topicsOverlay = document.createElement("div");
@@ -631,11 +615,17 @@ function createPopupElements() {
     document.body.appendChild(readerOverlay);
   }
 
-  /* Keep the existing create/edit form above the new popups. */
   if (modal) {
     modal.style.zIndex = "10000";
   }
 }
+
+/*
+  IMPORTANT: initialize popups here, before any code attaches
+  event listeners to their buttons.
+*/
+addPopupStyles();
+createPopupElements();
 
 function updateSubjectControls() {
   const selected = subjectFilter.value;
@@ -674,14 +664,13 @@ function getFilteredNotes() {
   });
 }
 
-/* Main My Notes page: show subject cards only. */
+/* Main page displays subject cards. */
 function render() {
   updateSubjectControls();
 
-  const filteredNotes = getFilteredNotes();
   const grouped = new Map();
 
-  filteredNotes.forEach(note => {
+  getFilteredNotes().forEach(note => {
     if (!grouped.has(note.subject)) {
       grouped.set(note.subject, []);
     }
@@ -714,9 +703,10 @@ function render() {
       const card = document.createElement("article");
       card.className = "subject-card";
 
-      const header = document.createElement("button");
-      header.type = "button";
+      const header = document.createElement("div");
       header.className = "subject-header";
+      header.tabIndex = 0;
+      header.setAttribute("role", "button");
       header.setAttribute("aria-label", "Open " + subjectName);
 
       header.innerHTML = `
@@ -729,8 +719,14 @@ function render() {
           </p>
         </div>`;
 
-      header.addEventListener("click", () => {
-        openTopicsModal(subjectName);
+      const openSubject = () => openTopicsModal(subjectName);
+
+      header.addEventListener("click", openSubject);
+      header.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openSubject();
+        }
       });
 
       card.appendChild(header);
@@ -738,23 +734,23 @@ function render() {
     });
 }
 
-/* Stage 1: open a centered popup containing topic titles only. */
+/* First popup: topic titles only. */
 function openTopicsModal(subjectName) {
   activeSubject = subjectName;
   quickAddVisible = false;
 
   const overlay = document.getElementById("luminaTopicsOverlay");
-  const title = document.getElementById("luminaTopicsTitle");
-  const subtitle = document.getElementById("luminaTopicsSubtitle");
   const quickForm = document.getElementById("luminaQuickAddForm");
   const quickInput = document.getElementById("luminaQuickAddInput");
-  const quickToggle = document.getElementById("luminaQuickAddToggle");
 
-  title.textContent = subjectName;
-  subtitle.textContent = "Choose a topic to read its complete answer.";
+  document.getElementById("luminaTopicsTitle").textContent = subjectName;
+  document.getElementById("luminaTopicsSubtitle").textContent =
+    "Choose a topic to read its complete answer.";
+
   quickForm.classList.remove("visible");
   quickInput.value = "";
-  quickToggle.textContent = "+ Add a quick note";
+  document.getElementById("luminaQuickAddToggle").textContent =
+    "+ Add a quick note";
 
   renderTopicsList();
 
@@ -765,7 +761,6 @@ function openTopicsModal(subjectName) {
 
 function renderTopicsList() {
   const list = document.getElementById("luminaTopicsList");
-
   if (!activeSubject) return;
 
   const subjectNotes = getFilteredNotes()
@@ -790,9 +785,7 @@ function renderTopicsList() {
     titleButton.type = "button";
     titleButton.className = "lumina-topic-title";
     titleButton.textContent = note.title;
-    titleButton.addEventListener("click", () => {
-      openReader(note.id);
-    });
+    titleButton.addEventListener("click", () => openReader(note.id));
 
     const actions = document.createElement("div");
     actions.className = "lumina-topic-actions";
@@ -801,19 +794,13 @@ function renderTopicsList() {
     editButton.type = "button";
     editButton.className = "lumina-topic-action";
     editButton.textContent = "Edit";
-    editButton.setAttribute("aria-label", "Edit " + note.title);
-    editButton.addEventListener("click", () => {
-      openEditModal(note.id);
-    });
+    editButton.addEventListener("click", () => openEditModal(note.id));
 
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "lumina-topic-action delete";
     deleteButton.textContent = "Delete";
-    deleteButton.setAttribute("aria-label", "Delete " + note.title);
-    deleteButton.addEventListener("click", () => {
-      deleteNote(note.id);
-    });
+    deleteButton.addEventListener("click", () => deleteNote(note.id));
 
     actions.append(editButton, deleteButton);
     row.append(titleButton, actions);
@@ -826,12 +813,11 @@ function closeTopicsModal() {
 
   overlay.classList.remove("lumina-popup-open");
   overlay.setAttribute("aria-hidden", "true");
-
   activeSubject = null;
   quickAddVisible = false;
 }
 
-/* Stage 2: open a large reader containing the complete answer. */
+/* Second popup: large reading window with the full answer. */
 function openReader(noteId) {
   const note = notes.find(item => item.id === noteId);
   if (!note) return;
@@ -839,10 +825,10 @@ function openReader(noteId) {
   activeReaderNoteId = noteId;
 
   const overlay = document.getElementById("luminaReaderOverlay");
-  const subtitle = document.getElementById("luminaReaderSubtitle");
   const content = document.getElementById("luminaReaderContent");
 
-  subtitle.textContent = note.subject;
+  document.getElementById("luminaReaderSubtitle").textContent =
+    note.subject;
 
   content.innerHTML = "";
 
@@ -880,15 +866,14 @@ function closeReader() {
 
   overlay.classList.remove("lumina-popup-open");
   overlay.setAttribute("aria-hidden", "true");
-
   activeReaderNoteId = null;
 
-  /* The topic list stays open behind the reader. */
   if (activeSubject) {
     document.getElementById("luminaTopicsClose").focus();
   }
 }
 
+/* Create and edit note form. */
 function openCreateModal() {
   editingNoteId = null;
   noteForm.reset();
@@ -911,8 +896,6 @@ function openEditModal(id) {
   const note = notes.find(item => item.id === id);
   if (!note) return;
 
-  /* If the reader is open, close only the reader.
-     The topic list remains behind the edit form. */
   if (activeReaderNoteId) {
     closeReader();
   }
@@ -960,15 +943,15 @@ function deleteNote(id) {
     closeTopicsModal();
   }
 
-  saveNotes();
-  render();
+  if (saveNotes()) {
+    render();
 
-  if (activeSubject) {
-    renderTopicsList();
+    if (activeSubject) {
+      renderTopicsList();
+    }
   }
 }
 
-/* Existing Create Note and Edit Note form behaviour. */
 noteForm.addEventListener("submit", event => {
   event.preventDefault();
 
@@ -1009,17 +992,8 @@ noteForm.addEventListener("submit", event => {
     });
   }
 
-  const savedSubject = subject;
-
   if (saveNotes()) {
     closeModal();
-
-    if (activeSubject && activeSubject !== savedSubject) {
-      activeSubject = savedSubject;
-      document.getElementById("luminaTopicsTitle").textContent =
-        savedSubject;
-    }
-
     render();
 
     if (activeSubject) {
@@ -1028,7 +1002,7 @@ noteForm.addEventListener("submit", event => {
   }
 });
 
-/* Quick-add feature inside the subject popup. */
+/* Quick-add note within the subject popup. */
 document.getElementById("luminaQuickAddToggle")
   .addEventListener("click", () => {
     quickAddVisible = !quickAddVisible;
@@ -1080,7 +1054,7 @@ document.getElementById("luminaQuickAddForm")
     }
   });
 
-/* Popup close and navigation controls. */
+/* Popup navigation and close buttons. */
 document.getElementById("luminaTopicsClose")
   .addEventListener("click", closeTopicsModal);
 
@@ -1133,7 +1107,7 @@ modal.addEventListener("click", event => {
   }
 });
 
-/* Escape closes the topmost popup first. */
+/* Escape closes the topmost open popup. */
 document.addEventListener("keydown", event => {
   if (event.key !== "Escape") return;
 
@@ -1149,7 +1123,7 @@ document.addEventListener("keydown", event => {
   }
 });
 
-/* Existing search and subject filter. */
+/* Search and subject filter. */
 searchInput.addEventListener("input", event => {
   currentSearch = event.target.value;
   render();
@@ -1164,10 +1138,10 @@ subjectFilter.addEventListener("change", event => {
   render();
 
   if (activeSubject) {
-    const subjectStillVisible = getFilteredNotes()
+    const stillVisible = getFilteredNotes()
       .some(note => note.subject === activeSubject);
 
-    if (subjectStillVisible) {
+    if (stillVisible) {
       renderTopicsList();
     } else {
       closeReader();
@@ -1176,7 +1150,7 @@ subjectFilter.addEventListener("change", event => {
   }
 });
 
-/* Preserve the AI feature's existing note-saving connection. */
+/* Keep the AI feature's existing save connection. */
 window.LuminaNotes = {
   save(noteData) {
     if (
@@ -1207,22 +1181,19 @@ window.LuminaNotes = {
       ? noteData.source
       : "manual";
 
-    const now = new Date().toISOString();
-
     const newNote = {
       id: createId(),
       title,
       subject,
       content,
       source,
-      createdAt: now,
-      updatedAt: now
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     try {
-      const existing = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]"
-      );
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const existing = stored === null ? [] : JSON.parse(stored);
 
       if (!Array.isArray(existing)) {
         throw new Error("Stored notes are not in the expected format.");
@@ -1230,13 +1201,10 @@ window.LuminaNotes = {
 
       existing.push(newNote);
 
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(existing)
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
 
-      /* Keep the current page in sync when AI saves a note. */
-      notes = loadNotes();
+      /* Update the page's in-memory notes after saving. */
+      notes = existing.filter(isValidNote);
       render();
 
       if (activeSubject) {
@@ -1258,6 +1226,5 @@ window.LuminaNotes = {
   }
 };
 
-addPopupStyles();
-createPopupElements();
+/* Display saved notes on page load. */
 render();
