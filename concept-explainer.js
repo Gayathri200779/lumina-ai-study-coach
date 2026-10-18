@@ -371,6 +371,8 @@ if (saveBtn) {
         JSON.stringify(storedNotes)
       );
 
+      alert('Notes saved successfully!');
+
       saveBtn.innerHTML =
         '<span class="material-icons">check</span> Saved!';
 
