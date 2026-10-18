@@ -9,194 +9,536 @@
   <link rel="stylesheet" href="./dashboard.css">
 
   <style>
-    .tabs {
+    html, body {
+      height: 100%;
+    }
+
+    body {
       display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      padding: 6px;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .navbar {
+      flex: 0 0 auto;
+    }
+
+    .assistant-shell {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      width: 100%;
+      max-width: 880px;
+      min-height: 0;
+      margin: 0 auto;
+    }
+
+    /* ---------- Top bar: mode switch ---------- */
+    .mode-bar {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 20px 10px;
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
       background: var(--white);
       border: 1px solid var(--border-green);
       border-radius: 14px;
-      width: fit-content;
-      max-width: 100%;
     }
 
-    .tab-btn {
-      padding: 10px 20px;
+    .mode-btn {
+      padding: 9px 16px;
       color: var(--text-muted);
       background: transparent;
       border: 0;
       border-radius: 10px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: background 0.2s ease, color 0.2s ease;
     }
 
-    .tab-btn:hover {
+    .mode-btn:hover {
       background: var(--soft-green);
     }
 
-    .tab-btn[aria-selected="true"] {
+    .mode-btn[aria-selected="true"] {
       color: var(--white);
       background: var(--accent);
     }
 
-    .assistant-panel {
-      padding: 24px;
-      background: var(--white);
-      border: 1px solid var(--border-green);
-      border-radius: 15px;
-    }
-
-    .assistant-panel[hidden] {
-      display: none;
-    }
-
-    .assistant-panel h2 {
-      margin-bottom: 4px;
-      font-size: 20px;
-    }
-
-    .assistant-panel .panel-desc {
-      margin-bottom: 18px;
-      color: var(--text-muted);
-      font-size: 13px;
-    }
-
-    .field-label {
-      display: block;
-      margin-bottom: 6px;
+    .new-chat-btn {
+      padding: 9px 14px;
       color: var(--dark-green);
+      background: transparent;
+      border: 1px solid #8eaa92;
+      border-radius: 10px;
       font-size: 13px;
-      font-weight: 600;
-    }
-
-    .field,
-    .field-area {
-      width: 100%;
-      padding: 12px 14px;
-      color: var(--text-main);
-      background: var(--white);
-      border: 1px solid var(--border-green);
-      border-radius: 10px;
-      font-size: 14px;
-    }
-
-    .field-area {
-      min-height: 200px;
-      resize: vertical;
-      line-height: 1.7;
-    }
-
-    .field:focus,
-    .field-area:focus {
-      outline: 2px solid #719b76;
-      outline-offset: 1px;
-    }
-
-    .option-row {
-      margin-top: 14px;
-      max-width: 260px;
-    }
-
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .btn {
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
     }
 
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .btn-primary {
-      color: var(--white);
-      background: var(--accent);
-      border: 1px solid var(--accent);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: var(--dark-green);
-    }
-
-    .btn-secondary {
-      color: var(--dark-green);
-      background: var(--white);
-      border: 1px solid #8eaa92;
-    }
-
-    .btn-secondary:hover:not(:disabled) {
+    .new-chat-btn:hover {
       background: var(--soft-green);
     }
 
-    .result-box {
-      margin-top: 20px;
-      padding: 18px;
-      background: #f7fbf7;
+    /* ---------- Chat area ---------- */
+    .chat-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 8px 20px 20px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .chat-thread[hidden] {
+      display: none;
+    }
+
+    .chat-thread {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Welcome screen */
+    .welcome-box {
+      padding: 36px 10px 10px;
+      text-align: center;
+    }
+
+    .chat-thread.has-messages .welcome-box {
+      display: none;
+    }
+
+    .welcome-icon {
+      display: grid;
+      place-items: center;
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 14px;
+      background: var(--soft-green);
       border: 1px solid var(--border-green);
-      border-radius: 12px;
-      font-size: 15px;
-      line-height: 1.9;
+      border-radius: 18px;
+      font-size: 30px;
+    }
+
+    .welcome-box h1 {
+      margin-bottom: 8px;
+      color: var(--text-main);
+      font-size: clamp(22px, 3vw, 28px);
+    }
+
+    .welcome-box p {
+      max-width: 520px;
+      margin: 0 auto;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .starter-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .starter-btn {
+      padding: 10px 16px;
+      color: var(--dark-green);
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .starter-btn:hover {
+      background: var(--soft-green);
+      border-color: var(--accent);
+    }
+
+    /* Messages */
+    .msg {
+      display: flex;
+      gap: 12px;
+      max-width: 100%;
+    }
+
+    .msg.user {
+      justify-content: flex-end;
+    }
+
+    .user-bubble {
+      max-width: min(80%, 560px);
+      padding: 12px 16px;
+      color: var(--white);
+      background: var(--accent);
+      border-radius: 18px 18px 4px 18px;
+      font-size: 14px;
+      line-height: 1.7;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
 
-    .result-box[hidden],
-    .save-row[hidden] {
+    .avatar-ai {
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      background: var(--soft-green);
+      border: 1px solid var(--border-green);
+      border-radius: 50%;
+      font-size: 18px;
+    }
+
+    .ai-body {
+      flex: 1 1 auto;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .ai-label {
+      margin-bottom: 6px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ai-card {
+      padding: 18px 20px;
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 4px 18px 18px 18px;
+      color: var(--text-main);
+      font-size: 14.5px;
+      line-height: 1.8;
+      overflow-wrap: anywhere;
+    }
+
+    .a-heading {
+      margin-top: 16px;
+      color: var(--dark-green);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .a-heading:first-child {
+      margin-top: 0;
+    }
+
+    .a-para {
+      margin-top: 6px;
+    }
+
+    .a-item {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .a-marker {
+      flex: 0 0 auto;
+      min-width: 20px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* Action buttons under an answer */
+    .ai-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .action-btn {
+      padding: 7px 12px;
+      color: var(--dark-green);
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      background: var(--soft-green);
+    }
+
+    .save-form {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 12px;
+      background: #f7fbf7;
+      border: 1px solid var(--border-green);
+      border-radius: 12px;
+    }
+
+    .save-form[hidden] {
       display: none;
     }
 
-    .save-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      margin-top: 14px;
-      align-items: end;
+    .save-form input {
+      flex: 1 1 200px;
+      min-width: 0;
+      padding: 9px 12px;
+      color: var(--text-main);
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 8px;
+      font-size: 13px;
     }
 
-    .status-msg {
-      margin-top: 10px;
-      color: var(--accent);
+    .save-form input:focus {
+      outline: 2px solid #719b76;
+      outline-offset: 1px;
+    }
+
+    .save-btn {
+      padding: 9px 16px;
+      color: var(--white);
+      background: var(--accent);
+      border: 0;
+      border-radius: 8px;
       font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .save-btn:hover {
+      background: var(--dark-green);
+    }
+
+    .save-note {
+      flex-basis: 100%;
+      color: var(--accent);
+      font-size: 12px;
       font-weight: 600;
     }
 
-    .status-msg.error {
+    .save-note.error {
       color: #b54747;
     }
 
+    /* Typing dots */
+    .typing {
+      display: inline-flex;
+      gap: 5px;
+      padding: 16px 20px;
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 4px 18px 18px 18px;
+    }
+
+    .typing span {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.35;
+      animation: blink 1.2s infinite ease-in-out;
+    }
+
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+      40% { opacity: 1; transform: translateY(-3px); }
+    }
+
+    /* Error message */
+    .error-card {
+      padding: 14px 18px;
+      color: #8f3232;
+      background: #fdf1f1;
+      border: 1px solid #ecc3c3;
+      border-radius: 4px 18px 18px 18px;
+      font-size: 14px;
+    }
+
+    .error-card .action-btn {
+      margin-top: 10px;
+    }
+
+    /* ---------- Message bar ---------- */
+    .composer-wrap {
+      flex: 0 0 auto;
+      padding: 10px 20px 14px;
+      background: linear-gradient(to top, var(--page-bg) 80%, rgba(238, 253, 239, 0));
+    }
+
+    .marks-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .marks-row[hidden] {
+      display: none;
+    }
+
+    .marks-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .chip {
+      padding: 6px 14px;
+      color: var(--dark-green);
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .chip:hover {
+      background: var(--soft-green);
+    }
+
+    .chip[aria-pressed="true"] {
+      color: var(--white);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .composer {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      padding: 10px 10px 10px 16px;
+      background: var(--white);
+      border: 1px solid var(--border-green);
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(55, 86, 59, 0.08);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .composer:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 6px 20px rgba(55, 86, 59, 0.14);
+    }
+
+    .composer textarea {
+      flex: 1 1 auto;
+      min-width: 0;
+      max-height: 180px;
+      padding: 8px 0;
+      color: var(--text-main);
+      background: transparent;
+      border: 0;
+      outline: none;
+      resize: none;
+      font-size: 14.5px;
+      line-height: 1.6;
+    }
+
+    .composer textarea::placeholder {
+      color: #8d9c91;
+    }
+
+    .send-btn {
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      color: var(--white);
+      background: var(--accent);
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .send-btn:hover:not(:disabled) {
+      background: var(--dark-green);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .disclaimer {
+      margin-top: 8px;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-align: center;
+    }
+
     @media (max-width: 600px) {
-      .tabs {
-        width: 100%;
+      .mode-bar {
+        padding: 10px 12px 8px;
       }
 
-      .tab-btn {
-        flex: 1;
-        padding: 10px 8px;
-        font-size: 13px;
+      .mode-btn {
+        padding: 8px 10px;
+        font-size: 12px;
       }
 
-      .assistant-panel {
-        padding: 18px;
+      .new-chat-btn {
+        padding: 8px 10px;
+        font-size: 12px;
       }
 
-      .option-row {
-        max-width: none;
+      .chat-scroll {
+        padding: 8px 12px 16px;
       }
 
-      .save-row {
-        grid-template-columns: 1fr;
+      .composer-wrap {
+        padding: 8px 12px 12px;
+      }
+
+      .avatar-ai {
+        width: 30px;
+        height: 30px;
+        font-size: 15px;
+      }
+
+      .msg {
+        gap: 8px;
+      }
+
+      .ai-card {
+        padding: 14px;
+      }
+
+      .user-bubble {
+        max-width: 88%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .typing span {
+        animation: none;
+        opacity: 0.7;
+      }
+
+      .chat-scroll {
+        scroll-behavior: auto;
       }
     }
   </style>
@@ -211,140 +553,196 @@
     </nav>
   </header>
 
-  <main class="container">
-    <section class="welcome">
-      <p class="eyebrow">YOUR AI STUDY COMPANION</p>
-      <h1>AI Study Assistant 🧠</h1>
-      <p>Choose a tool below: explain a concept, or summarize your study material.</p>
-    </section>
+  <div class="assistant-shell">
 
-    <div class="tabs" role="tablist" aria-label="AI Study Assistant tools">
-      <button class="tab-btn" id="tab-explainer" role="tab"
-              aria-selected="true" aria-controls="panel-explainer"
-              type="button">💡 Concept Explainer</button>
-      <button class="tab-btn" id="tab-summarizer" role="tab"
-              aria-selected="false" aria-controls="panel-summarizer"
-              type="button">✨ Notes Summarizer</button>
+    <!-- Top bar -->
+    <div class="mode-bar">
+      <div class="mode-switch" role="tablist" aria-label="AI Study Assistant tools">
+        <button class="mode-btn" id="tab-explain" role="tab"
+                aria-selected="true" type="button">💡 Concept Explainer</button>
+        <button class="mode-btn" id="tab-summarize" role="tab"
+                aria-selected="false" type="button">✨ Notes Summarizer</button>
+      </div>
+
+      <button class="new-chat-btn" id="newChatBtn" type="button">+ New chat</button>
     </div>
 
-    <!-- TOOL 1: CONCEPT EXPLAINER -->
-    <section class="assistant-panel" id="panel-explainer"
-             role="tabpanel" aria-labelledby="tab-explainer">
-      <h2>Concept Explainer</h2>
-      <p class="panel-desc">Type a topic or question and get a simple, friendly explanation.</p>
+    <!-- Chat area -->
+    <div class="chat-scroll" id="chatScroll">
 
-      <label class="field-label" for="explainerInput">Topic or question</label>
-      <textarea class="field-area" id="explainerInput" style="min-height:110px"
-        maxlength="500"
-        placeholder="e.g. Explain how neural networks learn"></textarea>
-
-      <div class="option-row">
-        <label class="field-label" for="explainerLevel">Explanation level</label>
-        <select class="field" id="explainerLevel">
-          <option value="Beginner">Beginner</option>
-          <option value="Intermediate">Intermediate</option>
-          <option value="Advanced">Advanced</option>
-        </select>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-primary" id="explainBtn" type="button">Explain</button>
-        <button class="btn btn-secondary" id="explainClear" type="button">Clear</button>
-      </div>
-
-      <div class="result-box" id="explainerResult" hidden></div>
-
-      <div class="save-row" id="explainerSave" hidden>
-        <div>
-          <label class="field-label" for="explainerSubject">Save to My Notes under subject</label>
-          <input class="field" id="explainerSubject" type="text"
-                 list="subjectOptions" placeholder="e.g. Artificial Intelligence">
+      <div class="chat-thread" id="thread-explain" role="log" aria-live="polite">
+        <div class="welcome-box">
+          <div class="welcome-icon">💡</div>
+          <h1>Concept Explainer</h1>
+          <p>Type any topic or exam question. Choose 2, 5 or 10 marks and get a proper model answer.</p>
+          <div class="starter-list">
+            <button class="starter-btn" type="button">Explain supervised learning with an example</button>
+            <button class="starter-btn" type="button">What is normalization in DBMS?</button>
+            <button class="starter-btn" type="button">Differentiate between TCP and UDP</button>
+            <button class="starter-btn" type="button">Explain deadlock in operating systems</button>
+          </div>
         </div>
-        <button class="btn btn-secondary" id="explainerSaveBtn" type="button">
-          Save to My Notes
-        </button>
-      </div>
-      <p class="status-msg" id="explainerStatus" role="status" aria-live="polite"></p>
-    </section>
-
-    <!-- TOOL 2: NOTES SUMMARIZER -->
-    <section class="assistant-panel" id="panel-summarizer"
-             role="tabpanel" aria-labelledby="tab-summarizer" hidden>
-      <h2>Notes Summarizer</h2>
-      <p class="panel-desc">Paste your study material and get short, clear revision notes.</p>
-
-      <label class="field-label" for="summarizerInput">Study material</label>
-      <textarea class="field-area" id="summarizerInput" maxlength="20000"
-        placeholder="Paste your notes, textbook text or lecture material here..."></textarea>
-
-      <div class="btn-row">
-        <button class="btn btn-primary" id="summarizeBtn" type="button">Summarize</button>
-        <button class="btn btn-secondary" id="summarizeClear" type="button">Clear</button>
       </div>
 
-      <div class="result-box" id="summarizerResult" hidden></div>
-
-      <div class="save-row" id="summarizerSave" hidden>
-        <div>
-          <label class="field-label" for="summarizerSubject">Save to My Notes under subject</label>
-          <input class="field" id="summarizerSubject" type="text"
-                 list="subjectOptions" placeholder="e.g. Statistics">
+      <div class="chat-thread" id="thread-summarize" role="log" aria-live="polite" hidden>
+        <div class="welcome-box">
+          <div class="welcome-icon">✨</div>
+          <h1>Notes Summarizer</h1>
+          <p>Paste your textbook text or lecture notes below. You will get short revision notes with key terms, formulas and likely exam questions.</p>
         </div>
-        <button class="btn btn-secondary" id="summarizerSaveBtn" type="button">
-          Save to My Notes
-        </button>
       </div>
-      <p class="status-msg" id="summarizerStatus" role="status" aria-live="polite"></p>
-    </section>
 
-    <datalist id="subjectOptions"></datalist>
-  </main>
+    </div>
 
-  <footer class="footer">
-    <div class="footer-logo">🌿 Lumina AI</div>
-    <p class="footer-text">
-      Supporting your learning journey, one step at a time.
-    </p>
-  </footer>
+    <!-- Message bar -->
+    <div class="composer-wrap">
+      <div class="marks-row" id="marksRow">
+        <span class="marks-label">Answer type:</span>
+        <button class="chip" type="button" data-marks="2" aria-pressed="false">2 marks</button>
+        <button class="chip" type="button" data-marks="5" aria-pressed="true">5 marks</button>
+        <button class="chip" type="button" data-marks="10" aria-pressed="false">10 marks</button>
+      </div>
+
+      <form class="composer" id="composer">
+        <textarea id="promptInput" rows="1" maxlength="500"
+                  aria-label="Message"
+                  placeholder="Type a topic or exam question..."></textarea>
+
+        <button class="send-btn" id="sendBtn" type="submit" aria-label="Send">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5"></path>
+            <path d="M5 12l7-7 7 7"></path>
+          </svg>
+        </button>
+      </form>
+
+      <p class="disclaimer">AI can make mistakes. Check important facts and formulas with your textbook.</p>
+    </div>
+
+  </div>
+
+  <datalist id="subjectOptions"></datalist>
 
   <script>
   "use strict";
 
   /* =========================================================
-     AI CONNECTION  (uses your existing /api/chat)
+     PROMPTS  (sent to your existing /api/chat)
      ========================================================= */
-  async function askAI(mode, input) {
-    let prompt;
 
-    if (mode === "explain") {
-      const level = document.getElementById("explainerLevel").value;
+  const FORMAT_RULES = `
+Formatting rules:
+- Write in plain text only. Do NOT use the symbols * # _ or backticks.
+- Write each section heading on its own line, followed by a colon.
+- For lists, use numbers (1. 2. 3.) or the bullet symbol •
+- Leave one empty line between sections.
+- Use correct technical terms. Be accurate. Do not invent facts.
+- Do not add any greeting, emoji or closing remark.`;
 
-      prompt =
-        `Explain "${input}". Level: ${level}. Style: Simple.
+  function buildExplainPrompt(topic, marks) {
+    const intro =
+      `You are an experienced university professor writing a model answer for a college exam.
+Question or topic: "${topic}"
+`;
+
+    if (marks === "2") {
+      return intro + `
+This is a 2-mark answer. Write about 60 to 80 words using exactly this structure:
+
+Definition:
+A clear, precise definition in 2 to 3 sentences.
+
+Key Points:
+Give 2 to 3 short numbered points that a student must mention.
+${FORMAT_RULES}`;
+    }
+
+    if (marks === "10") {
+      return intro + `
+This is a 10-mark answer. Write about 450 to 550 words using exactly this structure:
+
+Introduction:
+2 to 3 sentences that introduce the topic and why it matters.
+
+Definition:
+A precise textbook-style definition.
+
+Detailed Explanation:
+Explain the concept step by step under 4 to 6 numbered sub-headings, each with 2 to 3 sentences. Include how it works, important terms, formulas or algorithms where relevant.
+
+Types or Components:
+List and briefly describe the main types, parts or stages (skip only if not applicable).
+
+Advantages and Limitations:
+Give 3 advantages and 2 to 3 limitations as numbered points.
+
+Applications:
+Give 3 to 4 real-world applications.
+
+Example:
+One clear, worked example.
+
+Conclusion:
+2 to 3 sentences that sum up the answer.
+${FORMAT_RULES}`;
+    }
+
+    return intro + `
+This is a 5-mark answer. Write about 200 to 250 words using exactly this structure:
+
+Definition:
+A clear, precise definition in 2 to 3 sentences.
+
+Explanation:
+Explain the concept in 4 to 6 numbered points, each 1 to 2 sentences. Include important terms and how it works.
+
+Example:
+One clear, simple example.
+
+Conclusion:
+1 to 2 sentences that sum up the answer.
+${FORMAT_RULES}`;
+  }
+
+  function buildSummarizePrompt(material) {
+    return `You are an experienced university professor preparing exam revision notes for a college student.
+Convert the study material below into clear, well-organized revision notes.
+
+Use exactly this structure:
+
+Topic:
+One line naming the topic.
+
+Key Definitions:
+List each important term with its definition, using the bullet symbol •
+
+Main Points:
+Group the content under short headings. Under each heading give numbered points of 1 to 2 sentences each.
+
+Formulas and Important Facts:
+List any formulas, rules, numbers, dates or steps exactly as given in the material (skip this section only if there are none).
+
+Quick Revision:
+3 to 5 short one-line points that the student should memorise before the exam.
+
+Important Exam Questions:
+2 to 3 likely exam questions based on this material.
+
 Rules:
-1. The very first line must start with "PICTURE:" followed by 4 to 6 emojis with arrows between them that show the idea step by step. Example: PICTURE: 🌞 → 💧 → 🌱 → 🍃
-2. Then leave an empty line.
-3. Write like a fun, friendly teacher. Start with one fun hook line.
-4. Then give 3 or 4 short parts. Each part has an emoji and a short title on its own line, then 1 or 2 short sentences.
-5. Add one funny, easy real-life example.
-6. End with a line that starts with "Remember:".
-7. Keep it under 150 words. Leave an empty line between parts.
-8. Do not use symbols like * or #.`;
-    } else {
-      prompt =
-        `Summarize the study material below into short revision notes for a college student.
-Rules:
-1. Start with one short title line.
-2. Then give the key points as short lines. Each line starts with an emoji and has one clear sentence.
-3. Group related points together and leave an empty line between groups.
-4. Keep important terms, definitions, formulas and numbers exactly as they are.
-5. End with a line that starts with "Remember:" and gives the single most important idea.
-6. Keep the summary much shorter than the original.
-7. Do not use symbols like * or #.
+- Keep every term, formula and number exactly as in the material. Do not add facts that are not in the material.
+- Make the notes much shorter than the original.
+${FORMAT_RULES}
 
 Study material:
-${input}`;
-    }
+${material}`;
+  }
+
+  async function askAI(mode, input, marks) {
+    const prompt = mode === "explain"
+      ? buildExplainPrompt(input, marks)
+      : buildSummarizePrompt(input);
 
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -364,47 +762,434 @@ ${input}`;
       throw new Error("No answer came. Please try again in a moment.");
     }
 
-    let reply = String(data.reply).trim();
-
-    // Show the emoji "picture" line without the word PICTURE:
-    if (mode === "explain") {
-      reply = reply.replace(/^PICTURE:\s*/i, "");
-    }
-
-    return reply;
+    return String(data.reply)
+      .replace(/\*\*/g, "")
+      .replace(/^#{1,6}\s*/gm, "")
+      .replace(/^\s*[\*\-]\s+/gm, "• ")
+      .replace(/[*_`]/g, "")
+      .trim();
   }
+
+  /* =========================================================
+     PAGE STATE
+     ========================================================= */
 
   const NOTES_KEY = "luminaNotes";
 
-  const tabs = {
-    explainer: {
-      tab: document.getElementById("tab-explainer"),
-      panel: document.getElementById("panel-explainer")
+  const $ = id => document.getElementById(id);
+
+  const modes = {
+    explain: {
+      tab: $("tab-explain"),
+      thread: $("thread-explain"),
+      placeholder: "Type a topic or exam question...",
+      maxLength: 500,
+      label: "Concept Explainer",
+      source: "ai-chat"
     },
-    summarizer: {
-      tab: document.getElementById("tab-summarizer"),
-      panel: document.getElementById("panel-summarizer")
+    summarize: {
+      tab: $("tab-summarize"),
+      thread: $("thread-summarize"),
+      placeholder: "Paste your study material here...",
+      maxLength: 20000,
+      label: "Notes Summarizer",
+      source: "ai-summary"
     }
   };
 
-  function showTab(name) {
-    if (!tabs[name]) name = "explainer";
+  const chatScroll = $("chatScroll");
+  const input = $("promptInput");
+  const sendBtn = $("sendBtn");
+  const marksRow = $("marksRow");
 
-    Object.entries(tabs).forEach(([key, item]) => {
+  let currentMode = "explain";
+  let selectedMarks = "5";
+  let busy = false;
+  const drafts = { explain: "", summarize: "" };
+
+  /* ---------- Mode switching ---------- */
+  function setMode(name) {
+    if (!modes[name]) name = "explain";
+
+    drafts[currentMode] = input.value;
+    currentMode = name;
+
+    Object.entries(modes).forEach(([key, m]) => {
       const active = key === name;
-      item.tab.setAttribute("aria-selected", String(active));
-      item.panel.hidden = !active;
+      m.tab.setAttribute("aria-selected", String(active));
+      m.thread.hidden = !active;
     });
 
+    input.maxLength = modes[name].maxLength;
+    input.placeholder = modes[name].placeholder;
+    input.value = drafts[name] || "";
+    marksRow.hidden = name !== "explain";
+
+    resizeInput();
+    scrollToBottom(true);
     history.replaceState(null, "", "#" + name);
   }
 
-  tabs.explainer.tab.addEventListener("click", () => showTab("explainer"));
-  tabs.summarizer.tab.addEventListener("click", () => showTab("summarizer"));
+  modes.explain.tab.addEventListener("click", () => setMode("explain"));
+  modes.summarize.tab.addEventListener("click", () => setMode("summarize"));
 
-  showTab(location.hash.replace("#", "") || "explainer");
+  /* ---------- Marks chips ---------- */
+  marksRow.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      selectedMarks = chip.dataset.marks;
+      marksRow.querySelectorAll(".chip").forEach(c =>
+        c.setAttribute("aria-pressed", String(c === chip)));
+    });
+  });
 
-  /* ---------- Subject suggestions from existing notes ---------- */
+  /* ---------- Starter questions ---------- */
+  document.querySelectorAll(".starter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      input.value = btn.textContent.trim();
+      resizeInput();
+      input.focus();
+    });
+  });
+
+  /* ---------- New chat ---------- */
+  $("newChatBtn").addEventListener("click", () => {
+    if (busy) return;
+
+    const thread = modes[currentMode].thread;
+    thread.querySelectorAll(".msg").forEach(el => el.remove());
+    thread.classList.remove("has-messages");
+    input.focus();
+  });
+
+  /* ---------- Input box ---------- */
+  function resizeInput() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 180) + "px";
+  }
+
+  input.addEventListener("input", resizeInput);
+
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      $("composer").requestSubmit();
+    }
+  });
+
+  function scrollToBottom(instant) {
+    requestAnimationFrame(() => {
+      chatScroll.scrollTo({
+        top: chatScroll.scrollHeight,
+        behavior: instant ? "auto" : "smooth"
+      });
+    });
+  }
+
+  /* =========================================================
+     MESSAGES
+     ========================================================= */
+
+  function addUserMessage(mode, text) {
+    const thread = modes[mode].thread;
+
+    const row = document.createElement("div");
+    row.className = "msg user";
+
+    const bubble = document.createElement("div");
+    bubble.className = "user-bubble";
+    bubble.textContent = text;
+
+    row.appendChild(bubble);
+    thread.appendChild(row);
+    thread.classList.add("has-messages");
+    scrollToBottom();
+  }
+
+  function makeAiRow() {
+    const row = document.createElement("div");
+    row.className = "msg ai";
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar-ai";
+    avatar.textContent = "🌿";
+    avatar.setAttribute("aria-hidden", "true");
+
+    const body = document.createElement("div");
+    body.className = "ai-body";
+
+    row.append(avatar, body);
+    return { row, body };
+  }
+
+  function addTyping(mode) {
+    const { row, body } = makeAiRow();
+
+    const dots = document.createElement("div");
+    dots.className = "typing";
+    dots.setAttribute("aria-label", "Lumina AI is writing");
+    dots.innerHTML = "<span></span><span></span><span></span>";
+
+    body.appendChild(dots);
+    modes[mode].thread.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  /* Turn plain text into headings, paragraphs and list items */
+  function renderAnswer(container, text) {
+    text.split("\n").forEach(rawLine => {
+      const line = rawLine.trim();
+      if (!line) return;
+
+      const item = line.match(/^(\d+[.)]|•)\s+(.*)$/);
+
+      if (item) {
+        const row = document.createElement("div");
+        row.className = "a-item";
+
+        const marker = document.createElement("span");
+        marker.className = "a-marker";
+        marker.textContent = item[1] === "•" ? "•" : item[1];
+
+        const content = document.createElement("span");
+        content.textContent = item[2];
+
+        row.append(marker, content);
+        container.appendChild(row);
+        return;
+      }
+
+      if (/:$/.test(line) && line.length <= 60 && !/[.!?]:$/.test(line)) {
+        const heading = document.createElement("div");
+        heading.className = "a-heading";
+        heading.textContent = line.slice(0, -1);
+        container.appendChild(heading);
+        return;
+      }
+
+      const para = document.createElement("div");
+      para.className = "a-para";
+      para.textContent = line;
+      container.appendChild(para);
+    });
+  }
+
+  function getNoteTitle(mode, answer, question, marks) {
+    if (mode === "explain") {
+      const q = question.replace(/\s+/g, " ").trim();
+      const short = q.length > 55 ? q.slice(0, 55).trim() + "..." : q;
+      return short + " (" + marks + " marks)";
+    }
+
+    const topic = answer.match(/Topic:\s*\n?\s*(.+)/i);
+    if (topic && topic[1].trim()) {
+      const t = topic[1].trim();
+      return "Summary: " + (t.length > 55 ? t.slice(0, 55).trim() + "..." : t);
+    }
+
+    const q = question.replace(/\s+/g, " ").trim();
+    return "Summary: " + (q.length > 40 ? q.slice(0, 40).trim() + "..." : q);
+  }
+
+  function addAnswer(mode, answer, meta) {
+    const { row, body } = makeAiRow();
+
+    const label = document.createElement("div");
+    label.className = "ai-label";
+    label.textContent = mode === "explain"
+      ? "Lumina AI · " + meta.marks + "-mark answer"
+      : "Lumina AI · Revision notes";
+
+    const card = document.createElement("div");
+    card.className = "ai-card";
+    renderAnswer(card, answer);
+
+    /* Action buttons */
+    const actions = document.createElement("div");
+    actions.className = "ai-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "action-btn";
+    copyBtn.textContent = "Copy";
+
+    const saveToggle = document.createElement("button");
+    saveToggle.type = "button";
+    saveToggle.className = "action-btn";
+    saveToggle.textContent = "Save to My Notes";
+
+    actions.append(copyBtn, saveToggle);
+
+    /* Save form */
+    const form = document.createElement("div");
+    form.className = "save-form";
+    form.hidden = true;
+
+    const subjectInput = document.createElement("input");
+    subjectInput.type = "text";
+    subjectInput.setAttribute("list", "subjectOptions");
+    subjectInput.placeholder = "Subject name, e.g. Artificial Intelligence";
+    subjectInput.setAttribute("aria-label", "Subject name");
+
+    const saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.className = "save-btn";
+    saveBtn.textContent = "Save";
+
+    const note = document.createElement("div");
+    note.className = "save-note";
+    note.setAttribute("role", "status");
+
+    form.append(subjectInput, saveBtn, note);
+
+    copyBtn.addEventListener("click", () => {
+      if (!navigator.clipboard) {
+        copyBtn.textContent = "Copy not supported";
+        return;
+      }
+
+      navigator.clipboard.writeText(answer).then(() => {
+        copyBtn.textContent = "Copied ✓";
+        setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
+      }).catch(() => {
+        copyBtn.textContent = "Could not copy";
+        setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
+      });
+    });
+
+    saveToggle.addEventListener("click", () => {
+      form.hidden = !form.hidden;
+      if (!form.hidden) subjectInput.focus();
+      scrollToBottom();
+    });
+
+    function doSave() {
+      const subject = subjectInput.value.trim();
+      note.classList.remove("error");
+
+      if (!subject) {
+        note.textContent = "Please enter a subject name.";
+        note.classList.add("error");
+        subjectInput.focus();
+        return;
+      }
+
+      try {
+        saveToNotes(
+          getNoteTitle(mode, answer, meta.question, meta.marks),
+          subject,
+          answer,
+          modes[mode].source
+        );
+        note.textContent = "✓ Saved to My Notes under " + subject + ".";
+        fillSubjects();
+      } catch (error) {
+        console.error(error);
+        note.textContent = "Unable to save the note. Please try again.";
+        note.classList.add("error");
+      }
+    }
+
+    saveBtn.addEventListener("click", doSave);
+
+    subjectInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        doSave();
+      }
+    });
+
+    body.append(label, card, actions, form);
+    modes[mode].thread.appendChild(row);
+    scrollToBottom();
+  }
+
+  function addError(mode, message, retry) {
+    const { row, body } = makeAiRow();
+
+    const card = document.createElement("div");
+    card.className = "error-card";
+    card.textContent = message;
+
+    const retryBtn = document.createElement("button");
+    retryBtn.type = "button";
+    retryBtn.className = "action-btn";
+    retryBtn.textContent = "Try again";
+
+    retryBtn.addEventListener("click", () => {
+      if (busy) return;
+      row.remove();
+      retry();
+    });
+
+    card.appendChild(document.createElement("br"));
+    card.appendChild(retryBtn);
+    body.appendChild(card);
+    modes[mode].thread.appendChild(row);
+    scrollToBottom();
+  }
+
+  /* =========================================================
+     RUNNING A REQUEST
+     ========================================================= */
+
+  async function runRequest(mode, text, marks) {
+    busy = true;
+    sendBtn.disabled = true;
+
+    const typing = addTyping(mode);
+
+    try {
+      const answer = await askAI(mode, text, marks);
+      typing.remove();
+      addAnswer(mode, answer, { question: text, marks });
+    } catch (error) {
+      console.error(error);
+      typing.remove();
+      addError(
+        mode,
+        error.message || "Something went wrong. Please try again.",
+        () => runRequest(mode, text, marks)
+      );
+    } finally {
+      busy = false;
+      sendBtn.disabled = false;
+      if (currentMode === mode) input.focus();
+    }
+  }
+
+  $("composer").addEventListener("submit", event => {
+    event.preventDefault();
+
+    if (busy) return;
+
+    const text = input.value.trim();
+
+    if (!text) {
+      input.focus();
+      return;
+    }
+
+    const mode = currentMode;
+    const marks = selectedMarks;
+
+    const shown = mode === "summarize" && text.length > 300
+      ? text.slice(0, 300).trim() + "…\n(" + text.length + " characters pasted)"
+      : text;
+
+    addUserMessage(mode, shown);
+
+    input.value = "";
+    drafts[mode] = "";
+    resizeInput();
+
+    runRequest(mode, text, marks);
+  });
+
+  /* =========================================================
+     MY NOTES
+     ========================================================= */
+
   function readNotes() {
     try {
       const data = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
@@ -414,18 +1199,18 @@ ${input}`;
     }
   }
 
-  (function fillSubjects() {
-    const list = document.getElementById("subjectOptions");
-    const subjects = [...new Set(readNotes().map(n => n.subject).filter(Boolean))];
+  function fillSubjects() {
+    const list = $("subjectOptions");
+    list.innerHTML = "";
 
-    subjects.forEach(subject => {
-      const option = document.createElement("option");
-      option.value = subject;
-      list.appendChild(option);
-    });
-  })();
+    [...new Set(readNotes().map(n => n.subject).filter(Boolean))]
+      .forEach(subject => {
+        const option = document.createElement("option");
+        option.value = subject;
+        list.appendChild(option);
+      });
+  }
 
-  /* ---------- Save a result into My Notes ---------- */
   function saveToNotes(title, subject, content, source) {
     const notes = readNotes();
     const now = new Date().toISOString();
@@ -444,119 +1229,11 @@ ${input}`;
     localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
   }
 
-  /* ---------- Wire up one tool ---------- */
-  function setupTool(config) {
-    const input = document.getElementById(config.inputId);
-    const runBtn = document.getElementById(config.runId);
-    const clearBtn = document.getElementById(config.clearId);
-    const result = document.getElementById(config.resultId);
-    const saveRow = document.getElementById(config.saveRowId);
-    const subjectInput = document.getElementById(config.subjectId);
-    const saveBtn = document.getElementById(config.saveBtnId);
-    const status = document.getElementById(config.statusId);
-
-    let lastAnswer = "";
-
-    function setStatus(message, isError) {
-      status.textContent = message;
-      status.classList.toggle("error", Boolean(isError));
-    }
-
-    runBtn.addEventListener("click", async () => {
-      const text = input.value.trim();
-      setStatus("");
-
-      if (!text) {
-        setStatus(config.emptyMessage, true);
-        input.focus();
-        return;
-      }
-
-      runBtn.disabled = true;
-      runBtn.textContent = "Working...";
-      result.hidden = true;
-      saveRow.hidden = true;
-
-      try {
-        lastAnswer = (await askAI(config.mode, text)).trim();
-        result.textContent = lastAnswer;
-        result.hidden = false;
-        saveRow.hidden = !lastAnswer;
-      } catch (error) {
-        console.error(error);
-        setStatus(error.message || "Something went wrong. Please try again.", true);
-      } finally {
-        runBtn.disabled = false;
-        runBtn.textContent = config.runLabel;
-      }
-    });
-
-    clearBtn.addEventListener("click", () => {
-      input.value = "";
-      result.textContent = "";
-      result.hidden = true;
-      saveRow.hidden = true;
-      setStatus("");
-      lastAnswer = "";
-      input.focus();
-    });
-
-    saveBtn.addEventListener("click", () => {
-      const subject = subjectInput.value.trim();
-
-      if (!lastAnswer) return;
-
-      if (!subject) {
-        setStatus("Please enter a subject to save this note.", true);
-        subjectInput.focus();
-        return;
-      }
-
-      const raw = input.value.trim().replace(/\s+/g, " ");
-      const title = config.titlePrefix +
-        (raw.length > 40 ? raw.slice(0, 40).trim() + "..." : raw);
-
-      try {
-        saveToNotes(title, subject, lastAnswer, config.source);
-        setStatus("✓ Saved to My Notes under " + subject + ".", false);
-      } catch (error) {
-        console.error(error);
-        setStatus("Unable to save the note. Please try again.", true);
-      }
-    });
-  }
-
-  setupTool({
-    mode: "explain",
-    inputId: "explainerInput",
-    runId: "explainBtn",
-    clearId: "explainClear",
-    resultId: "explainerResult",
-    saveRowId: "explainerSave",
-    subjectId: "explainerSubject",
-    saveBtnId: "explainerSaveBtn",
-    statusId: "explainerStatus",
-    runLabel: "Explain",
-    emptyMessage: "Please type a topic or question first.",
-    titlePrefix: "",
-    source: "ai-chat"
-  });
-
-  setupTool({
-    mode: "summarize",
-    inputId: "summarizerInput",
-    runId: "summarizeBtn",
-    clearId: "summarizeClear",
-    resultId: "summarizerResult",
-    saveRowId: "summarizerSave",
-    subjectId: "summarizerSubject",
-    saveBtnId: "summarizerSaveBtn",
-    statusId: "summarizerStatus",
-    runLabel: "Summarize",
-    emptyMessage: "Please paste some study material first.",
-    titlePrefix: "Summary: ",
-    source: "ai-summary"
-  });
+  /* ---------- Start ---------- */
+  fillSubjects();
+  setMode(location.hash === "#summarize" || location.hash === "#summarizer"
+    ? "summarize"
+    : "explain");
   </script>
 </body>
 </html>
