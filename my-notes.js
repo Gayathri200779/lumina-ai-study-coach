@@ -1,4 +1,3 @@
-
 "use strict";
 
 const STORAGE_KEY = "luminaNotes";
@@ -17,12 +16,10 @@ const saveNoteBtn = document.getElementById("saveNoteBtn");
 const saveStatus = document.getElementById("saveStatus");
 
 let notes = loadNotes();
+let expandedSubject = null;
 let editingNoteId = null;
 let currentSearch = "";
 let currentFilter = "";
-let activeSubject = null;
-let activeReaderNoteId = null;
-let quickAddVisible = false;
 
 const subjectIcons = [
   "📘", "🧠", "📊", "🐍", "🧪",
@@ -41,21 +38,38 @@ function createId() {
 function isValidNote(note) {
   return note &&
     typeof note === "object" &&
-    typeof note.title === "string" &&
-    typeof note.subject === "string" &&
+    typeof (note.title || note.topic) === "string" &&
     typeof note.content === "string";
 }
 
-/* Load existing notes without overwriting saved data. */
+function normalizeNote(note) {
+  const now = new Date().toISOString();
+
+  return {
+    id: note.id || createId(),
+    title: String(note.title || note.topic || "Untitled Note").trim(),
+    subject: String(note.subject || note.subjectName || "General").trim() || "General",
+    content: String(note.content || ""),
+    source: ["manual", "ai-chat", "ai-summary"].includes(note.source)
+      ? note.source
+      : "manual",
+    createdAt: note.createdAt || note.savedAt || now,
+    updatedAt: note.updatedAt || note.savedAt || now
+  };
+}
+
 function loadNotes() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
 
     if (saved !== null) {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed)
-        ? parsed.filter(isValidNote)
-        : [];
+      if (!Array.isArray(parsed)) return [];
+
+      const normalized = parsed.filter(isValidNote).map(normalizeNote);
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+      return normalized;
     }
 
     if (localStorage.getItem(LEGACY_KEY) !== "true") {
@@ -137,8 +151,7 @@ function saveNotes() {
     console.error("Unable to save notes:", error);
 
     if (saveStatus) {
-      saveStatus.textContent =
-        "Unable to save notes. Please try again.";
+      saveStatus.textContent = "Unable to save notes. Please try again.";
     }
 
     return false;
@@ -156,11 +169,9 @@ function escapeHTML(value) {
 }
 
 function getSubjectNames() {
-  return [
-    ...new Set(
-      notes.map(note => note.subject.trim()).filter(Boolean)
-    )
-  ].sort((a, b) => a.localeCompare(b));
+  return [...new Set(
+    notes.map(note => note.subject.trim()).filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
 }
 
 function getIcon(subject) {
@@ -186,538 +197,7 @@ function getIcon(subject) {
   return subjectIcons[total % subjectIcons.length];
 }
 
-/* Create popup styling without replacing the page's original styles. */
-function addPopupStyles() {
-  if (document.getElementById("luminaNotesPopupStyles")) return;
-
-  const style = document.createElement("style");
-  style.id = "luminaNotesPopupStyles";
-
-  style.textContent = `
-    .lumina-popup-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      background: rgba(31, 47, 37, .42);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      box-sizing: border-box;
-    }
-
-    .lumina-popup-overlay.lumina-popup-open {
-      display: flex;
-    }
-
-    #luminaReaderOverlay {
-      z-index: 9001;
-      padding: 0;
-    }
-
-    .lumina-popup-panel {
-      width: min(540px, 100%);
-      max-height: 84vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      background: #FBFCFA;
-      color: #344638;
-      border: 1px solid #DDE9DF;
-      border-radius: 20px;
-      box-shadow: 0 20px 65px rgba(30, 55, 37, .22);
-      font-family: inherit;
-    }
-
-    .lumina-popup-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 20px 22px;
-      background: #F6FAF7;
-      border-bottom: 1px solid #E4EEE6;
-    }
-
-    .lumina-popup-heading {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .lumina-popup-heading h2 {
-      margin: 0;
-      color: #4F6F52;
-      font-family: inherit;
-      font-size: 20px;
-      font-weight: 600;
-      overflow-wrap: anywhere;
-    }
-
-    .lumina-popup-subtitle {
-      margin: 5px 0 0;
-      color: #718174;
-      font-size: 13px;
-      overflow-wrap: anywhere;
-    }
-
-    .lumina-popup-close {
-      flex-shrink: 0;
-      width: 36px;
-      height: 36px;
-      border: 1px solid #DCE8DE;
-      border-radius: 50%;
-      background: #FFFFFF;
-      color: #4F6F52;
-      font-size: 22px;
-      line-height: 1;
-      cursor: pointer;
-    }
-
-    .lumina-popup-close:hover {
-      background: #EAF4EC;
-    }
-
-    .lumina-topics-list {
-      padding: 12px 16px;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-    }
-
-    .lumina-topic-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 5px 0;
-      border-bottom: 1px solid #EAF0EB;
-    }
-
-    .lumina-topic-title {
-      flex: 1;
-      min-width: 0;
-      padding: 13px 10px;
-      border: 0;
-      border-radius: 9px;
-      background: transparent;
-      color: #344638;
-      font-family: inherit;
-      font-size: 15px;
-      line-height: 1.5;
-      text-align: left;
-      overflow-wrap: anywhere;
-      cursor: pointer;
-    }
-
-    .lumina-topic-title:hover {
-      background: #EEF8F3;
-      color: #4F6F52;
-    }
-
-    .lumina-topic-actions {
-      display: flex;
-      gap: 6px;
-    }
-
-    .lumina-topic-action {
-      padding: 7px 9px;
-      border: 1px solid #DCE8DE;
-      border-radius: 8px;
-      background: #FFFFFF;
-      color: #4F6F52;
-      font-family: inherit;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .lumina-topic-action:hover {
-      background: #EEF8F3;
-    }
-
-    .lumina-topic-action.delete {
-      color: #B24A4A;
-    }
-
-    .lumina-topics-footer {
-      padding: 13px 18px;
-      border-top: 1px solid #E4EEE6;
-      background: #F6FAF7;
-    }
-
-    .lumina-quick-add-toggle {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px dashed #A9C4AD;
-      border-radius: 10px;
-      background: transparent;
-      color: #4F6F52;
-      font-family: inherit;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .lumina-quick-add-form {
-      display: none;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .lumina-quick-add-form.visible {
-      display: flex;
-    }
-
-    .lumina-quick-add-form input {
-      flex: 1;
-      min-width: 0;
-      padding: 10px 12px;
-      border: 1px solid #D5E3D8;
-      border-radius: 9px;
-      outline-color: #6B9080;
-      font: inherit;
-    }
-
-    .lumina-quick-add-form button {
-      padding: 10px 14px;
-      border: 0;
-      border-radius: 9px;
-      background: #6B9080;
-      color: white;
-      font-family: inherit;
-      cursor: pointer;
-    }
-
-    .lumina-topic-empty {
-      padding: 26px 12px;
-      color: #718174;
-      text-align: center;
-      font-size: 14px;
-    }
-
-    /* Full-screen note reader */
-    .lumina-reader-panel {
-      width: 100%;
-      height: 100%;
-      max-height: 100%;
-      border: 0;
-      border-radius: 0;
-    }
-
-    .lumina-reader-header {
-      flex-shrink: 0;
-      padding: 12px 24px;
-    }
-
-    .lumina-reader-header .lumina-popup-heading h2 {
-      font-size: 16px;
-      font-weight: 600;
-      line-height: 1.4;
-    }
-
-    .lumina-reader-header .lumina-popup-subtitle {
-      margin-top: 2px;
-      font-size: 11px;
-    }
-
-    .lumina-reader-content {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 28px clamp(20px, 7vw, 90px);
-      background: #FBFCFA;
-      overscroll-behavior: contain;
-    }
-
-    .lumina-reader-answer {
-      width: 100%;
-      max-width: 1100px;
-      margin: 0 auto;
-      color: #344638;
-      font-family: inherit;
-      font-size: 16px;
-      line-height: 2;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .lumina-reader-source {
-      display: inline-block;
-      margin: 22px auto 0;
-      padding: 6px 10px;
-      border-radius: 8px;
-      background: #EEF8F3;
-      color: #4F6F52;
-      font-size: 12px;
-    }
-
-    .lumina-reader-footer {
-      display: flex;
-      flex-shrink: 0;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 20px;
-      border-top: 1px solid #E4EEE6;
-      background: #F6FAF7;
-    }
-
-    .lumina-reader-footer button {
-      padding: 10px 17px;
-      border: 1px solid #D5E3D8;
-      border-radius: 9px;
-      background: #FFFFFF;
-      color: #4F6F52;
-      font-family: inherit;
-      cursor: pointer;
-    }
-
-    .lumina-reader-footer .lumina-reader-edit {
-      background: #6B9080;
-      color: #FFFFFF;
-      border-color: #6B9080;
-    }
-
-    .lumina-reader-footer .lumina-reader-delete {
-      color: #B24A4A;
-    }
-
-    .lumina-reader-left,
-    .lumina-reader-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .lumina-popup-overlay button:focus-visible {
-      outline: 2px solid #6B9080;
-      outline-offset: 3px;
-    }
-
-    /* Full-screen create/edit form */
-    .modal.show {
-      position: fixed !important;
-      inset: 0 !important;
-      z-index: 10000 !important;
-      display: flex !important;
-      align-items: stretch !important;
-      justify-content: stretch !important;
-      padding: 0 !important;
-      overflow: hidden !important;
-    }
-
-    .modal.show .modal-card {
-      display: flex;
-      flex-direction: column;
-      width: 100vw !important;
-      max-width: 100vw !important;
-      height: 100vh !important;
-      height: 100dvh !important;
-      max-height: 100vh !important;
-      max-height: 100dvh !important;
-      margin: 0 !important;
-      padding: 22px clamp(18px, 5vw, 64px) !important;
-      overflow-y: auto !important;
-      border: 0 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-    }
-
-    .modal.show .modal-heading {
-      flex-shrink: 0;
-      margin-bottom: 18px !important;
-      padding-bottom: 14px;
-      border-bottom: 1px solid #D7E6D9;
-    }
-
-    .modal.show .modal-heading h2 {
-      font-size: 19px !important;
-    }
-
-    .modal.show .modal-heading p {
-      font-size: 11px !important;
-      overflow-wrap: anywhere;
-    }
-
-    .modal.show .form-group {
-      margin-bottom: 14px;
-    }
-
-    .modal.show .form-group textarea {
-      min-height: 40vh;
-      min-height: 40dvh;
-      resize: vertical;
-      font-size: 14px;
-      line-height: 1.9;
-    }
-
-    .modal.show .modal-actions {
-      flex-shrink: 0;
-      margin-top: 12px;
-      padding-bottom: 8px;
-    }
-
-    .modal.show .save-status {
-      flex-shrink: 0;
-    }
-
-    @media (max-width: 600px) {
-      .lumina-popup-overlay {
-        padding: 10px;
-      }
-
-      .lumina-popup-panel {
-        max-height: 88vh;
-        border-radius: 15px;
-      }
-
-      .lumina-popup-header {
-        padding: 16px;
-      }
-
-      .lumina-popup-heading h2 {
-        font-size: 18px;
-      }
-
-      .lumina-topic-row {
-        gap: 5px;
-      }
-
-      .lumina-topic-actions {
-        gap: 4px;
-      }
-
-      .lumina-topic-action {
-        padding: 7px;
-      }
-
-      #luminaReaderOverlay {
-        padding: 0;
-      }
-
-      #luminaReaderOverlay .lumina-reader-panel {
-        width: 100%;
-        height: 100%;
-        max-height: 100%;
-        border-radius: 0;
-      }
-
-      #luminaReaderOverlay .lumina-reader-header {
-        padding: 10px 14px;
-      }
-
-      #luminaReaderOverlay .lumina-reader-content {
-        padding: 20px 16px;
-      }
-
-      #luminaReaderOverlay .lumina-reader-answer {
-        font-size: 15px;
-        line-height: 1.9;
-      }
-
-      .lumina-reader-footer {
-        padding: 10px;
-        flex-wrap: wrap;
-      }
-
-      .lumina-reader-footer button {
-        padding: 9px 11px;
-        font-size: 13px;
-      }
-
-      .modal.show .modal-card {
-        padding: 16px !important;
-      }
-
-      .modal.show .form-group textarea {
-        min-height: 35vh;
-        min-height: 35dvh;
-      }
-    }
-  `;
-
-  document.head.appendChild(style);
-}
-
-/* Create topic and reader screens before attaching their handlers. */
-function createPopupElements() {
-  if (!document.getElementById("luminaTopicsOverlay")) {
-    const topicsOverlay = document.createElement("div");
-    topicsOverlay.id = "luminaTopicsOverlay";
-    topicsOverlay.className = "lumina-popup-overlay";
-    topicsOverlay.setAttribute("aria-hidden", "true");
-
-    topicsOverlay.innerHTML = `
-      <section class="lumina-popup-panel" role="dialog"
-               aria-modal="true" aria-labelledby="luminaTopicsTitle">
-        <header class="lumina-popup-header">
-          <div class="lumina-popup-heading">
-            <h2 id="luminaTopicsTitle">Topics</h2>
-            <p class="lumina-popup-subtitle" id="luminaTopicsSubtitle"></p>
-          </div>
-          <button type="button" class="lumina-popup-close"
-                  id="luminaTopicsClose" aria-label="Close topics">&times;</button>
-        </header>
-        <div class="lumina-topics-list" id="luminaTopicsList"></div>
-        <footer class="lumina-topics-footer">
-          <button type="button" class="lumina-quick-add-toggle"
-                  id="luminaQuickAddToggle">+ Add a quick note</button>
-          <form class="lumina-quick-add-form" id="luminaQuickAddForm">
-            <input type="text" id="luminaQuickAddInput"
-                   maxlength="50000" placeholder="Write a quick note..."
-                   aria-label="Quick note content">
-            <button type="submit">Add</button>
-          </form>
-        </footer>
-      </section>`;
-
-    document.body.appendChild(topicsOverlay);
-  }
-
-  if (!document.getElementById("luminaReaderOverlay")) {
-    const readerOverlay = document.createElement("div");
-    readerOverlay.id = "luminaReaderOverlay";
-    readerOverlay.className = "lumina-popup-overlay";
-    readerOverlay.setAttribute("aria-hidden", "true");
-
-    readerOverlay.innerHTML = `
-      <section class="lumina-popup-panel lumina-reader-panel"
-               role="dialog" aria-modal="true"
-               aria-labelledby="luminaReaderTitle">
-        <header class="lumina-popup-header lumina-reader-header">
-          <div class="lumina-popup-heading">
-            <h2 id="luminaReaderTitle">Note Title</h2>
-            <p class="lumina-popup-subtitle" id="luminaReaderSubtitle">Subject Name</p>
-          </div>
-          <button type="button" class="lumina-popup-close"
-                  id="luminaReaderClose" aria-label="Close note">&times;</button>
-        </header>
-        <main class="lumina-reader-content" id="luminaReaderContent"></main>
-        <footer class="lumina-reader-footer">
-          <div class="lumina-reader-left">
-            <button type="button" id="luminaReaderBack">← Topics</button>
-          </div>
-          <div class="lumina-reader-right">
-            <button type="button" class="lumina-reader-delete"
-                    id="luminaReaderDelete">Delete</button>
-            <button type="button" class="lumina-reader-edit"
-                    id="luminaReaderEdit">Edit Note</button>
-          </div>
-        </footer>
-      </section>`;
-
-    document.body.appendChild(readerOverlay);
-  }
-
-  if (modal) {
-    modal.style.zIndex = "10000";
-  }
-}
-
-addPopupStyles();
-createPopupElements();
-
 function updateSubjectControls() {
-  if (!subjectFilter) return;
-
   const selected = subjectFilter.value;
   const subjects = getSubjectNames();
 
@@ -738,10 +218,369 @@ function updateSubjectControls() {
   }
 }
 
-function getFilteredNotes() {
+/* =========================================
+   FULL-SCREEN NOTE READER AND EDITOR
+========================================= */
+
+let noteReader = document.getElementById("noteReader");
+
+function ensureNoteReader() {
+  if (noteReader) return noteReader;
+
+  noteReader = document.createElement("div");
+  noteReader.id = "noteReader";
+  noteReader.setAttribute("role", "dialog");
+  noteReader.setAttribute("aria-modal", "true");
+  noteReader.setAttribute("aria-labelledby", "noteReaderTitle");
+
+  Object.assign(noteReader.style, {
+    display: "none",
+    position: "fixed",
+    inset: "0",
+    zIndex: "9999",
+    background: "#eefdef",
+    padding: "0",
+    boxSizing: "border-box",
+    alignItems: "stretch",
+    justifyContent: "stretch"
+  });
+
+  const panel = document.createElement("section");
+  panel.id = "noteReaderPanel";
+
+  Object.assign(panel.style, {
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    height: "100%",
+    maxHeight: "100%",
+    overflow: "hidden",
+    background: "#FBFCFA",
+    color: "#121e16",
+    border: "0",
+    borderRadius: "0",
+    padding: "clamp(16px, 3vw, 32px)",
+    boxSizing: "border-box",
+    boxShadow: "none",
+    fontFamily: "Poppins, sans-serif"
+  });
+
+  const close = document.createElement("button");
+  close.type = "button";
+  close.id = "noteReaderClose";
+  close.textContent = "✕";
+  close.setAttribute("aria-label", "Close note");
+
+  Object.assign(close.style, {
+    position: "sticky",
+    top: "0",
+    float: "right",
+    alignSelf: "flex-end",
+    flexShrink: "0",
+    border: "0",
+    borderRadius: "10px",
+    width: "40px",
+    height: "40px",
+    background: "#e8f8ea",
+    color: "#37563b",
+    fontSize: "20px",
+    cursor: "pointer"
+  });
+
+  close.addEventListener("click", closeNoteReader);
+
+  const subject = document.createElement("p");
+  subject.id = "noteReaderSubject";
+
+  Object.assign(subject.style, {
+    margin: "8px 50px 2px 0",
+    color: "#4f6f52",
+    fontWeight: "600",
+    fontSize: "12px"
+  });
+
+  const title = document.createElement("h2");
+  title.id = "noteReaderTitle";
+
+  Object.assign(title.style, {
+    margin: "0 50px 14px 0",
+    color: "#37563b",
+    fontSize: "clamp(16px, 2vw, 20px)",
+    fontWeight: "600",
+    lineHeight: "1.4",
+    overflowWrap: "anywhere"
+  });
+
+  const content = document.createElement("div");
+  content.id = "noteReaderContent";
+
+  Object.assign(content.style, {
+    flex: "1",
+    minHeight: "0",
+    width: "100%",
+    overflowY: "auto",
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
+    fontSize: "16px",
+    lineHeight: "1.9",
+    color: "#25352a",
+    padding: "18px 0",
+    boxSizing: "border-box"
+  });
+
+  const footer = document.createElement("div");
+
+  Object.assign(footer.style, {
+    display: "flex",
+    gap: "10px",
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    flexShrink: "0",
+    marginTop: "10px",
+    paddingTop: "14px",
+    borderTop: "1px solid #d7e6d9"
+  });
+
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.id = "noteReaderEdit";
+  edit.textContent = "Edit Note";
+
+  Object.assign(edit.style, {
+    border: "0",
+    borderRadius: "10px",
+    padding: "11px 18px",
+    background: "#4f6f52",
+    color: "#fff",
+    font: "inherit",
+    fontWeight: "600",
+    cursor: "pointer"
+  });
+
+  const done = document.createElement("button");
+  done.type = "button";
+  done.textContent = "Close";
+
+  Object.assign(done.style, {
+    border: "1px solid #cbdccb",
+    borderRadius: "10px",
+    padding: "11px 18px",
+    background: "#fff",
+    color: "#37563b",
+    font: "inherit",
+    cursor: "pointer"
+  });
+
+  done.addEventListener("click", closeNoteReader);
+
+  footer.append(edit, done);
+  panel.append(close, subject, title, content, footer);
+  noteReader.appendChild(panel);
+
+  noteReader.addEventListener("click", event => {
+    if (event.target === noteReader) closeNoteReader();
+  });
+
+  document.body.appendChild(noteReader);
+
+  return noteReader;
+}
+
+function openNoteReader(note, startInEditMode = false) {
+  if (!note) return;
+
+  ensureNoteReader();
+
+  const subject = document.getElementById("noteReaderSubject");
+  const title = document.getElementById("noteReaderTitle");
+  const editButton = document.getElementById("noteReaderEdit");
+  const closeButton = document.getElementById("noteReaderClose");
+
+  subject.textContent = "📚 " + note.subject;
+  title.textContent = note.title;
+
+  function showReadMode(updatedNote) {
+    subject.textContent = "📚 " + updatedNote.subject;
+    title.textContent = updatedNote.title;
+
+    const answer = document.createElement("div");
+    answer.id = "noteReaderContent";
+    answer.textContent = updatedNote.content;
+
+    Object.assign(answer.style, {
+      flex: "1",
+      minHeight: "0",
+      width: "100%",
+      overflowY: "auto",
+      whiteSpace: "pre-wrap",
+      overflowWrap: "anywhere",
+      fontSize: "16px",
+      lineHeight: "1.9",
+      color: "#25352a",
+      padding: "18px 0",
+      boxSizing: "border-box"
+    });
+
+    const currentContent = document.getElementById("noteReaderContent");
+
+    if (currentContent) {
+      currentContent.replaceWith(answer);
+    }
+
+    editButton.textContent = "Edit Note";
+    editButton.onclick = () => openNoteReader(updatedNote, true);
+  }
+
+  function showEditMode(currentNote) {
+    const currentContent = document.getElementById("noteReaderContent");
+
+    if (!currentContent) return;
+
+    const editor = document.createElement("textarea");
+    editor.id = "noteReaderContent";
+    editor.value = currentNote.content;
+    editor.setAttribute("aria-label", "Edit note answer");
+    editor.placeholder = "Edit your note here...";
+
+    Object.assign(editor.style, {
+      flex: "1",
+      minHeight: "0",
+      width: "100%",
+      resize: "none",
+      overflowY: "auto",
+      padding: "18px",
+      border: "1px solid #d7e6d9",
+      borderRadius: "12px",
+      background: "#ffffff",
+      color: "#25352a",
+      font: "inherit",
+      fontSize: "16px",
+      lineHeight: "1.9",
+      outlineColor: "#4f6f52",
+      boxSizing: "border-box"
+    });
+
+    currentContent.replaceWith(editor);
+
+    editButton.textContent = "Save Edit";
+
+    editButton.onclick = () => {
+      const editedContent = editor.value.trim();
+
+      if (!editedContent) {
+        window.alert("Please enter the note answer before saving.");
+        editor.focus();
+        return;
+      }
+
+      // Ask for the title with the current title already filled in.
+      const enteredTitle = window.prompt(
+        "Enter or confirm the note title:",
+        currentNote.title
+      );
+
+      if (enteredTitle === null) return;
+
+      const editedTitle = enteredTitle.trim();
+
+      if (!editedTitle) {
+        window.alert("The note title cannot be empty.");
+        return;
+      }
+
+      const index = notes.findIndex(item => item.id === currentNote.id);
+
+      if (index === -1) {
+        window.alert(
+          "This note could not be found. Please reopen it and try again."
+        );
+        return;
+      }
+
+      const originalNote = notes[index];
+
+      const updatedNote = {
+        ...originalNote,
+        title: editedTitle,
+        content: editedContent,
+        updatedAt: new Date().toISOString()
+      };
+
+      notes[index] = updatedNote;
+
+      if (!saveNotes()) {
+        notes[index] = originalNote;
+        window.alert("Unable to save the note. Please try again.");
+        return;
+      }
+
+      expandedSubject = updatedNote.subject;
+      render();
+      showReadMode(updatedNote);
+
+      window.alert("Note updated successfully!");
+    };
+
+    editor.focus();
+  }
+
+  // Rebuild the answer area in read mode when opening a note.
+  const oldContent = document.getElementById("noteReaderContent");
+
+  if (oldContent) {
+    const answer = document.createElement("div");
+    answer.id = "noteReaderContent";
+    answer.textContent = note.content;
+
+    Object.assign(answer.style, {
+      flex: "1",
+      minHeight: "0",
+      width: "100%",
+      overflowY: "auto",
+      whiteSpace: "pre-wrap",
+      overflowWrap: "anywhere",
+      fontSize: "16px",
+      lineHeight: "1.9",
+      color: "#25352a",
+      padding: "18px 0",
+      boxSizing: "border-box"
+    });
+
+    oldContent.replaceWith(answer);
+  }
+
+  editButton.textContent = "Edit Note";
+  editButton.onclick = () => showEditMode(note);
+
+  noteReader.style.display = "flex";
+  document.body.style.overflow = "hidden";
+
+  if (startInEditMode) {
+    showEditMode(note);
+  } else {
+    closeButton.focus();
+  }
+}
+
+function closeNoteReader() {
+  if (noteReader) {
+    noteReader.style.display = "none";
+  }
+
+  document.body.style.overflow = "";
+}
+
+/* =========================================
+   DISPLAY SUBJECT CARDS AND TOPIC TITLES
+========================================= */
+
+function render() {
+  updateSubjectControls();
+
   const term = currentSearch.trim().toLowerCase();
 
-  return notes.filter(note => {
+  const filteredNotes = notes.filter(note => {
     const matchesSearch =
       note.title.toLowerCase().includes(term) ||
       note.subject.toLowerCase().includes(term) ||
@@ -752,17 +591,10 @@ function getFilteredNotes() {
 
     return matchesSearch && matchesSubject;
   });
-}
-
-/* Main page shows subject cards. */
-function render() {
-  if (!grid) return;
-
-  updateSubjectControls();
 
   const grouped = new Map();
 
-  getFilteredNotes().forEach(note => {
+  filteredNotes.forEach(note => {
     if (!grouped.has(note.subject)) {
       grouped.set(note.subject, []);
     }
@@ -799,7 +631,10 @@ function render() {
       header.className = "subject-header";
       header.tabIndex = 0;
       header.setAttribute("role", "button");
-      header.setAttribute("aria-label", "Open " + subjectName);
+      header.setAttribute(
+        "aria-expanded",
+        String(expandedSubject === subjectName)
+      );
 
       header.innerHTML = `
         <div class="subject-icon">${getIcon(subjectName)}</div>
@@ -807,157 +642,168 @@ function render() {
           <h3>${escapeHTML(subjectName)}</h3>
           <p class="note-count">
             ${subjectNotes.length}
-            ${subjectNotes.length === 1 ? "Topic" : "Topics"}
+            ${subjectNotes.length === 1 ? "Note" : "Notes"}
           </p>
-        </div>`;
+        </div>
+      `;
 
-      const openSubject = () => openTopicsModal(subjectName);
+      function toggleSubject() {
+        expandedSubject =
+          expandedSubject === subjectName ? null : subjectName;
+        render();
+      }
 
-      header.addEventListener("click", openSubject);
+      header.addEventListener("click", toggleSubject);
+
       header.addEventListener("keydown", event => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          openSubject();
+          toggleSubject();
         }
       });
 
       card.appendChild(header);
+
+      if (expandedSubject === subjectName) {
+        const detail = document.createElement("div");
+        detail.className = "subject-detail";
+
+        const list = document.createElement("ul");
+        list.className = "notes-list";
+
+        subjectNotes.forEach(note => {
+          const item = document.createElement("li");
+          item.className = "note-item";
+
+          const content = document.createElement("div");
+          content.className = "note-content";
+
+          const title = document.createElement("span");
+          title.className = "note-title";
+          title.textContent = note.title;
+
+          const body = document.createElement("p");
+          body.className = "note-text";
+          body.textContent = note.content;
+
+          content.append(title, body);
+          content.tabIndex = 0;
+          content.setAttribute("role", "button");
+          content.setAttribute(
+            "aria-label",
+            "Read full note: " + note.title
+          );
+          content.style.cursor = "pointer";
+
+          content.addEventListener("click", () => openNoteReader(note));
+
+          content.addEventListener("keydown", event => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openNoteReader(note);
+            }
+          });
+
+          if (note.source === "ai-chat" || note.source === "ai-summary") {
+            const source = document.createElement("span");
+            source.className = "note-source";
+            source.textContent = note.source === "ai-chat"
+              ? "✦ AI Chat Explanation"
+              : "✦ AI Summary";
+
+            content.appendChild(source);
+          }
+
+          const actions = document.createElement("div");
+          actions.className = "note-actions";
+
+          const editButton = document.createElement("button");
+          editButton.type = "button";
+          editButton.className = "small-action";
+          editButton.textContent = "Edit";
+
+          editButton.addEventListener("click", () => {
+            openNoteReader(note, true);
+          });
+
+          const deleteButton = document.createElement("button");
+          deleteButton.type = "button";
+          deleteButton.className = "small-action delete";
+          deleteButton.textContent = "✕";
+          deleteButton.setAttribute("aria-label", "Delete " + note.title);
+
+          deleteButton.addEventListener("click", () => deleteNote(note.id));
+
+          actions.append(editButton, deleteButton);
+          item.append(content, actions);
+          list.appendChild(item);
+        });
+
+        detail.appendChild(list);
+
+        // Quick note input inside each subject.
+        const quickAdd = document.createElement("div");
+        quickAdd.className = "add-note-row";
+
+        quickAdd.innerHTML = `
+          <input class="add-note-input" type="text"
+                 maxlength="50000"
+                 placeholder="Write a quick note..."
+                 aria-label="Quick note content">
+          <button class="add-note-btn" type="button">Add</button>
+        `;
+
+        const quickInput = quickAdd.querySelector("input");
+
+        function addQuickNote() {
+          const content = quickInput.value.trim();
+
+          if (!content) {
+            quickInput.focus();
+            return;
+          }
+
+          const now = new Date().toISOString();
+
+          notes.push({
+            id: createId(),
+            title: content.length > 45
+              ? content.slice(0, 45).trim() + "..."
+              : content,
+            subject: subjectName,
+            content,
+            source: "manual",
+            createdAt: now,
+            updatedAt: now
+          });
+
+          if (saveNotes()) {
+            render();
+          }
+        }
+
+        quickAdd.querySelector("button")
+          .addEventListener("click", addQuickNote);
+
+        quickInput.addEventListener("keydown", event => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addQuickNote();
+          }
+        });
+
+        detail.appendChild(quickAdd);
+        card.appendChild(detail);
+      }
+
       grid.appendChild(card);
     });
 }
 
-/* Subject screen displays topic titles only. */
-function openTopicsModal(subjectName) {
-  activeSubject = subjectName;
-  quickAddVisible = false;
+/* =========================================
+   CREATE NOTE POPUP
+========================================= */
 
-  const overlay = document.getElementById("luminaTopicsOverlay");
-  const quickForm = document.getElementById("luminaQuickAddForm");
-  const quickInput = document.getElementById("luminaQuickAddInput");
-
-  document.getElementById("luminaTopicsTitle").textContent = subjectName;
-  document.getElementById("luminaTopicsSubtitle").textContent =
-    "Choose a topic to read its complete answer.";
-
-  quickForm.classList.remove("visible");
-  quickInput.value = "";
-
-  document.getElementById("luminaQuickAddToggle").textContent =
-    "+ Add a quick note";
-
-  renderTopicsList();
-
-  overlay.classList.add("lumina-popup-open");
-  overlay.setAttribute("aria-hidden", "false");
-  document.getElementById("luminaTopicsClose").focus();
-}
-
-function renderTopicsList() {
-  const list = document.getElementById("luminaTopicsList");
-  if (!activeSubject) return;
-
-  const subjectNotes = getFilteredNotes()
-    .filter(note => note.subject === activeSubject)
-    .sort((a, b) => a.title.localeCompare(b.title));
-
-  list.innerHTML = "";
-
-  if (subjectNotes.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "lumina-topic-empty";
-    empty.textContent = "No topics found in this subject.";
-    list.appendChild(empty);
-    return;
-  }
-
-  subjectNotes.forEach(note => {
-    const row = document.createElement("div");
-    row.className = "lumina-topic-row";
-
-    const titleButton = document.createElement("button");
-    titleButton.type = "button";
-    titleButton.className = "lumina-topic-title";
-    titleButton.textContent = note.title;
-    titleButton.addEventListener("click", () => openReader(note.id));
-
-    const actions = document.createElement("div");
-    actions.className = "lumina-topic-actions";
-
-    const editButton = document.createElement("button");
-    editButton.type = "button";
-    editButton.className = "lumina-topic-action";
-    editButton.textContent = "Edit";
-    editButton.addEventListener("click", () => openEditModal(note.id));
-
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "lumina-topic-action delete";
-    deleteButton.textContent = "Delete";
-    deleteButton.addEventListener("click", () => deleteNote(note.id));
-
-    actions.append(editButton, deleteButton);
-    row.append(titleButton, actions);
-    list.appendChild(row);
-  });
-}
-
-function closeTopicsModal() {
-  const overlay = document.getElementById("luminaTopicsOverlay");
-
-  overlay.classList.remove("lumina-popup-open");
-  overlay.setAttribute("aria-hidden", "true");
-  activeSubject = null;
-  quickAddVisible = false;
-}
-
-/* Full-screen reader: small topic heading, subject underneath, answer below. */
-function openReader(noteId) {
-  const note = notes.find(item => item.id === noteId);
-  if (!note) return;
-
-  activeReaderNoteId = noteId;
-
-  const overlay = document.getElementById("luminaReaderOverlay");
-  const content = document.getElementById("luminaReaderContent");
-
-  document.getElementById("luminaReaderTitle").textContent = note.title;
-  document.getElementById("luminaReaderSubtitle").textContent = note.subject;
-
-  content.innerHTML = "";
-
-  const answer = document.createElement("div");
-  answer.className = "lumina-reader-answer";
-  answer.textContent = note.content;
-  content.appendChild(answer);
-
-  if (note.source === "ai-chat" || note.source === "ai-summary") {
-    const source = document.createElement("span");
-    source.className = "lumina-reader-source";
-    source.textContent = note.source === "ai-chat"
-      ? "✦ AI Chat Explanation"
-      : "✦ AI Summary";
-    content.appendChild(source);
-  }
-
-  overlay.classList.add("lumina-popup-open");
-  overlay.setAttribute("aria-hidden", "false");
-  content.scrollTop = 0;
-  document.getElementById("luminaReaderClose").focus();
-}
-
-function closeReader() {
-  const overlay = document.getElementById("luminaReaderOverlay");
-
-  overlay.classList.remove("lumina-popup-open");
-  overlay.setAttribute("aria-hidden", "true");
-  activeReaderNoteId = null;
-
-  if (activeSubject) {
-    document.getElementById("luminaTopicsClose").focus();
-  }
-}
-
-/* Create note using the existing form, now shown full-screen. */
 function openCreateModal() {
   editingNoteId = null;
   noteForm.reset();
@@ -966,27 +812,17 @@ function openCreateModal() {
   saveNoteBtn.textContent = "Save Note";
   saveStatus.textContent = "";
 
-  const description = modal.querySelector(".modal-heading p");
-  if (description) description.textContent = "Create and save your study note.";
-
   if (currentFilter) {
     noteSubject.value = currentFilter;
-  } else if (activeSubject) {
-    noteSubject.value = activeSubject;
   }
 
   modal.classList.add("show");
   noteTitle.focus();
 }
 
-/* Edit note using the same full-screen form. */
 function openEditModal(id) {
   const note = notes.find(item => item.id === id);
   if (!note) return;
-
-  if (activeReaderNoteId) {
-    closeReader();
-  }
 
   editingNoteId = id;
   noteTitle.value = note.title;
@@ -997,11 +833,6 @@ function openEditModal(id) {
   saveNoteBtn.textContent = "Save Changes";
   saveStatus.textContent = "";
 
-  const description = modal.querySelector(".modal-heading p");
-  if (description) {
-    description.textContent = note.subject + " · " + note.title;
-  }
-
   modal.classList.add("show");
   noteTitle.focus();
 }
@@ -1011,46 +842,35 @@ function closeModal() {
   noteForm.reset();
   editingNoteId = null;
   saveStatus.textContent = "";
-
-  const description = modal.querySelector(".modal-heading p");
-  if (description) {
-    description.textContent = "Create and save your study note.";
-  }
 }
+
+/* =========================================
+   DELETE NOTE
+========================================= */
 
 function deleteNote(id) {
   const note = notes.find(item => item.id === id);
   if (!note) return;
 
-  if (!window.confirm(
-    `Delete "${note.title}"? This cannot be undone.`
-  )) {
+  if (!window.confirm(`Delete "${note.title}"? This cannot be undone.`)) {
     return;
   }
 
   notes = notes.filter(item => item.id !== id);
 
-  if (activeReaderNoteId === id) {
-    closeReader();
-  }
-
-  if (
-    activeSubject &&
-    !notes.some(item => item.subject === activeSubject)
-  ) {
-    closeTopicsModal();
+  if (!notes.some(item => item.subject === expandedSubject)) {
+    expandedSubject = null;
   }
 
   if (saveNotes()) {
     render();
-
-    if (activeSubject) {
-      renderTopicsList();
-    }
   }
 }
 
-/* Save edits or create a new note. */
+/* =========================================
+   CREATE AND SAVE NOTE FORM
+========================================= */
+
 noteForm.addEventListener("submit", event => {
   event.preventDefault();
 
@@ -1066,10 +886,7 @@ noteForm.addEventListener("submit", event => {
   const now = new Date().toISOString();
 
   if (editingNoteId) {
-    const index = notes.findIndex(
-      note => note.id === editingNoteId
-    );
-
+    const index = notes.findIndex(note => note.id === editingNoteId);
     if (index === -1) return;
 
     notes[index] = {
@@ -1091,118 +908,13 @@ noteForm.addEventListener("submit", event => {
     });
   }
 
+  expandedSubject = subject;
+
   if (saveNotes()) {
-    const savedSubject = subject;
     closeModal();
     render();
-
-    if (activeSubject && activeSubject !== savedSubject) {
-      activeSubject = savedSubject;
-      document.getElementById("luminaTopicsTitle").textContent =
-        savedSubject;
-    } else if (!activeSubject && savedSubject) {
-      activeSubject = savedSubject;
-    }
-
-    if (activeSubject) {
-      renderTopicsList();
-
-      const topics = document.getElementById("luminaTopicsOverlay");
-      topics.classList.add("lumina-popup-open");
-      topics.setAttribute("aria-hidden", "false");
-    }
   }
 });
-
-/* Quick-add note inside a subject's topic list. */
-document.getElementById("luminaQuickAddToggle")
-  .addEventListener("click", () => {
-    quickAddVisible = !quickAddVisible;
-
-    const form = document.getElementById("luminaQuickAddForm");
-    const toggle = document.getElementById("luminaQuickAddToggle");
-
-    form.classList.toggle("visible", quickAddVisible);
-    toggle.textContent = quickAddVisible
-      ? "− Cancel quick note"
-      : "+ Add a quick note";
-
-    if (quickAddVisible) {
-      document.getElementById("luminaQuickAddInput").focus();
-    }
-  });
-
-document.getElementById("luminaQuickAddForm")
-  .addEventListener("submit", event => {
-    event.preventDefault();
-
-    const input = document.getElementById("luminaQuickAddInput");
-    const content = input.value.trim();
-
-    if (!content || !activeSubject) {
-      input.focus();
-      return;
-    }
-
-    const now = new Date().toISOString();
-
-    notes.push({
-      id: createId(),
-      title: content.length > 45
-        ? content.slice(0, 45).trim() + "..."
-        : content,
-      subject: activeSubject,
-      content,
-      source: "manual",
-      createdAt: now,
-      updatedAt: now
-    });
-
-    if (saveNotes()) {
-      input.value = "";
-      render();
-      renderTopicsList();
-      input.focus();
-    }
-  });
-
-/* Popup buttons. */
-document.getElementById("luminaTopicsClose")
-  .addEventListener("click", closeTopicsModal);
-
-document.getElementById("luminaReaderClose")
-  .addEventListener("click", closeReader);
-
-document.getElementById("luminaReaderBack")
-  .addEventListener("click", closeReader);
-
-document.getElementById("luminaReaderEdit")
-  .addEventListener("click", () => {
-    if (activeReaderNoteId) {
-      openEditModal(activeReaderNoteId);
-    }
-  });
-
-document.getElementById("luminaReaderDelete")
-  .addEventListener("click", () => {
-    if (activeReaderNoteId) {
-      deleteNote(activeReaderNoteId);
-    }
-  });
-
-document.getElementById("luminaTopicsOverlay")
-  .addEventListener("click", event => {
-    if (event.target.id === "luminaTopicsOverlay") {
-      closeTopicsModal();
-    }
-  });
-
-document.getElementById("luminaReaderOverlay")
-  .addEventListener("click", event => {
-    if (event.target.id === "luminaReaderOverlay") {
-      closeReader();
-    }
-  });
 
 document.getElementById("createNoteBtn")
   .addEventListener("click", openCreateModal);
@@ -1219,50 +931,32 @@ modal.addEventListener("click", event => {
   }
 });
 
-/* Escape closes the topmost open screen. */
 document.addEventListener("keydown", event => {
-  if (event.key !== "Escape") return;
+  if (event.key === "Escape") {
+    if (noteReader && noteReader.style.display === "flex") {
+      closeNoteReader();
+    }
 
-  const reader = document.getElementById("luminaReaderOverlay");
-  const topics = document.getElementById("luminaTopicsOverlay");
-
-  if (modal.classList.contains("show")) {
-    closeModal();
-  } else if (reader.classList.contains("lumina-popup-open")) {
-    closeReader();
-  } else if (topics.classList.contains("lumina-popup-open")) {
-    closeTopicsModal();
+    if (modal.classList.contains("show")) {
+      closeModal();
+    }
   }
 });
 
-/* Search and subject filter. */
 searchInput.addEventListener("input", event => {
   currentSearch = event.target.value;
   render();
-
-  if (activeSubject) {
-    renderTopicsList();
-  }
 });
 
 subjectFilter.addEventListener("change", event => {
   currentFilter = event.target.value;
   render();
-
-  if (activeSubject) {
-    const stillVisible = getFilteredNotes()
-      .some(note => note.subject === activeSubject);
-
-    if (stillVisible) {
-      renderTopicsList();
-    } else {
-      closeReader();
-      closeTopicsModal();
-    }
-  }
 });
 
-/* Preserve the AI feature's existing save connection. */
+/* =========================================
+   SAVE NOTES FROM AI PAGES
+========================================= */
+
 window.LuminaNotes = {
   save(noteData) {
     if (
@@ -1293,19 +987,22 @@ window.LuminaNotes = {
       ? noteData.source
       : "manual";
 
+    const now = new Date().toISOString();
+
     const newNote = {
       id: createId(),
       title,
       subject,
       content,
       source,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now
     };
 
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const existing = stored === null ? [] : JSON.parse(stored);
+      const existing = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || "[]"
+      );
 
       if (!Array.isArray(existing)) {
         throw new Error("Stored notes are not in the expected format.");
@@ -1313,13 +1010,6 @@ window.LuminaNotes = {
 
       existing.push(newNote);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
-
-      notes = existing.filter(isValidNote);
-      render();
-
-      if (activeSubject) {
-        renderTopicsList();
-      }
 
       return {
         success: true,
@@ -1336,5 +1026,4 @@ window.LuminaNotes = {
   }
 };
 
-/* Show saved notes when the page loads. */
 render();
