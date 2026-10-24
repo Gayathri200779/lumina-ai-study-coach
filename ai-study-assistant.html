@@ -978,7 +978,9 @@ ${material}`;
 
     actions.append(copyBtn, saveToggle);
 
-    /* Save form */
+    /* Save form: subject name + title */
+    const defaultTitle = getNoteTitle(mode, answer, meta.question, meta.marks);
+
     const form = document.createElement("div");
     form.className = "save-form";
     form.hidden = true;
@@ -989,6 +991,13 @@ ${material}`;
     subjectInput.placeholder = "Subject name, e.g. Artificial Intelligence";
     subjectInput.setAttribute("aria-label", "Subject name");
 
+    const titleInput = document.createElement("input");
+    titleInput.type = "text";
+    titleInput.maxLength = 120;
+    titleInput.value = defaultTitle;
+    titleInput.placeholder = "Title / topic, e.g. Supervised learning";
+    titleInput.setAttribute("aria-label", "Title");
+
     const saveBtn = document.createElement("button");
     saveBtn.type = "button";
     saveBtn.className = "save-btn";
@@ -998,7 +1007,7 @@ ${material}`;
     note.className = "save-note";
     note.setAttribute("role", "status");
 
-    form.append(subjectInput, saveBtn, note);
+    form.append(subjectInput, titleInput, saveBtn, note);
 
     copyBtn.addEventListener("click", () => {
       if (!navigator.clipboard) {
@@ -1023,6 +1032,7 @@ ${material}`;
 
     function doSave() {
       const subject = subjectInput.value.trim();
+      const title = titleInput.value.trim() || defaultTitle;
       note.classList.remove("error");
 
       if (!subject) {
@@ -1033,13 +1043,8 @@ ${material}`;
       }
 
       try {
-        saveToNotes(
-          getNoteTitle(mode, answer, meta.question, meta.marks),
-          subject,
-          answer,
-          modes[mode].source
-        );
-        note.textContent = "✓ Saved to My Notes under " + subject + ".";
+        saveToNotes(title, subject, answer, modes[mode].source);
+        note.textContent = "✓ Saved to My Notes under " + subject + " as \"" + title + "\".";
         fillSubjects();
       } catch (error) {
         console.error(error);
@@ -1050,11 +1055,13 @@ ${material}`;
 
     saveBtn.addEventListener("click", doSave);
 
-    subjectInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        doSave();
-      }
+    [subjectInput, titleInput].forEach(field => {
+      field.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          doSave();
+        }
+      });
     });
 
     body.append(label, card, actions, form);
