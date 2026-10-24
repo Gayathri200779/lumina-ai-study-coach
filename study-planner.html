@@ -2,189 +2,349 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumina AI - Study Planner</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Planner | Lumina AI</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="planner.css">
-  <script src="planner.js" defer></script>
+    <!-- Connect CSS file -->
+    <link rel="stylesheet" href="study-planner.css">
+
+    <!-- Connect JavaScript file -->
+    <script src="study-planner.js" defer></script>
+
+    <!-- Poppins font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
-<header class="topbar">
-  <div class="logo">🌿 Lumina <span>AI</span></div>
-  <a href="dashboard.html" class="home-btn">← Home</a>
-</header>
+    <div class="planner-app">
 
-<main class="container">
-  <section class="page-heading">
-    <h1>My Study Planner 📚</h1>
-    <p>Organise your study tasks, exams, and college deadlines.</p>
-  </section>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <a href="dashboard.html" class="brand">
+                <span class="brand-icon">🌿</span>
+                <span>Lumina <small>AI Study Coach</small></span>
+            </a>
 
-  <section class="stats">
-    <div class="stat-card">
-      <p>Total Study Tasks</p><h2 id="totalTasks">0</h2>
+            <p class="sidebar-label">WORKSPACE</p>
+
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-link">
+                    <span>⌂</span> Home
+                </a>
+
+                <a href="notes.html" class="nav-link">
+                    <span>▤</span> My Notes
+                </a>
+
+                <a href="study-planner.html" class="nav-link active">
+                    <span>▦</span> Study Planner
+                </a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-tip">
+                    <span class="tip-icon">🌱</span>
+                    <h3>Small steps matter</h3>
+                    <p>Every task you complete brings you closer to your goal.</p>
+                </div>
+
+                <p class="sidebar-footer">Made for your learning journey 💚</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">YOUR PERSONAL WORKSPACE</p>
+                    <h1>Study Planner <span>🌿</span></h1>
+                    <p class="page-description">
+                        Plan your study sessions, track your tasks, and stay prepared.
+                    </p>
+                </div>
+
+                <a href="dashboard.html" class="home-button">← Back to Home</a>
+            </header>
+
+            <!-- Welcome section -->
+            <section class="welcome-card">
+                <div>
+                    <p class="welcome-label">A LITTLE PROGRESS EVERY DAY</p>
+                    <h2>Make today count.</h2>
+                    <p>Organise your studies one task at a time.</p>
+                </div>
+                <div class="welcome-illustration">📚</div>
+            </section>
+
+            <!-- Statistics -->
+            <section class="stats-grid">
+                <article class="stat-card">
+                    <div class="stat-icon icon-green">✓</div>
+                    <div>
+                        <p>Total Tasks</p>
+                        <h2 id="totalTasks">0</h2>
+                    </div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-icon icon-peach">◷</div>
+                    <div>
+                        <p>Pending Tasks</p>
+                        <h2 id="pendingTasks">0</h2>
+                    </div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-icon icon-lilac">★</div>
+                    <div>
+                        <p>Completed Tasks</p>
+                        <h2 id="completedTasks">0</h2>
+                    </div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-icon icon-yellow">%</div>
+                    <div>
+                        <p>Progress</p>
+                        <h2 id="progressPercent">0%</h2>
+                    </div>
+                </article>
+            </section>
+
+            <!-- Progress bar -->
+            <section class="progress-card">
+                <div class="progress-heading">
+                    <div>
+                        <h3>Your study progress</h3>
+                        <p>Keep going. Every completed task counts!</p>
+                    </div>
+                    <span id="progressLabel">0% completed</span>
+                </div>
+
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </section>
+
+            <!-- Planner layout -->
+            <section class="planner-layout">
+
+                <!-- Daily tasks -->
+                <div class="content-card tasks-card">
+                    <div class="section-heading">
+                        <div>
+                            <p class="section-kicker">STAY ON TRACK</p>
+                            <h2>My Study Tasks</h2>
+                        </div>
+                        <span class="section-emoji">📝</span>
+                    </div>
+
+                    <p class="section-description">
+                        Add your subjects, revision work, and daily goals.
+                    </p>
+
+                    <form id="taskForm" class="task-form">
+                        <div class="form-group full-width">
+                            <label for="taskTitle">Task name</label>
+                            <input
+                                type="text"
+                                id="taskTitle"
+                                placeholder="e.g. Revise Computer Networks"
+                                maxlength="100"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="taskSubject">Subject</label>
+                                <input
+                                    type="text"
+                                    id="taskSubject"
+                                    placeholder="e.g. Computer Science"
+                                    maxlength="60"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="taskDate">Due date</label>
+                                <input type="date" id="taskDate" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="taskPriority">Priority</label>
+                                <select id="taskPriority">
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="taskDuration">Study time</label>
+                                <select id="taskDuration">
+                                    <option value="15 minutes">15 minutes</option>
+                                    <option value="30 minutes" selected>30 minutes</option>
+                                    <option value="45 minutes">45 minutes</option>
+                                    <option value="1 hour">1 hour</option>
+                                    <option value="2 hours">2 hours</option>
+                                    <option value="3 hours">3 hours</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="taskNotes">Notes (optional)</label>
+                            <textarea
+                                id="taskNotes"
+                                rows="2"
+                                placeholder="Add a reminder or important points..."
+                                maxlength="500"
+                            ></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" id="taskSubmitButton" class="primary-button">
+                                + Add Study Task
+                            </button>
+                            <button type="button" id="cancelEditButton" class="secondary-button hidden">
+                                Cancel Edit
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="task-toolbar">
+                        <h3>My task list</h3>
+
+                        <select id="taskFilter" aria-label="Filter study tasks">
+                            <option value="all">All tasks</option>
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <div id="taskList" class="task-list"></div>
+
+                    <p id="taskEmptyMessage" class="empty-message">
+                        🌱 No study tasks yet. Add your first task above!
+                    </p>
+                </div>
+
+                <!-- Academic calendar and events -->
+                <div class="content-card calendar-card">
+                    <div class="section-heading">
+                        <div>
+                            <p class="section-kicker">IMPORTANT DATES</p>
+                            <h2>Academic Calendar</h2>
+                        </div>
+                        <span class="section-emoji">📅</span>
+                    </div>
+
+                    <p class="section-description">
+                        Keep track of exams, assignments, submissions, and college events.
+                    </p>
+
+                    <div class="calendar-navigation">
+                        <button type="button" id="previousMonth" class="calendar-arrow" aria-label="Previous month">‹</button>
+                        <h3 id="calendarMonth">Month Year</h3>
+                        <button type="button" id="nextMonth" class="calendar-arrow" aria-label="Next month">›</button>
+                    </div>
+
+                    <div class="calendar-weekdays">
+                        <span>Sun</span>
+                        <span>Mon</span>
+                        <span>Tue</span>
+                        <span>Wed</span>
+                        <span>Thu</span>
+                        <span>Fri</span>
+                        <span>Sat</span>
+                    </div>
+
+                    <div id="calendarDays" class="calendar-days"></div>
+
+                    <div class="calendar-legend">
+                        <span><i class="legend-dot today-dot"></i> Today</span>
+                        <span><i class="legend-dot event-dot"></i> Has event</span>
+                    </div>
+
+                    <div class="selected-date-heading">
+                        <h3>Events on <span id="selectedDateLabel"></span></h3>
+                    </div>
+
+                    <div id="eventList" class="event-list"></div>
+
+                    <p id="eventEmptyMessage" class="empty-message">
+                        No events for this date.
+                    </p>
+
+                    <div class="event-form-section">
+                        <h3 id="eventFormHeading">Add Academic Event</h3>
+
+                        <form id="eventForm">
+                            <div class="form-group">
+                                <label for="eventTitle">Event name</label>
+                                <input
+                                    type="text"
+                                    id="eventTitle"
+                                    placeholder="e.g. Internal Assessment"
+                                    maxlength="100"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="eventType">Event type</label>
+                                <select id="eventType">
+                                    <option value="Theory Exam">Theory Exam</option>
+                                    <option value="Practical Exam">Practical Exam</option>
+                                    <option value="Internal Exam">Internal Exam</option>
+                                    <option value="Assignment">Assignment</option>
+                                    <option value="Record Submission">Record Submission</option>
+                                    <option value="Project Review">Project Review</option>
+                                    <option value="Project Submission">Project Submission</option>
+                                    <option value="Seminar">Seminar</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="eventDate">Event date</label>
+                                <input type="date" id="eventDate" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="eventNotes">Details (optional)</label>
+                                <textarea
+                                    id="eventNotes"
+                                    rows="2"
+                                    placeholder="Subject, room, or other details..."
+                                    maxlength="500"
+                                ></textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" id="eventSubmitButton" class="primary-button">
+                                    + Add Event
+                                </button>
+                                <button type="button" id="cancelEventEditButton" class="secondary-button hidden">
+                                    Cancel Edit
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="page-footer">
+                <p>🌿 Lumina AI Study Coach · Learn at your own pace.</p>
+            </footer>
+        </main>
     </div>
-    <div class="stat-card">
-      <p>Tasks Completed</p><h2 id="completedTasks">0</h2>
-    </div>
-    <div class="stat-card">
-      <p>Upcoming Academic Dates</p><h2 id="upcomingEvents">0</h2>
-    </div>
-    <div class="stat-card">
-      <p>Study Completion</p><h2 id="completionPercent">0%</h2>
-      <div class="progress-track">
-        <div id="progressFill" class="progress-fill"></div>
-      </div>
-    </div>
-  </section>
-
-  <div class="layout">
-    <section class="panel">
-      <div class="panel-heading">
-        <div>
-          <h2>📝 Daily Study Tasks</h2>
-          <p class="small-text">Tick a task to strike through its details.</p>
-        </div>
-        <button class="primary-btn" id="showTaskForm">+ Add Task</button>
-      </div>
-
-      <form id="taskForm" class="hidden">
-        <div class="form-grid">
-          <div class="field full">
-            <label for="taskTitle">Task title *</label>
-            <input id="taskTitle" required placeholder="Revise Computer Vision Unit 1">
-          </div>
-          <div class="field">
-            <label for="taskSubject">Subject</label>
-            <input id="taskSubject" placeholder="Computer Vision">
-          </div>
-          <div class="field">
-            <label for="taskDate">Study date *</label>
-            <input id="taskDate" type="date" required>
-          </div>
-          <div class="field">
-            <label for="taskTime">Start time</label>
-            <input id="taskTime" type="time">
-          </div>
-          <div class="field">
-            <label for="taskDuration">Duration (minutes)</label>
-            <input id="taskDuration" type="number" min="1" placeholder="45">
-          </div>
-          <div class="field full">
-            <label for="taskNotes">Notes</label>
-            <textarea id="taskNotes" placeholder="Topics to revise or work to complete"></textarea>
-          </div>
-        </div>
-        <div class="form-actions">
-          <button class="primary-btn" type="submit">Save Task</button>
-          <button class="secondary-btn" type="button" id="cancelTask">Cancel</button>
-        </div>
-      </form>
-
-      <div class="filters" id="taskFilters">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="pending">Pending</button>
-        <button class="filter-btn" data-filter="completed">Completed</button>
-      </div>
-      <div id="taskList" class="item-list"></div>
-    </section>
-
-    <div>
-      <section class="panel">
-        <div class="panel-heading">
-          <div>
-            <h2>📅 Academic Calendar</h2>
-            <p class="small-text">Select a date to see tasks and events.</p>
-          </div>
-        </div>
-
-        <div class="calendar-heading">
-          <button class="secondary-btn" id="prevMonth" aria-label="Previous month">‹</button>
-          <h3 id="monthLabel"></h3>
-          <button class="secondary-btn" id="nextMonth" aria-label="Next month">›</button>
-        </div>
-        <div id="calendar" class="calendar-grid"></div>
-
-        <p class="legend">
-          <span>🟢 Study task</span>
-          <span>🟠 Exam</span>
-          <span>🟣 Assignment</span>
-          <span>✓ Completed = crossed out</span>
-        </p>
-
-        <div class="selected-date">
-          <h3 id="selectedDateLabel">Events for selected date</h3>
-          <div id="dayEvents" class="item-list"></div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-heading">
-          <div>
-            <h2>🔔 Academic Reminders</h2>
-            <p class="small-text">Exams, assignments, records, and project deadlines.</p>
-          </div>
-          <button class="primary-btn" id="showEventForm">+ Add Date</button>
-        </div>
-
-        <form id="eventForm" class="hidden">
-          <div class="form-grid">
-            <div class="field full">
-              <label for="eventTitle">Event title *</label>
-              <input id="eventTitle" required placeholder="Semester exam">
-            </div>
-            <div class="field">
-              <label for="eventType">Event type</label>
-              <select id="eventType">
-                <option>Theory exam</option>
-                <option>Practical exam</option>
-                <option>Internal/Model exam</option>
-                <option>Assignment submission</option>
-                <option>Record submission</option>
-                <option>Project review</option>
-                <option>Project submission</option>
-                <option>Seminar/Presentation</option>
-                <option>Other college event</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="eventDate">Date *</label>
-              <input id="eventDate" type="date" required>
-            </div>
-            <div class="field">
-              <label for="eventTime">Time</label>
-              <input id="eventTime" type="time">
-            </div>
-            <div class="field">
-              <label for="eventSubject">Subject</label>
-              <input id="eventSubject" placeholder="Computer Vision">
-            </div>
-            <div class="field full">
-              <label for="eventNotes">Notes</label>
-              <textarea id="eventNotes" placeholder="Syllabus or submission details"></textarea>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="primary-btn" type="submit">Save Reminder</button>
-            <button class="secondary-btn" type="button" id="cancelEvent">Cancel</button>
-          </div>
-        </form>
-
-        <div class="filters" id="eventFilters">
-          <button class="filter-btn active" data-filter="pending">Pending</button>
-          <button class="filter-btn" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="completed">Completed</button>
-        </div>
-        <div id="eventList" class="item-list"></div>
-      </section>
-    </div>
-  </div>
-</main>
-
-<div id="toast" class="toast" role="status"></div>
-<footer>Lumina AI Study Coach 🌿</footer>
 </body>
 </html>
