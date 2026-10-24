@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,13 +27,11 @@
 
   <main class="planner-container">
     <section class="page-heading">
-      <div>
-        <p class="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
-        <h1>Study Planner 📚</h1>
-        <p class="subtitle">
-          Organise your tasks, deadlines and academic events in one place.
-        </p>
-      </div>
+      <p class="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
+      <h1>Study Planner 📚</h1>
+      <p class="subtitle">
+        Keep your study tasks, assignments and academic events organised in one place.
+      </p>
     </section>
 
     <!-- Task summary: no Today count -->
@@ -62,71 +61,86 @@
       </article>
     </section>
 
-    <!-- Add task -->
-    <section class="panel">
+    <!-- ONE FORM FOR TASKS AND EVENTS -->
+    <section class="panel" id="addItemSection">
       <div class="section-heading">
         <div>
           <span class="section-icon">✍️</span>
-          <h2>Add Study Task</h2>
+          <h2>Add a Task or Event</h2>
         </div>
       </div>
 
-      <form id="taskForm" class="form-grid">
+      <p class="section-description">
+        Enter your task or event once. Lumina will organise it according to its type.
+      </p>
+
+      <form id="unifiedForm" class="form-grid">
         <div class="form-group">
-          <label for="taskTitle">Task name</label>
+          <label for="unifiedTitle">Task or event name</label>
           <input
             type="text"
-            id="taskTitle"
-            placeholder="e.g. Revise Unit 1"
+            id="unifiedTitle"
+            placeholder="e.g. Complete Unit 1 assignment"
             required
           >
         </div>
 
         <div class="form-group">
-          <label for="taskSubject">Subject</label>
+          <label for="unifiedType">Type</label>
           <input
             type="text"
-            id="taskSubject"
+            id="unifiedType"
+            list="unifiedTypeOptions"
+            placeholder="e.g. Study, Assignment, Exam"
+            required
+          >
+
+          <datalist id="unifiedTypeOptions">
+            <option value="Study"></option>
+            <option value="Assignment"></option>
+            <option value="Exam"></option>
+            <option value="Project"></option>
+            <option value="Revision"></option>
+            <option value="Seminar"></option>
+            <option value="Workshop"></option>
+            <option value="Presentation"></option>
+            <option value="Class"></option>
+            <option value="Deadline"></option>
+          </datalist>
+        </div>
+
+        <div class="form-group">
+          <label for="unifiedSubject">Subject (optional)</label>
+          <input
+            type="text"
+            id="unifiedSubject"
             placeholder="e.g. Computer Vision"
-            required
           >
         </div>
 
         <div class="form-group">
-          <label for="taskCategory">Task category</label>
-          <select id="taskCategory" required>
-            <option value="Study">Study</option>
-            <option value="Assignment">Assignment</option>
-            <option value="Exam Preparation">Exam Preparation</option>
-            <option value="Project">Project</option>
-            <option value="Revision">Revision</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="taskDueDate">Due date</label>
-          <input type="date" id="taskDueDate">
+          <label for="unifiedDate">Due date or event date</label>
+          <input type="date" id="unifiedDate" required>
         </div>
 
         <div class="form-group form-wide">
-          <label for="taskDescription">Description (optional)</label>
+          <label for="unifiedDescription">Description (optional)</label>
           <textarea
-            id="taskDescription"
+            id="unifiedDescription"
             rows="2"
-            placeholder="Add a few details..."
+            placeholder="Add any important details..."
           ></textarea>
         </div>
 
         <div class="form-actions form-wide">
           <button type="submit" class="primary-button">
-            + Add Task
+            + Add
           </button>
         </div>
       </form>
     </section>
 
-    <!-- Task list -->
+    <!-- TASK DISPLAY -->
     <section class="panel">
       <div class="section-heading task-heading">
         <div>
@@ -148,108 +162,35 @@
           <span>Overall task progress</span>
           <strong id="progressPercent">0%</strong>
         </div>
+
         <div
           class="progress-track"
+          id="progressTrack"
           role="progressbar"
           aria-label="Overall task progress"
           aria-valuemin="0"
           aria-valuemax="100"
           aria-valuenow="0"
-          id="progressTrack"
         >
           <div id="progressBar" class="progress-bar"></div>
         </div>
       </div>
     </section>
 
-    <!-- Academic events: no large calendar -->
-    <section class="panel" id="academicEvents">
-      <div class="section-heading">
-        <div>
-          <span class="section-icon">📅</span>
-          <h2>Add Academic Event</h2>
-        </div>
-      </div>
-
-      <p class="section-description">
-        Add exams, assignments, seminars or any other event.
-        Lumina will organise events into categories automatically.
-      </p>
-
-      <form id="eventForm" class="form-grid">
-        <div class="form-group">
-          <label for="eventTitle">Event name</label>
-          <input
-            type="text"
-            id="eventTitle"
-            placeholder="e.g. Computer Vision Internal Exam"
-            required
-          >
-        </div>
-
-        <div class="form-group">
-          <label for="eventType">Event type</label>
-          <input
-            type="text"
-            id="eventType"
-            list="eventTypeSuggestions"
-            placeholder="e.g. Exam, Assignment, Seminar"
-            required
-          >
-          <datalist id="eventTypeSuggestions">
-            <option value="Exam"></option>
-            <option value="Assignment"></option>
-            <option value="Project"></option>
-            <option value="Seminar"></option>
-            <option value="Workshop"></option>
-            <option value="Presentation"></option>
-            <option value="Class"></option>
-            <option value="Deadline"></option>
-            <option value="Other"></option>
-          </datalist>
-        </div>
-
-        <div class="form-group">
-          <label for="eventSubject">Subject (optional)</label>
-          <input
-            type="text"
-            id="eventSubject"
-            placeholder="e.g. Computer Science"
-          >
-        </div>
-
-        <div class="form-group">
-          <label for="eventDate">Event date</label>
-          <input type="date" id="eventDate" required>
-        </div>
-
-        <div class="form-group form-wide">
-          <label for="eventDescription">Details (optional)</label>
-          <textarea
-            id="eventDescription"
-            rows="2"
-            placeholder="Add event details..."
-          ></textarea>
-        </div>
-
-        <div class="form-actions form-wide">
-          <button type="submit" class="primary-button">
-            📅 Add Academic Event
-          </button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Dynamic event categories are created here -->
+    <!-- EVENT DISPLAY: no large calendar -->
     <section class="panel">
       <div class="section-heading">
         <div>
-          <span class="section-icon">🗂️</span>
+          <span class="section-icon">📅</span>
           <h2>My Academic Events</h2>
         </div>
 
         <span class="event-total" id="eventTotal">0 events</span>
       </div>
+
+      <p class="section-description">
+        Assignments, exams, projects and other event types appear in their own categories.
+      </p>
 
       <div id="eventCategories" class="event-categories"></div>
     </section>
