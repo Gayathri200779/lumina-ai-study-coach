@@ -706,35 +706,133 @@ Study material:
 ${material}`;
   }
 
-  async function askAI(mode, input, marks) {
-    const prompt = mode === "explain"
-      ? buildExplainPrompt(input, marks)
-      : buildSummarizePrompt(input);
+  /* =========================================================
+     ASKING THE AI  (streaming + time limit)
+     ========================================================= */
 
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: prompt })
-    });
+  const REQUEST_TIMEOUT_MS = 120000; // 2 minutes
 
-    let data = null;
-
-    try {
-      data = await response.json();
-    } catch (error) {
-      data = null;
-    }
-
-    if (!response.ok || !data || !data.reply) {
-      throw new Error("No answer came. Please try again in a moment.");
-    }
-
-    return String(data.reply)
+  function cleanAnswer(text) {
+    return String(text)
       .replace(/\*\*/g, "")
       .replace(/^#{1,6}\s*/gm, "")
       .replace(/^\s*[\*\-]\s+/gm, "• ")
       .replace(/[*_`]/g, "")
       .trim();
+  }
+
+  /*
+    onUpdate(partialText) is called while the answer is arriving.
+    If your server streams plain text, the words appear one by one.
+    If your server still sends JSON { reply: "..." }, it works as before.
+  */
+  async function askAI(mode, input, marks, onUpdate) {
+    const prompt = mode === "explain"
+      ? buildExplainPrompt(input, marks)
+      : buildSummarizePrompt(input);
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: prompt, stream: true }),
+        signal: controller.signal
+      });
+
+      if (!response.ok) {
+        throw new Error("No answer came. Please try again in a moment.");
+      }
+
+      const type = response.headers.get("content-type") || "";
+
+      /* Streaming answer (plain text pieces) */
+      if (!type.includes("application/json") && response.body && response.body.getReader) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let full = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          full += decoder.decode(value, { stream: true });
+          if (onUpdate) onUpdate(cleanAnswer(full));
+        }
+
+        full += decoder.decode();
+        const finalText = cleanAnswer(full);
+
+        if (!finalText) {
+          throw new Error("No answer came. Please try again in a moment.");
+        }
+
+        return finalText;
+      }
+
+      /* Normal JSON answer */
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch (error) {
+        data = null;
+      }
+
+      if (!data || !data.reply) {
+        throw new Error("No answer came. Please try again in a moment.");
+      }
+
+      return cleanAnswer(data.reply);
+
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw new Error("The answer is taking too long. Please try again.");
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /* =========================================================
+     SAVED ANSWERS (same question = instant answer)
+     ========================================================= */
+
+  const CACHE_KEY = "luminaAnswerCache";
+  const CACHE_LIMIT = 30;
+
+  function cacheKey(mode, text, marks) {
+    return mode + "|" + (mode === "explain" ? marks : "-") + "|" +
+      text.trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
+  function readCache() {
+    try {
+      const data = JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function getCached(mode, text, marks) {
+    const key = cacheKey(mode, text, marks);
+    const hit = readCache().find(item => item.key === key);
+    return hit ? hit.answer : null;
+  }
+
+  function setCached(mode, text, marks, answer) {
+    try {
+      const key = cacheKey(mode, text, marks);
+      const list = readCache().filter(item => item.key !== key);
+      list.push({ key, answer });
+      localStorage.setItem(CACHE_KEY, JSON.stringify(list.slice(-CACHE_LIMIT)));
+    } catch (error) {
+      /* storage full or blocked: ignore */
+    }
   }
 
   /* =========================================================
@@ -949,7 +1047,8 @@ ${material}`;
     return "Summary: " + (q.length > 40 ? q.slice(0, 40).trim() + "..." : q);
   }
 
-  function addAnswer(mode, answer, meta) {
+  /* The empty answer row (label + card) */
+  function buildAnswerShell(mode, meta) {
     const { row, body } = makeAiRow();
 
     const label = document.createElement("div");
@@ -960,9 +1059,15 @@ ${material}`;
 
     const card = document.createElement("div");
     card.className = "ai-card";
-    renderAnswer(card, answer);
 
-    /* Action buttons */
+    body.append(label, card);
+    modes[mode].thread.appendChild(row);
+
+    return { row, body, card };
+  }
+
+  /* Copy / Save buttons and the Subject + Title save form */
+  function attachActions(body, mode, answer, meta) {
     const actions = document.createElement("div");
     actions.className = "ai-actions";
 
@@ -978,7 +1083,6 @@ ${material}`;
 
     actions.append(copyBtn, saveToggle);
 
-    /* Save form: subject name + title */
     const defaultTitle = getNoteTitle(mode, answer, meta.question, meta.marks);
 
     const form = document.createElement("div");
@@ -1064,9 +1168,47 @@ ${material}`;
       });
     });
 
-    body.append(label, card, actions, form);
-    modes[mode].thread.appendChild(row);
+    body.append(actions, form);
+  }
+
+  /* A finished answer shown all at once */
+  function addAnswer(mode, answer, meta) {
+    const shell = buildAnswerShell(mode, meta);
+    renderAnswer(shell.card, answer);
+    attachActions(shell.body, mode, answer, meta);
     scrollToBottom();
+  }
+
+  /* An answer that fills in while it is arriving */
+  function createLiveAnswer(mode, meta) {
+    const shell = buildAnswerShell(mode, meta);
+    let pending = null;
+    let scheduled = false;
+
+    function paint() {
+      scheduled = false;
+      shell.card.innerHTML = "";
+      renderAnswer(shell.card, pending);
+      scrollToBottom(true);
+    }
+
+    return {
+      row: shell.row,
+      update(text) {
+        pending = text;
+        if (!scheduled) {
+          scheduled = true;
+          requestAnimationFrame(paint);
+        }
+      },
+      finish(answer) {
+        pending = answer;
+        shell.card.innerHTML = "";
+        renderAnswer(shell.card, answer);
+        attachActions(shell.body, mode, answer, meta);
+        scrollToBottom();
+      }
+    };
   }
 
   function addError(mode, message, retry) {
@@ -1099,18 +1241,47 @@ ${material}`;
      ========================================================= */
 
   async function runRequest(mode, text, marks) {
+    const meta = { question: text, marks };
+
+    /* Same question asked before: show it instantly */
+    const cached = getCached(mode, text, marks);
+    if (cached) {
+      addAnswer(mode, cached, meta);
+      if (currentMode === mode) input.focus();
+      return;
+    }
+
     busy = true;
     sendBtn.disabled = true;
 
     const typing = addTyping(mode);
+    let live = null;
 
     try {
-      const answer = await askAI(mode, text, marks);
-      typing.remove();
-      addAnswer(mode, answer, { question: text, marks });
+      const answer = await askAI(mode, text, marks, partial => {
+        if (!partial) return;
+
+        if (!live) {
+          typing.remove();
+          live = createLiveAnswer(mode, meta);
+        }
+
+        live.update(partial);
+      });
+
+      if (live) {
+        live.finish(answer);
+      } else {
+        typing.remove();
+        addAnswer(mode, answer, meta);
+      }
+
+      setCached(mode, text, marks, answer);
     } catch (error) {
       console.error(error);
       typing.remove();
+      if (live) live.row.remove();
+
       addError(
         mode,
         error.message || "Something went wrong. Please try again.",
