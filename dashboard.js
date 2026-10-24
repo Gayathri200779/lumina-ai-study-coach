@@ -19,8 +19,10 @@ document.addEventListener('DOMContentLoaded', function () {
     avatarToggle.addEventListener('click', toggleDropdown);
 
     document.addEventListener('click', function (event) {
-      if (!avatarDropdown.contains(event.target) &&
-          !avatarToggle.contains(event.target)) {
+      if (
+        !avatarDropdown.contains(event.target) &&
+        !avatarToggle.contains(event.target)
+      ) {
         closeDropdown();
       }
     });
@@ -37,7 +39,9 @@ document.addEventListener('DOMContentLoaded', function () {
   let profile = null;
 
   try {
-    profile = JSON.parse(localStorage.getItem('luminaProfile') || 'null');
+    profile = JSON.parse(
+      localStorage.getItem('luminaProfile') || 'null'
+    );
   } catch (error) {
     console.error('Unable to read saved Lumina profile:', error);
   }
@@ -53,16 +57,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const name = (profile.fullName || '').trim();
   const course = (profile.course || '').trim();
-  const semester = profile.semester ? String(profile.semester) : '';
-  const subjects = Array.isArray(profile.subjects) ? profile.subjects : [];
-  const goals = Array.isArray(profile.goals) ? profile.goals : [];
+  const semester = profile.semester
+    ? String(profile.semester)
+    : '';
+
+  const subjects = Array.isArray(profile.subjects)
+    ? profile.subjects
+    : [];
+
+  const goals = Array.isArray(profile.goals)
+    ? profile.goals
+    : [];
 
   if (welcomeName && name) {
     welcomeName.textContent = name;
   }
 
   if (currentCourse) {
-    currentCourse.textContent = `🎓 ${course || 'Degree not set'}`;
+    currentCourse.textContent =
+      `🎓 ${course || 'Degree not set'}`;
   }
 
   if (currentSemester) {
@@ -72,10 +85,11 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   if (subjectCount) {
-    subjectCount.textContent = `📝 Subjects: ${subjects.length}`;
+    subjectCount.textContent =
+      `📝 Subjects: ${subjects.length}`;
   }
 
-  // ===== Subject cards =====
+  // ===== Subject cards with navigation =====
   if (subjectGrid) {
     subjectGrid.replaceChildren();
 
@@ -87,7 +101,8 @@ document.addEventListener('DOMContentLoaded', function () {
       icon.textContent = '📚';
 
       const message = document.createElement('p');
-      message.textContent = 'No subjects added yet. Update your profile to add your subjects.';
+      message.textContent =
+        'No subjects added yet. Update your profile to add your subjects.';
 
       empty.append(icon, message);
       subjectGrid.appendChild(empty);
@@ -95,6 +110,11 @@ document.addEventListener('DOMContentLoaded', function () {
       subjects.forEach(function (subject) {
         const card = document.createElement('article');
         card.className = 'subject-card';
+
+        // Make the card keyboard-accessible and clickable
+        card.setAttribute('role', 'link');
+        card.setAttribute('tabindex', '0');
+        card.style.cursor = 'pointer';
 
         const icon = document.createElement('div');
         icon.className = 'subject-symbol';
@@ -104,9 +124,26 @@ document.addEventListener('DOMContentLoaded', function () {
         title.textContent = subject;
 
         const description = document.createElement('p');
-        description.textContent = 'Your learning subject';
+        description.textContent = 'Open your subject learning space';
 
         card.append(icon, title, description);
+
+        // Open the separate subject page
+        function openSubjectPage() {
+          window.location.href =
+            'subject.html?subject=' +
+            encodeURIComponent(subject);
+        }
+
+        card.addEventListener('click', openSubjectPage);
+
+        card.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openSubjectPage();
+          }
+        });
+
         subjectGrid.appendChild(card);
       });
     }
@@ -119,7 +156,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (goals.length === 0) {
       const message = document.createElement('p');
       message.className = 'goal-empty';
-      message.textContent = 'No learning goals selected yet. You can update them in your profile.';
+      message.textContent =
+        'No learning goals selected yet. You can update them in your profile.';
+
       learningGoals.appendChild(message);
     } else {
       const goalLabels = {
