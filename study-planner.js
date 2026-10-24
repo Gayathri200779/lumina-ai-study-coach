@@ -1,583 +1,536 @@
 
 document.addEventListener("DOMContentLoaded", () => {
-  const TASKS_KEY = "luminaStudyPlannerTasks";
-  const EVENTS_KEY = "luminaStudyPlannerEvents";
+    const form = document.getElementById("unifiedForm");
+    const titleInput = document.getElementById("unifiedTitle");
+    const categoryInput = document.getElementById("unifiedType");
+    const subjectInput = document.getElementById("unifiedSubject");
+    const dateInput = document.getElementById("unifiedDate");
+    const descriptionInput = document.getElementById("unifiedDescription");
 
-  const $ = (id) => document.getElementById(id);
+    const categoriesContainer = document.getElementById("eventCategories");
+    const totalCount = document.getElementById("totalCount");
+    const completedCount = document.getElementById("completedCount");
+    const pendingCount = document.getElementById("pendingCount");
+    const eventTotal = document.getElementById("eventTotal");
 
-  const form = $("unifiedForm");
-  const taskList = $("taskList");
-  const taskFilter = $("taskFilter");
-  const eventCategories = $("eventCategories");
+    const STORAGE_KEY = "luminaStudyPlannerItems";
+    const OLD_TASKS_KEY = "luminaStudyPlannerTasks";
+    const OLD_EVENTS_KEY = "luminaStudyPlannerEvents";
 
-  let tasks = loadData(TASKS_KEY);
-  let events = loadData(EVENTS_KEY);
+    let activities = loadActivities();
 
-  // ---------- Storage ----------
+    renderActivities();
 
-  function loadData(key) {
-    try {
-      const data = JSON.parse(localStorage.getItem(key) || "[]");
-      return Array.isArray(data) ? data : [];
-    } catch {
-      return [];
-    }
-  }
+    // Add a new activity.
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
 
-  function saveData(key, data) {
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-    } catch (error) {
-      console.error("Could not save planner data:", error);
-      alert("Could not save your changes. Please check your browser storage.");
-    }
-  }
+        const title = titleInput.value.trim();
+        const categoryText = categoryInput.value.trim();
 
-  function createId() {
-    return Date.now().toString(36) +
-      Math.random().toString(36).slice(2, 9);
-  }
+        if (!title || !categoryText) {
+            alert("Please enter the activity name and category.");
+            return;
+        }
 
-  function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, (character) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    })[character]);
-  }
+        const activity = {
+            id: createId(),
+            title,
+            category: normaliseCategory(categoryText),
+            subject: subjectInput.value.trim(),
+            date: dateInput.value,
+            description: descriptionInput.value.trim(),
+            completed: false,
+            createdAt: Date.now()
+        };
 
-  function parseLocalDate(value) {
-    if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      return null;
-    }
+        activities.push(activity);
+        saveActivities();
+        renderActivities();
 
-    const [year, month, day] = value.split("-").map(Number);
-    const date = new Date(year, month - 1, day);
-
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() !== month - 1 ||
-      date.getDate() !== day
-    ) {
-      return null;
-    }
-
-    return date;
-  }
-
-  function todayAtMidnight() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
-  }
-
-  function formatDate(value) {
-    const date = parseLocalDate(value);
-
-    if (!date) return "No date set";
-
-    return date.toLocaleDateString(undefined, {
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    });
-  }
-
-  // ---------- Category handling ----------
-
-  function normaliseEventType(value) {
-    const cleaned = String(value || "")
-      .trim()
-      .replace(/\s+/g, " ");
-
-    if (!cleaned) return "Other Events";
-
-    const key = cleaned.toLowerCase();
-
-    const standardCategories = {
-      exam: "Exams",
-      exams: "Exams",
-      examination: "Exams",
-      examinations: "Exams",
-
-      assignment: "Assignments",
-      assignments: "Assignments",
-
-      project: "Projects",
-      projects: "Projects",
-
-      seminar: "Seminars",
-      seminars: "Seminars",
-
-      workshop: "Workshops",
-      workshops: "Workshops",
-
-      presentation: "Presentations",
-      presentations: "Presentations",
-
-      class: "Classes",
-      classes: "Classes",
-      lecture: "Classes",
-      lectures: "Classes",
-
-      deadline: "Deadlines",
-      deadlines: "Deadlines",
-
-      study: "Study",
-      revision: "Revision",
-      revisions: "Revision",
-
-      other: "Other Events",
-      "other event": "Other Events",
-      "other events": "Other Events"
-    };
-
-    if (standardCategories[key]) {
-      return standardCategories[key];
-    }
-
-    // Create a category for a new type.
-    const words = cleaned.split(" ").map((word) => {
-      return word.charAt(0).toUpperCase() + word.slice(1);
+        form.reset();
+        titleInput.focus();
     });
 
-    let category = words.join(" ");
-
-    if (/\b[^aeiou]y$/i.test(category)) {
-      category = category.slice(0, -1) + "ies";
-    } else if (!/(s|x|z|ch|sh)$/i.test(category)) {
-      category += "s";
-    }
-
-    return category;
-  }
-
-  function getCategoryKey(category) {
-    return String(category || "").trim().toLowerCase();
-  }
-
-  /*
-    Study and Revision are shown in My Study Tasks.
-    All other types are shown in My Academic Events.
-    Both are added through the same form.
-  */
-  function isStudyTask(type) {
-    const key = String(type || "").trim().toLowerCase();
-
-    return [
-      "study",
-      "revision",
-      "revisions"
-    ].includes(key);
-  }
-
-  // ---------- Add everything through ONE form ----------
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    const title = $("unifiedTitle").value.trim();
-    const type = $("unifiedType").value.trim();
-    const subject = $("unifiedSubject").value.trim();
-    const date = $("unifiedDate").value;
-    const description = $("unifiedDescription").value.trim();
-
-    if (!title || !type || !date) {
-      alert("Please enter the name, type and date.");
-      return;
-    }
-
-    if (!parseLocalDate(date)) {
-      alert("Please choose a valid date.");
-      return;
-    }
-
-    if (isStudyTask(type)) {
-      // Save a study or revision item as a task.
-      tasks.unshift({
-        id: createId(),
-        title,
-        subject,
-        category: normaliseEventType(type),
-        dueDate: date,
-        description,
-        completed: false,
-        createdAt: new Date().toISOString()
-      });
-
-      saveData(TASKS_KEY, tasks);
-      renderTasks();
-    } else {
-      // Save an assignment, exam, project or other type as an event.
-      const category = normaliseEventType(type);
-
-      events.push({
-        id: createId(),
-        title,
-        eventType: type,
-        category,
-        subject,
-        date,
-        description,
-        createdAt: new Date().toISOString()
-      });
-
-      saveData(EVENTS_KEY, events);
-      renderEvents();
-    }
-
-    // Clear the form after successfully adding an item.
-    form.reset();
-
-    // Keep the user's attention on the section where the item appeared.
-    if (isStudyTask(type)) {
-      $("taskList").scrollIntoView({
-        behavior: "smooth",
-        block: "nearest"
-      });
-    } else {
-      $("eventCategories").scrollIntoView({
-        behavior: "smooth",
-        block: "nearest"
-      });
-    }
-  });
-
-  // ---------- Study tasks ----------
-
-  function renderTasks() {
-    const filter = taskFilter.value;
-
-    const filteredTasks = tasks.filter((task) => {
-      if (filter === "pending") return !task.completed;
-      if (filter === "completed") return task.completed;
-      return true;
+    // Clear Form is handled by the browser's native reset behaviour.
+    form.addEventListener("reset", () => {
+        // No saved activity is changed when the form is cleared.
     });
 
-    $("totalTasks").textContent = tasks.length;
+    // Handle completion and deletion from the unified activity list.
+    categoriesContainer.addEventListener("change", (event) => {
+        const checkbox = event.target.closest("[data-action='complete']");
 
-    const completedCount = tasks.filter(
-      (task) => task.completed
-    ).length;
+        if (!checkbox) return;
 
-    $("completedTasks").textContent = completedCount;
-    $("pendingTasks").textContent = tasks.length - completedCount;
+        const activity = activities.find(
+            item => item.id === checkbox.dataset.id
+        );
 
-    const percentage = tasks.length
-      ? Math.round((completedCount / tasks.length) * 100)
-      : 0;
+        if (!activity) return;
 
-    $("progressPercent").textContent = percentage + "%";
-    $("progressBar").style.width = percentage + "%";
-    $("progressTrack").setAttribute("aria-valuenow", percentage);
-
-    if (filteredTasks.length === 0) {
-      taskList.innerHTML = `
-        <div class="empty-state">
-          ${
-            tasks.length === 0
-              ? "🌱 No study tasks yet. Add a Study or Revision item using the form above."
-              : "No tasks match this filter."
-          }
-        </div>
-      `;
-      return;
-    }
-
-    filteredTasks.sort((a, b) => {
-      return (a.dueDate || "9999-12-31")
-        .localeCompare(b.dueDate || "9999-12-31");
+        activity.completed = checkbox.checked;
+        saveActivities();
+        renderActivities();
     });
 
-    taskList.innerHTML = filteredTasks.map((task) => {
-      const dueDate = parseLocalDate(task.dueDate);
-      const overdue = dueDate &&
-        dueDate < todayAtMidnight() &&
-        !task.completed;
+    categoriesContainer.addEventListener("click", (event) => {
+        const deleteButton = event.target.closest("[data-action='delete']");
 
-      return `
-        <article class="task-item ${task.completed ? "is-completed" : ""}">
-          <input
-            type="checkbox"
-            class="task-checkbox"
-            data-action="toggle-task"
-            data-id="${escapeHTML(task.id)}"
-            aria-label="Toggle task completion"
-            ${task.completed ? "checked" : ""}
-          >
+        if (!deleteButton) return;
 
-          <div class="task-content">
-            <div class="task-title-row">
-              <h3 class="task-title">${escapeHTML(task.title)}</h3>
+        const activity = activities.find(
+            item => item.id === deleteButton.dataset.id
+        );
 
-              <button
-                type="button"
-                class="delete-button"
-                data-action="delete-task"
-                data-id="${escapeHTML(task.id)}"
-              >Delete</button>
-            </div>
+        if (!activity) return;
 
-            ${
-              task.description
-                ? `<p class="task-description">${escapeHTML(task.description)}</p>`
-                : ""
+        const shouldDelete = confirm(
+            `Delete "${activity.title}"?`
+        );
+
+        if (!shouldDelete) return;
+
+        activities = activities.filter(
+            item => item.id !== deleteButton.dataset.id
+        );
+
+        saveActivities();
+        renderActivities();
+    });
+
+    function createId() {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+            return window.crypto.randomUUID();
+        }
+
+        return `activity-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    function readArrayFromStorage(key) {
+        try {
+            const stored = localStorage.getItem(key);
+
+            if (!stored) return [];
+
+            const parsed = JSON.parse(stored);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+            console.error(`Could not read ${key}:`, error);
+            return [];
+        }
+    }
+
+    function loadActivities() {
+        // Prefer the unified storage after it has been created.
+        try {
+            const unifiedData = localStorage.getItem(STORAGE_KEY);
+
+            if (unifiedData !== null) {
+                const parsed = JSON.parse(unifiedData);
+
+                if (Array.isArray(parsed)) {
+                    return parsed.map(normaliseSavedActivity);
+                }
+            }
+        } catch (error) {
+            console.error("Could not load saved activities:", error);
+        }
+
+        // First-time migration from the previous task and event lists.
+        const oldTasks = readArrayFromStorage(OLD_TASKS_KEY);
+        const oldEvents = readArrayFromStorage(OLD_EVENTS_KEY);
+
+        const migratedTasks = oldTasks.map(task => ({
+            id: String(task.id || createId()),
+            title: String(task.title || task.name || "Untitled activity"),
+            category: normaliseCategory(
+                task.category || task.type || "Study"
+            ),
+            subject: String(task.subject || ""),
+            date: String(task.date || task.dueDate || ""),
+            description: String(task.description || ""),
+            completed: Boolean(task.completed),
+            createdAt: Number(task.createdAt || Date.now())
+        }));
+
+        const migratedEvents = oldEvents.map(item => ({
+            id: String(item.id || createId()),
+            title: String(item.title || item.name || "Untitled activity"),
+            category: normaliseCategory(
+                item.category || item.type || "Other Events"
+            ),
+            subject: String(item.subject || ""),
+            date: String(item.date || item.dueDate || ""),
+            description: String(item.description || ""),
+            completed: Boolean(item.completed),
+            createdAt: Number(item.createdAt || Date.now())
+        }));
+
+        const migrated = [...migratedTasks, ...migratedEvents];
+
+        if (migrated.length > 0) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+            } catch (error) {
+                console.error("Could not migrate activities:", error);
+            }
+        }
+
+        return migrated;
+    }
+
+    function normaliseSavedActivity(item) {
+        return {
+            id: String(item.id || createId()),
+            title: String(item.title || item.name || "Untitled activity"),
+            category: normaliseCategory(
+                item.category || item.type || "Study"
+            ),
+            subject: String(item.subject || ""),
+            date: String(item.date || item.dueDate || ""),
+            description: String(item.description || ""),
+            completed: Boolean(item.completed),
+            createdAt: Number(item.createdAt || Date.now())
+        };
+    }
+
+    function saveActivities() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
+        } catch (error) {
+            console.error("Could not save activities:", error);
+            alert("Your activity could not be saved. Please check your browser storage.");
+        }
+    }
+
+    // Standard categories use consistent names.
+    // New categories are also supported automatically.
+    function normaliseCategory(value) {
+        const trimmed = value.trim().replace(/\s+/g, " ");
+        const key = trimmed.toLowerCase();
+
+        const standardCategories = {
+            exam: "Exams",
+            exams: "Exams",
+            examination: "Exams",
+            examinations: "Exams",
+
+            assignment: "Assignments",
+            assignments: "Assignments",
+
+            project: "Projects",
+            projects: "Projects",
+
+            seminar: "Seminars",
+            seminars: "Seminars",
+
+            study: "Study",
+            studies: "Study",
+
+            revision: "Revision",
+            revisions: "Revision",
+
+            presentation: "Presentations",
+            presentations: "Presentations",
+
+            workshop: "Workshops",
+            workshops: "Workshops",
+
+            class: "Classes",
+            classes: "Classes",
+            lecture: "Classes",
+            lectures: "Classes",
+
+            deadline: "Deadlines",
+            deadlines: "Deadlines",
+
+            event: "Other Events",
+            events: "Other Events",
+            "other event": "Other Events",
+            "other events": "Other Events"
+        };
+
+        if (standardCategories[key]) {
+            return standardCategories[key];
+        }
+
+        // Preserve an already-plural custom category.
+        if (/ies$/i.test(trimmed) || /s$/i.test(trimmed)) {
+            return capitaliseWords(trimmed);
+        }
+
+        // Give a custom singular category its own plural group.
+        if (/[^aeiou]y$/i.test(trimmed)) {
+            return capitaliseWords(trimmed.slice(0, -1) + "ies");
+        }
+
+        if (/(s|x|z|ch|sh)$/i.test(trimmed)) {
+            return capitaliseWords(trimmed + "es");
+        }
+
+        return capitaliseWords(trimmed + "s");
+    }
+
+    function capitaliseWords(value) {
+        return value
+            .split(" ")
+            .map(word => {
+                if (!word) return word;
+                return word.charAt(0).toUpperCase() + word.slice(1);
+            })
+            .join(" ");
+    }
+
+    function renderActivities() {
+        renderSummary();
+
+        categoriesContainer.replaceChildren();
+
+        if (activities.length === 0) {
+            const emptyState = document.createElement("div");
+            emptyState.className = "empty-state";
+
+            const icon = document.createElement("span");
+            icon.className = "empty-icon";
+            icon.textContent = "🌿";
+
+            const heading = document.createElement("h3");
+            heading.textContent = "Your planner is ready!";
+
+            const message = document.createElement("p");
+            message.textContent =
+                "Add your first activity above. Your items will appear here, grouped by category.";
+
+            emptyState.append(icon, heading, message);
+            categoriesContainer.appendChild(emptyState);
+            return;
+        }
+
+        // Group all activities by category.
+        const grouped = new Map();
+
+        activities.forEach(activity => {
+            const category = normaliseCategory(activity.category || "Study");
+            activity.category = category;
+
+            if (!grouped.has(category)) {
+                grouped.set(category, []);
             }
 
-            <div class="task-meta">
-              ${
-                task.subject
-                  ? `<span class="meta-tag">📘 ${escapeHTML(task.subject)}</span>`
-                  : ""
-              }
-
-              <span class="meta-tag">
-                🏷️ ${escapeHTML(task.category || "Study")}
-              </span>
-
-              ${
-                task.dueDate
-                  ? `<span class="meta-tag ${overdue ? "overdue-tag" : ""}">
-                      📅 ${overdue ? "Overdue · " : ""}${escapeHTML(formatDate(task.dueDate))}
-                    </span>`
-                  : ""
-              }
-
-              ${
-                task.completed
-                  ? `<span class="meta-tag">✓ Completed</span>`
-                  : ""
-              }
-            </div>
-          </div>
-        </article>
-      `;
-    }).join("");
-  }
-
-  taskFilter.addEventListener("change", renderTasks);
-
-  taskList.addEventListener("change", (event) => {
-    const checkbox = event.target.closest(
-      '[data-action="toggle-task"]'
-    );
-
-    if (!checkbox) return;
-
-    const task = tasks.find(
-      (item) => item.id === checkbox.dataset.id
-    );
-
-    if (!task) return;
-
-    task.completed = checkbox.checked;
-    saveData(TASKS_KEY, tasks);
-    renderTasks();
-  });
-
-  taskList.addEventListener("click", (event) => {
-    const button = event.target.closest(
-      '[data-action="delete-task"]'
-    );
-
-    if (!button) return;
-
-    const task = tasks.find(
-      (item) => item.id === button.dataset.id
-    );
-
-    if (!task || !confirm(`Delete "${task.title}"?`)) return;
-
-    tasks = tasks.filter(
-      (item) => item.id !== button.dataset.id
-    );
-
-    saveData(TASKS_KEY, tasks);
-    renderTasks();
-  });
-
-  // ---------- Small calendar and date reminders ----------
-
-  function renderSmallCalendar(dateString) {
-    const date = parseLocalDate(dateString);
-
-    if (!date) {
-      return `
-        <div class="event-calendar">
-          <span class="calendar-month">Date</span>
-          <span class="calendar-day">—</span>
-        </div>
-      `;
-    }
-
-    const month = date.toLocaleDateString(undefined, {
-      month: "short"
-    });
-
-    return `
-      <div class="event-calendar" aria-label="${escapeHTML(formatDate(dateString))}">
-        <span class="calendar-month">${escapeHTML(month)}</span>
-        <span class="calendar-day">${date.getDate()}</span>
-      </div>
-    `;
-  }
-
-  function getDateReminder(dateString) {
-    const date = parseLocalDate(dateString);
-
-    if (!date) return "";
-
-    const difference = Math.round(
-      (date.getTime() - todayAtMidnight().getTime()) /
-      (24 * 60 * 60 * 1000)
-    );
-
-    if (difference < 0) return "";
-
-    if (difference === 0) {
-      return `<span class="event-reminder today">🔔 Today</span>`;
-    }
-
-    if (difference === 1) {
-      return `<span class="event-reminder urgent">🔔 Tomorrow</span>`;
-    }
-
-    if (difference <= 7) {
-      return `<span class="event-reminder urgent">🔔 In ${difference} days</span>`;
-    }
-
-    return "";
-  }
-
-  // ---------- Academic events grouped automatically ----------
-
-  function renderEvents() {
-    $("eventTotal").textContent =
-      `${events.length} ${events.length === 1 ? "event" : "events"}`;
-
-    if (events.length === 0) {
-      eventCategories.innerHTML = `
-        <div class="empty-state">
-          📅 No academic events yet.<br>
-          Add an assignment, exam, project or any event using the form above.
-        </div>
-      `;
-      return;
-    }
-
-    const sortedEvents = [...events].sort((a, b) => {
-      const dateA = a.date || "9999-12-31";
-      const dateB = b.date || "9999-12-31";
-
-      if (dateA !== dateB) {
-        return dateA.localeCompare(dateB);
-      }
-
-      return (a.title || "").localeCompare(b.title || "");
-    });
-
-    const groups = new Map();
-
-    sortedEvents.forEach((item) => {
-      const category = normaliseEventType(
-        item.eventType || item.category || "Other"
-      );
-
-      const key = getCategoryKey(category);
-
-      if (!groups.has(key)) {
-        groups.set(key, {
-          name: category,
-          items: []
+            grouped.get(category).push(activity);
         });
-      }
 
-      groups.get(key).items.push(item);
-    });
+        const sortedCategories = [...grouped.keys()].sort((a, b) =>
+            a.localeCompare(b)
+        );
 
-    eventCategories.innerHTML = [...groups.values()]
-      .map((group) => {
-        const cards = group.items.map((item) => `
-          <article class="event-card">
-            ${renderSmallCalendar(item.date)}
+        sortedCategories.forEach(category => {
+            const categorySection = document.createElement("section");
+            categorySection.className = "event-category";
 
-            <div class="event-content">
-              <h4 class="event-title">${escapeHTML(item.title)}</h4>
+            const headingRow = document.createElement("div");
+            headingRow.className = "category-heading";
 
-              <div class="task-meta">
-                <span class="event-type-label">
-                  ${escapeHTML(normaliseEventType(item.eventType || item.category || "Other"))}
-                </span>
+            const heading = document.createElement("h3");
+            heading.textContent = category;
 
-                ${
-                  item.subject
-                    ? `<span class="meta-tag">📘 ${escapeHTML(item.subject)}</span>`
-                    : ""
+            const items = grouped.get(category);
+            const count = document.createElement("span");
+            count.className = "category-count";
+            count.textContent = `${items.length} ${items.length === 1 ? "item" : "items"}`;
+
+            headingRow.append(heading, count);
+
+            const itemsContainer = document.createElement("div");
+            itemsContainer.className = "category-items";
+
+            // Show activities with nearer dates first; undated items last.
+            items.sort((a, b) => {
+                if (a.completed !== b.completed) {
+                    return Number(a.completed) - Number(b.completed);
                 }
-              </div>
 
-              ${
-                item.description
-                  ? `<p class="event-description">${escapeHTML(item.description)}</p>`
-                  : ""
-              }
+                if (a.date && b.date) {
+                    return a.date.localeCompare(b.date);
+                }
 
-              <p class="event-date-line">
-                📅 ${escapeHTML(formatDate(item.date))}
-              </p>
+                if (a.date) return -1;
+                if (b.date) return 1;
 
-              ${getDateReminder(item.date)}
-            </div>
+                return (a.createdAt || 0) - (b.createdAt || 0);
+            });
 
-            <button
-              type="button"
-              class="delete-button"
-              data-action="delete-event"
-              data-id="${escapeHTML(item.id)}"
-            >Delete</button>
-          </article>
-        `).join("");
+            items.forEach(activity => {
+                itemsContainer.appendChild(createActivityCard(activity));
+            });
 
-        return `
-          <section class="event-category">
-            <div class="category-heading">
-              <h3>${escapeHTML(group.name)}</h3>
-              <span class="category-count">${group.items.length}</span>
-            </div>
+            categorySection.append(headingRow, itemsContainer);
+            categoriesContainer.appendChild(categorySection);
+        });
+    }
 
-            <div class="category-events">
-              ${cards}
-            </div>
-          </section>
-        `;
-      }).join("");
-  }
+    function renderSummary() {
+        const completed = activities.filter(item => item.completed).length;
+        const pending = activities.length - completed;
 
-  eventCategories.addEventListener("click", (event) => {
-    const button = event.target.closest(
-      '[data-action="delete-event"]'
-    );
+        totalCount.textContent = activities.length;
+        completedCount.textContent = completed;
+        pendingCount.textContent = pending;
 
-    if (!button) return;
+        eventTotal.textContent =
+            `${activities.length} ${activities.length === 1 ? "item" : "items"}`;
+    }
 
-    const item = events.find(
-      (eventItem) => eventItem.id === button.dataset.id
-    );
+    function createActivityCard(activity) {
+        const card = document.createElement("article");
+        card.className = "activity-card";
 
-    if (!item || !confirm(`Delete "${item.title}"?`)) return;
+        if (activity.completed) {
+            card.classList.add("is-completed");
+        }
 
-    events = events.filter(
-      (eventItem) => eventItem.id !== button.dataset.id
-    );
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "completion-control";
+        checkbox.checked = activity.completed;
+        checkbox.dataset.action = "complete";
+        checkbox.dataset.id = activity.id;
+        checkbox.setAttribute(
+            "aria-label",
+            `Mark ${activity.title} as ${activity.completed ? "pending" : "completed"}`
+        );
 
-    saveData(EVENTS_KEY, events);
-    renderEvents();
-  });
+        const content = document.createElement("div");
+        content.className = "activity-content";
 
-  // ---------- Start the planner ----------
+        const title = document.createElement("h4");
+        title.className = "activity-title";
+        title.textContent = activity.title;
+        content.appendChild(title);
 
-  renderTasks();
-  renderEvents();
+        if (activity.subject) {
+            const subject = document.createElement("p");
+            subject.className = "activity-subject";
+            subject.textContent = `📘 ${activity.subject}`;
+            content.appendChild(subject);
+        }
+
+        if (activity.description) {
+            const description = document.createElement("p");
+            description.className = "activity-description";
+            description.textContent = activity.description;
+            content.appendChild(description);
+        }
+
+        const meta = document.createElement("div");
+        meta.className = "activity-meta";
+
+        if (activity.date && isValidDateString(activity.date)) {
+            const dateLabel = document.createElement("span");
+            dateLabel.className = "activity-date";
+            dateLabel.textContent = `🗓️ ${formatDate(activity.date)}`;
+            meta.appendChild(dateLabel);
+
+            if (!activity.completed) {
+                const reminder = createDateReminder(activity.date);
+
+                if (reminder) {
+                    meta.appendChild(reminder);
+                }
+            }
+        }
+
+        if (activity.completed) {
+            const status = document.createElement("span");
+            status.textContent = "✓ Completed";
+            meta.appendChild(status);
+        }
+
+        if (meta.childElementCount > 0) {
+            content.appendChild(meta);
+        }
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "delete-button";
+        deleteButton.dataset.action = "delete";
+        deleteButton.dataset.id = activity.id;
+        deleteButton.textContent = "Delete";
+        deleteButton.setAttribute("aria-label", `Delete ${activity.title}`);
+
+        card.append(checkbox, content, deleteButton);
+
+        return card;
+    }
+
+    function parseLocalDate(dateString) {
+        const parts = dateString.split("-").map(Number);
+
+        if (parts.length !== 3 || parts.some(Number.isNaN)) {
+            return null;
+        }
+
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+        date.setHours(0, 0, 0, 0);
+
+        if (
+            date.getFullYear() !== parts[0] ||
+            date.getMonth() !== parts[1] - 1 ||
+            date.getDate() !== parts[2]
+        ) {
+            return null;
+        }
+
+        return date;
+    }
+
+    function isValidDateString(dateString) {
+        return Boolean(parseLocalDate(dateString));
+    }
+
+    function formatDate(dateString) {
+        const date = parseLocalDate(dateString);
+
+        if (!date) return dateString;
+
+        return date.toLocaleDateString(undefined, {
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+        });
+    }
+
+    function createDateReminder(dateString) {
+        const dueDate = parseLocalDate(dateString);
+
+        if (!dueDate) return null;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const daysRemaining = Math.round(
+            (dueDate.getTime() - today.getTime()) / 86400000
+        );
+
+        // Show a reminder for overdue items and items due within 7 days.
+        if (daysRemaining > 7) return null;
+
+        const reminder = document.createElement("span");
+        reminder.className = "date-reminder";
+
+        if (daysRemaining < 0) {
+            reminder.textContent = `Overdue by ${Math.abs(daysRemaining)} ${Math.abs(daysRemaining) === 1 ? "day" : "days"}`;
+            reminder.classList.add("is-overdue");
+        } else if (daysRemaining === 0) {
+            reminder.textContent = "Due today";
+            reminder.classList.add("is-today");
+        } else if (daysRemaining === 1) {
+            reminder.textContent = "Due tomorrow";
+        } else {
+            reminder.textContent = `Due in ${daysRemaining} days`;
+        }
+
+        return reminder;
+    }
 });
