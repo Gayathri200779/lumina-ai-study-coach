@@ -1,184 +1,190 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lumina AI Coach - Study Plan</title>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="study-planner.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina AI - Study Planner</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="planner.css">
+  <script src="planner.js" defer></script>
 </head>
 <body>
+<header class="topbar">
+  <div class="logo">🌿 Lumina <span>AI</span></div>
+  <a href="dashboard.html" class="home-btn">← Home</a>
+</header>
 
-<!-- ===== TOP NAVIGATION BAR (connects to every page) ===== -->
-<nav class="top-nav">
-  <a href="dashboard.html" class="logo">Lumina AI<br>Coach</a>
+<main class="container">
+  <section class="page-heading">
+    <h1>My Study Planner 📚</h1>
+    <p>Organise your study tasks, exams, and college deadlines.</p>
+  </section>
 
-  <ul class="nav-links">
-    <li><a href="dashboard.html">Dashboard</a></li>
-    <li><a href="concept-explainer.html">AI Concept Explainer</a></li>
-    <li><a href="quiz.html">AI Quiz Generator</a></li>
-    <li><a href="my-notes.html">My Notes</a></li>
-    <li><a href="study-planner.html" class="active">Study Plan</a></li>
-    <li><a href="progress-tracker.html">Progress Tracker</a></li>
-  </ul>
+  <section class="stats">
+    <div class="stat-card">
+      <p>Total Study Tasks</p><h2 id="totalTasks">0</h2>
+    </div>
+    <div class="stat-card">
+      <p>Tasks Completed</p><h2 id="completedTasks">0</h2>
+    </div>
+    <div class="stat-card">
+      <p>Upcoming Academic Dates</p><h2 id="upcomingEvents">0</h2>
+    </div>
+    <div class="stat-card">
+      <p>Study Completion</p><h2 id="completionPercent">0%</h2>
+      <div class="progress-track">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+    </div>
+  </section>
 
-  <div class="nav-icons">
-    <button class="icon-btn" title="Settings">
-      <span class="material-symbols-outlined">settings</span>
-    </button>
-    <!-- No profile.html was specified, so this stays a plain button.
-         Change to <a href="profile.html" class="icon-btn"> if you add one. -->
-    <button class="icon-btn" title="Profile">
-      <span class="material-symbols-outlined">person</span>
-    </button>
-  </div>
-</nav>
-
-<!-- ===== MAIN CONTENT ===== -->
-<main class="main-content">
-
-  <header class="page-header">
-    <h1>Study Plan</h1>
-    <p>Set simple targets and keep track of your learning.</p>
-  </header>
-
-  <div class="bento-grid">
-
-    <!-- Today's Targets -->
-    <section class="column">
-      <div class="column-header">
-        <h2>Today's Targets</h2>
-        <button class="btn btn-primary" id="addTodayBtn">
-          <span class="material-symbols-outlined">add</span>Add Today's Target
-        </button>
+  <div class="layout">
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>📝 Daily Study Tasks</h2>
+          <p class="small-text">Tick a task to strike through its details.</p>
+        </div>
+        <button class="primary-btn" id="showTaskForm">+ Add Task</button>
       </div>
 
-      <article class="target-card priority-high">
-        <div class="card-top">
+      <form id="taskForm" class="hidden">
+        <div class="form-grid">
+          <div class="field full">
+            <label for="taskTitle">Task title *</label>
+            <input id="taskTitle" required placeholder="Revise Computer Vision Unit 1">
+          </div>
+          <div class="field">
+            <label for="taskSubject">Subject</label>
+            <input id="taskSubject" placeholder="Computer Vision">
+          </div>
+          <div class="field">
+            <label for="taskDate">Study date *</label>
+            <input id="taskDate" type="date" required>
+          </div>
+          <div class="field">
+            <label for="taskTime">Start time</label>
+            <input id="taskTime" type="time">
+          </div>
+          <div class="field">
+            <label for="taskDuration">Duration (minutes)</label>
+            <input id="taskDuration" type="number" min="1" placeholder="45">
+          </div>
+          <div class="field full">
+            <label for="taskNotes">Notes</label>
+            <textarea id="taskNotes" placeholder="Topics to revise or work to complete"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="primary-btn" type="submit">Save Task</button>
+          <button class="secondary-btn" type="button" id="cancelTask">Cancel</button>
+        </div>
+      </form>
+
+      <div class="filters" id="taskFilters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="pending">Pending</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+      </div>
+      <div id="taskList" class="item-list"></div>
+    </section>
+
+    <div>
+      <section class="panel">
+        <div class="panel-heading">
           <div>
-            <div class="tag-row">
-              <span class="tag tag-high">High Priority</span>
-              <span class="meta"><span class="material-symbols-outlined">schedule</span>45 mins</span>
+            <h2>📅 Academic Calendar</h2>
+            <p class="small-text">Select a date to see tasks and events.</p>
+          </div>
+        </div>
+
+        <div class="calendar-heading">
+          <button class="secondary-btn" id="prevMonth" aria-label="Previous month">‹</button>
+          <h3 id="monthLabel"></h3>
+          <button class="secondary-btn" id="nextMonth" aria-label="Next month">›</button>
+        </div>
+        <div id="calendar" class="calendar-grid"></div>
+
+        <p class="legend">
+          <span>🟢 Study task</span>
+          <span>🟠 Exam</span>
+          <span>🟣 Assignment</span>
+          <span>✓ Completed = crossed out</span>
+        </p>
+
+        <div class="selected-date">
+          <h3 id="selectedDateLabel">Events for selected date</h3>
+          <div id="dayEvents" class="item-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>🔔 Academic Reminders</h2>
+            <p class="small-text">Exams, assignments, records, and project deadlines.</p>
+          </div>
+          <button class="primary-btn" id="showEventForm">+ Add Date</button>
+        </div>
+
+        <form id="eventForm" class="hidden">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="eventTitle">Event title *</label>
+              <input id="eventTitle" required placeholder="Semester exam">
             </div>
-            <h3>Machine Learning Basics</h3>
+            <div class="field">
+              <label for="eventType">Event type</label>
+              <select id="eventType">
+                <option>Theory exam</option>
+                <option>Practical exam</option>
+                <option>Internal/Model exam</option>
+                <option>Assignment submission</option>
+                <option>Record submission</option>
+                <option>Project review</option>
+                <option>Project submission</option>
+                <option>Seminar/Presentation</option>
+                <option>Other college event</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="eventDate">Date *</label>
+              <input id="eventDate" type="date" required>
+            </div>
+            <div class="field">
+              <label for="eventTime">Time</label>
+              <input id="eventTime" type="time">
+            </div>
+            <div class="field">
+              <label for="eventSubject">Subject</label>
+              <input id="eventSubject" placeholder="Computer Vision">
+            </div>
+            <div class="field full">
+              <label for="eventNotes">Notes</label>
+              <textarea id="eventNotes" placeholder="Syllabus or submission details"></textarea>
+            </div>
           </div>
-          <div class="card-actions">
-            <button class="icon-btn small" title="Edit"><span class="material-symbols-outlined">edit</span></button>
-            <button class="icon-btn small" title="Delete"><span class="material-symbols-outlined">delete</span></button>
+          <div class="form-actions">
+            <button class="primary-btn" type="submit">Save Reminder</button>
+            <button class="secondary-btn" type="button" id="cancelEvent">Cancel</button>
           </div>
+        </form>
+
+        <div class="filters" id="eventFilters">
+          <button class="filter-btn active" data-filter="pending">Pending</button>
+          <button class="filter-btn" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="completed">Completed</button>
         </div>
-        <p class="card-desc">Chapter 3: Gradient Descent and Loss Functions</p>
-        <button class="btn btn-outline btn-full">
-          <span class="material-symbols-outlined">check_circle</span>Mark as completed
-        </button>
-      </article>
-
-      <article class="target-card completed">
-        <div class="card-top">
-          <div>
-            <div class="tag-row"><span class="tag tag-med">Med Priority</span></div>
-            <h3 class="strike">Data Structures</h3>
-          </div>
-          <span class="material-symbols-outlined check-icon filled">check_circle</span>
-        </div>
-        <p class="card-desc strike">Review Binary Trees implementations</p>
-      </article>
-    </section>
-
-    <!-- Weekly Targets -->
-    <section class="column">
-      <div class="column-header">
-        <h2>Weekly Targets</h2>
-        <button class="btn btn-secondary" id="addWeeklyBtn">
-          <span class="material-symbols-outlined">add</span>Add Weekly Target
-        </button>
-      </div>
-
-      <div class="empty-state">
-        <span class="material-symbols-outlined">calendar_month</span>
-        <p class="empty-title">No weekly targets yet</p>
-        <p class="empty-sub">Set a broader goal for the week to stay on track.</p>
-      </div>
-
-      <!-- Ethics Papers card: now a real checklist that drives the progress bar -->
-      <article class="target-card" id="ethicsCard">
-        <div class="card-top">
-          <div>
-            <span class="tag tag-low">Low Priority</span>
-            <h3>Read AI Ethics Papers</h3>
-          </div>
-          <button class="icon-btn small" title="Edit"><span class="material-symbols-outlined">edit</span></button>
-        </div>
-        <p class="card-desc">Read and summarize 2 papers on bias in LLMs.</p>
-
-        <ul class="checklist" id="ethicsChecklist">
-          <li>
-            <label>
-              <input type="checkbox" class="paper-check" data-paper="1">
-              <span>Paper 1: Bias in Large Language Models</span>
-            </label>
-          </li>
-          <li>
-            <label>
-              <input type="checkbox" class="paper-check" data-paper="2">
-              <span>Paper 2: Fairness Metrics in NLP</span>
-            </label>
-          </li>
-        </ul>
-
-        <div class="progress-row">
-          <span>Progress</span>
-          <span id="ethicsProgressText">0 / 2 completed</span>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" id="ethicsProgressFill" style="width:0%"></div></div>
-      </article>
-    </section>
-
+        <div id="eventList" class="item-list"></div>
+      </section>
+    </div>
   </div>
 </main>
 
-<!-- ===== BOTTOM NAV (mobile only, connects to every page too) ===== -->
-<nav class="bottom-nav">
-  <a href="concept-explainer.html"><span class="material-symbols-outlined">psychology</span><span>Concepts</span></a>
-  <a href="quiz.html"><span class="material-symbols-outlined">quiz</span><span>Quizzes</span></a>
-  <a href="study-planner.html" class="active"><span class="material-symbols-outlined filled">event_note</span><span>Plan</span></a>
-  <a href="progress-tracker.html"><span class="material-symbols-outlined">query_stats</span><span>Tracker</span></a>
-  <a href="dashboard.html"><span class="material-symbols-outlined">space_dashboard</span><span>Dashboard</span></a>
-</nav>
-
-<!-- ===== SCRIPT: makes the Ethics Papers progress update as-you-go ===== -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const checklist = document.querySelectorAll('#ethicsChecklist .paper-check');
-  const progressText = document.getElementById('ethicsProgressText');
-  const progressFill = document.getElementById('ethicsProgressFill');
-  const storageKey = 'lumina-ethics-progress';
-
-  // Restore whatever the user had checked last time
-  const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
-  if (saved) {
-    checklist.forEach(cb => {
-      if (saved[cb.dataset.paper] !== undefined) cb.checked = saved[cb.dataset.paper];
-    });
-  }
-
-  function updateProgress() {
-    const total = checklist.length;
-    const completed = Array.from(checklist).filter(cb => cb.checked).length;
-
-    progressText.textContent = `${completed} / ${total} completed`;
-    progressFill.style.width = `${(completed / total) * 100}%`;
-
-    const state = {};
-    checklist.forEach(cb => state[cb.dataset.paper] = cb.checked);
-    localStorage.setItem(storageKey, JSON.stringify(state));
-  }
-
-  checklist.forEach(cb => cb.addEventListener('change', updateProgress));
-  updateProgress(); // set initial state on load
-});
-</script>
-
+<div id="toast" class="toast" role="status"></div>
+<footer>Lumina AI Study Coach 🌿</footer>
 </body>
 </html>
