@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina AI Study Coach | Subject</title>
+  <link rel="stylesheet" href="subject.css">
+</head>
+<body>
+  <header class="navbar">
+    <a class="brand" href="dashboard.html">🌿 Lumina AI</a>
+    <nav>
+      <a href="dashboard.html">Home</a>
+      <a href="notes.html">My Notes</a>
+      <a href="study-planner.html">Study Planner</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <a class="back-link" href="dashboard.html">← Back to Dashboard</a>
+
+    <section class="welcome-card">
+      <p class="eyebrow">YOUR LEARNING SPACE</p>
+      <h1 id="subjectTitle">My Subject</h1>
+      <p id="subjectDescription">Organize your notes, materials and study activities in one place.</p>
+      <div class="progress-heading">
+        <span>Subject progress</span>
+        <strong id="progressLabel">0%</strong>
+      </div>
+      <div class="progress-track">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+      <label class="progress-input-label" for="progressInput">Update your progress</label>
+      <input id="progressInput" type="range" min="0" max="100" value="0">
+      <button id="saveProgress" class="primary-button">Save Progress</button>
+    </section>
+
+    <section class="section">
+      <h2>📚 My Study Notes</h2>
+      <p class="muted">Notes saved in Lumina with the same subject name will appear here.</p>
+      <div id="notesList" class="card-grid"></div>
+      <p id="notesEmpty" class="empty-message">No saved notes for this subject yet.</p>
+    </section>
+
+    <section class="section">
+      <h2>🗓️ Study Activities</h2>
+      <p class="muted">Your saved study planner activities for this subject will appear here.</p>
+      <div id="activitiesList" class="card-grid"></div>
+      <p id="activitiesEmpty" class="empty-message">No activities found for this subject.</p>
+    </section>
+
+    <section class="section">
+      <h2>📁 Study Materials</h2>
+      <p class="muted">Upload PDFs, documents or other study files for this subject.</p>
+      <form id="materialForm" class="upload-form">
+        <input id="materialFile" type="file" required>
+        <button class="primary-button" type="submit">Upload Material</button>
+      </form>
+      <p class="small-note">Materials are stored in this browser on this device. They do not automatically sync to another device.</p>
+      <div id="materialsList" class="card-grid"></div>
+      <p id="materialsEmpty" class="empty-message">No materials uploaded yet.</p>
+    </section>
+
+    <section class="section">
+      <h2>⭐ Important Questions</h2>
+      <p class="muted">Add questions you want to revise before your exam.</p>
+      <form id="questionForm" class="question-form">
+        <textarea id="questionInput" placeholder="Type an important question..." required></textarea>
+        <button class="primary-button" type="submit">Add Question</button>
+      </form>
+      <ul id="questionsList" class="question-list"></ul>
+      <p id="questionsEmpty" class="empty-message">No important questions added yet.</p>
+    </section>
+
+    <section class="section assistant-card">
+      <h2>✨ Need help understanding a topic?</h2>
+      <p>Open your AI learning tools to explain concepts and generate quizzes.</p>
+      <a class="primary-button link-button" href="dashboard.html">Go to AI Learning Tools</a>
+    </section>
+
+    <p id="pageStatus" class="status-message" role="status"></p>
+  </main>
+
+  <script src="subject.js"></script>
+</body>
+</html>
