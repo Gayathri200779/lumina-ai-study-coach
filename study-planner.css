@@ -1,3 +1,4 @@
+
 :root {
   --page: #F6FAF7;
   --surface: #FFFFFF;
@@ -40,6 +41,8 @@ button {
   cursor: pointer;
 }
 
+/* Header */
+
 .top-header {
   width: 100%;
   min-height: 74px;
@@ -80,16 +83,14 @@ button {
   background: var(--soft-green);
 }
 
+/* Main layout */
+
 .planner-container {
   width: min(1120px, 92%);
   margin: 32px auto;
 }
 
 .page-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
   margin-bottom: 25px;
 }
 
@@ -114,7 +115,7 @@ button {
   line-height: 1.7;
 }
 
-/* Task summary cards */
+/* Summary cards */
 
 .summary-grid {
   display: grid;
@@ -158,7 +159,7 @@ button {
   font-size: 25px;
 }
 
-/* Main panels */
+/* Panels */
 
 .panel {
   min-width: 0;
@@ -201,7 +202,7 @@ button {
   line-height: 1.7;
 }
 
-/* Forms */
+/* One combined form */
 
 .form-grid {
   display: grid;
@@ -348,7 +349,8 @@ button {
   text-decoration: line-through;
 }
 
-.task-description {
+.task-description,
+.event-description {
   margin: 6px 0;
   color: var(--muted);
   font-size: 12px;
@@ -404,7 +406,7 @@ button {
   line-height: 1.7;
 }
 
-/* Progress bar */
+/* Progress */
 
 .progress-area {
   margin-top: 23px;
@@ -524,13 +526,13 @@ button {
   text-align: center;
 }
 
-.event-calendar .calendar-month {
+.calendar-month {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
 }
 
-.event-calendar .calendar-day {
+.calendar-day {
   font-size: 21px;
   line-height: 1.2;
   font-weight: 700;
@@ -546,14 +548,6 @@ button {
   color: var(--dark-green);
   font-size: 13px;
   font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.event-description {
-  margin: 6px 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.6;
   overflow-wrap: anywhere;
 }
 
@@ -587,10 +581,6 @@ button {
   background: #FFE9E9;
 }
 
-.event-card .delete-button {
-  flex: 0 0 auto;
-}
-
 /* Footer */
 
 .planner-footer {
@@ -600,7 +590,7 @@ button {
   text-align: center;
 }
 
-/* Responsive layout */
+/* Mobile layout */
 
 @media (max-width: 760px) {
   .top-header {
