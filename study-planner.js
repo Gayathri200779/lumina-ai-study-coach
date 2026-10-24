@@ -1,367 +1,814 @@
 
-const $ = id => document.getElementById(id);
+/* ========================================
+   LUMINA AI STUDY PLANNER
+   File: study-planner.js
+======================================== */
 
-const today = new Date();
-const dateString = date =>
-  `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
-const todayString = dateString(today);
+"use strict";
 
-function load(key) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key));
-    return Array.isArray(value) ? value : [];
-  } catch {
-    return [];
-  }
+// Local storage keys
+const TASKS_KEY = "luminaStudyPlannerTasks";
+const EVENTS_KEY = "luminaStudyPlannerEvents";
+
+// Get HTML elements
+const taskForm = document.getElementById("taskForm");
+const taskTitle = document.getElementById("taskTitle");
+const taskSubject = document.getElementById("taskSubject");
+const taskDate = document.getElementById("taskDate");
+const taskPriority = document.getElementById("taskPriority");
+const taskDuration = document.getElementById("taskDuration");
+const taskNotes = document.getElementById("taskNotes");
+const taskSubmitButton = document.getElementById("taskSubmitButton");
+const cancelEditButton = document.getElementById("cancelEditButton");
+const taskList = document.getElementById("taskList");
+const taskFilter = document.getElementById("taskFilter");
+const taskEmptyMessage = document.getElementById("taskEmptyMessage");
+
+const totalTasksElement = document.getElementById("totalTasks");
+const pendingTasksElement = document.getElementById("pendingTasks");
+const completedTasksElement = document.getElementById("completedTasks");
+const progressPercentElement = document.getElementById("progressPercent");
+const progressLabel = document.getElementById("progressLabel");
+const progressFill = document.getElementById("progressFill");
+
+const previousMonthButton = document.getElementById("previousMonth");
+const nextMonthButton = document.getElementById("nextMonth");
+const calendarMonth = document.getElementById("calendarMonth");
+const calendarDays = document.getElementById("calendarDays");
+const selectedDateLabel = document.getElementById("selectedDateLabel");
+
+const eventForm = document.getElementById("eventForm");
+const eventTitle = document.getElementById("eventTitle");
+const eventType = document.getElementById("eventType");
+const eventDate = document.getElementById("eventDate");
+const eventNotes = document.getElementById("eventNotes");
+const eventSubmitButton = document.getElementById("eventSubmitButton");
+const cancelEventEditButton = document.getElementById("cancelEventEditButton");
+const eventFormHeading = document.getElementById("eventFormHeading");
+const eventList = document.getElementById("eventList");
+const eventEmptyMessage = document.getElementById("eventEmptyMessage");
+
+// Get today's date in local time
+function getLocalDateString(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
 }
 
-let tasks = load("luminaStudyPlannerTasks");
-let events = load("luminaStudyPlannerEvents");
-let taskFilter = "all";
-let eventFilter = "pending";
-let editingTask = null;
-let editingEvent = null;
-let selectedDate = todayString;
-let shownMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+// Display dates in a readable format
+function formatDate(dateString) {
+    if (!dateString) return "";
 
-function save() {
-  localStorage.setItem("luminaStudyPlannerTasks", JSON.stringify(tasks));
-  localStorage.setItem("luminaStudyPlannerEvents", JSON.stringify(events));
+    const parts = dateString.split("-");
+
+    if (parts.length !== 3) return dateString;
+
+    const date = new Date(
+        Number(parts[0]),
+        Number(parts[1]) - 1,
+        Number(parts[2])
+    );
+
+    return date.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+    });
 }
 
-function id() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+// Read saved data safely
+function loadData(key) {
+    try {
+        const savedData = localStorage.getItem(key);
+
+        if (!savedData) return [];
+
+        const parsedData = JSON.parse(savedData);
+
+        return Array.isArray(parsedData) ? parsedData : [];
+    } catch (error) {
+        console.error("Could not load planner data:", error);
+        return [];
+    }
 }
 
-function safe(value) {
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  })[char]);
+// Save data
+function saveData(key, data) {
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (error) {
+        console.error("Could not save planner data:", error);
+        alert("Your browser could not save this change. Please check your browser storage settings.");
+    }
 }
 
-function prettyDate(value) {
-  if (!value) return "";
-  return new Date(value + "T12:00:00").toLocaleDateString(undefined, {
-    day:"numeric", month:"short", year:"numeric"
-  });
+// Planner data
+let tasks = loadData(TASKS_KEY);
+let events = loadData(EVENTS_KEY);
+
+let editingTaskId = null;
+let editingEventId = null;
+
+const today = getLocalDateString();
+
+let selectedDate = today;
+
+const initialDate = new Date();
+let visibleMonth = initialDate.getMonth();
+let visibleYear = initialDate.getFullYear();
+
+// Generate a unique ID
+function createId() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+    }
+
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function notify(message) {
-  $("toast").textContent = message;
-  $("toast").style.display = "block";
-  clearTimeout(notify.timer);
-  notify.timer = setTimeout(() => $("toast").style.display = "none", 2200);
+// Safely create text elements
+function createElement(tag, className, text = "") {
+    const element = document.createElement(tag);
+
+    if (className) {
+        element.className = className;
+    }
+
+    element.textContent = text;
+
+    return element;
 }
 
-/* Study task form */
-$("showTaskForm").onclick = () => openTaskForm();
-$("cancelTask").onclick = () => closeTaskForm();
+// ========================================
+// STUDY TASKS
+// ========================================
 
-function openTaskForm(task = null) {
-  editingTask = task ? task.id : null;
-  $("taskForm").reset();
-  $("taskTitle").value = task?.title || "";
-  $("taskSubject").value = task?.subject || "";
-  $("taskDate").value = task?.date || selectedDate || todayString;
-  $("taskTime").value = task?.time || "";
-  $("taskDuration").value = task?.duration || "";
-  $("taskNotes").value = task?.notes || "";
-  $("taskForm").classList.remove("hidden");
-}
+// Add or update a task
+taskForm.addEventListener("submit", function (event) {
+    event.preventDefault();
 
-function closeTaskForm() {
-  $("taskForm").classList.add("hidden");
-  editingTask = null;
-}
+    const title = taskTitle.value.trim();
 
-$("taskForm").addEventListener("submit", e => {
-  e.preventDefault();
+    if (!title) {
+        alert("Please enter a task name.");
+        taskTitle.focus();
+        return;
+    }
 
-  const data = {
-    title: $("taskTitle").value.trim(),
-    subject: $("taskSubject").value.trim(),
-    date: $("taskDate").value,
-    time: $("taskTime").value,
-    duration: $("taskDuration").value,
-    notes: $("taskNotes").value.trim()
-  };
+    if (!taskDate.value) {
+        alert("Please select a due date.");
+        taskDate.focus();
+        return;
+    }
 
-  if (!data.title || !data.date) return;
+    const taskData = {
+        title: title,
+        subject: taskSubject.value.trim(),
+        date: taskDate.value,
+        priority: taskPriority.value,
+        duration: taskDuration.value,
+        notes: taskNotes.value.trim()
+    };
 
-  if (editingTask) {
-    const task = tasks.find(t => t.id === editingTask);
-    if (task) Object.assign(task, data);
-    notify("Task updated");
-  } else {
-    tasks.push({id:id(), ...data, completed:false});
-    notify("Study task added");
-  }
+    if (editingTaskId !== null) {
+        tasks = tasks.map(function (task) {
+            if (task.id === editingTaskId) {
+                return {
+                    ...task,
+                    ...taskData
+                };
+            }
 
-  selectedDate = data.date;
-  shownMonth = new Date(data.date + "T12:00:00");
-  save();
-  closeTaskForm();
-  renderAll();
+            return task;
+        });
+    } else {
+        tasks.push({
+            id: createId(),
+            ...taskData,
+            completed: false,
+            createdAt: new Date().toISOString()
+        });
+    }
+
+    saveData(TASKS_KEY, tasks);
+
+    resetTaskForm();
+    renderTasks();
+    updateStatistics();
 });
 
-function toggleTask(taskId, checked) {
-  const task = tasks.find(t => t.id === taskId);
-  if (!task) return;
-  task.completed = checked;
-  save();
-  renderAll();
-  notify(checked ? "Task completed! Well done 🌿" : "Task marked pending");
+function resetTaskForm() {
+    taskForm.reset();
+
+    taskDate.value = getLocalDateString();
+    taskPriority.value = "Medium";
+    taskDuration.value = "30 minutes";
+
+    editingTaskId = null;
+
+    taskSubmitButton.textContent = "+ Add Study Task";
+    cancelEditButton.classList.add("hidden");
 }
 
-function deleteTask(taskId) {
-  if (!confirm("Delete this study task?")) return;
-  tasks = tasks.filter(t => t.id !== taskId);
-  save();
-  renderAll();
-  notify("Task deleted");
-}
+cancelEditButton.addEventListener("click", resetTaskForm);
 
-$("taskFilters").addEventListener("click", e => {
-  const button = e.target.closest("[data-filter]");
-  if (!button) return;
-  taskFilter = button.dataset.filter;
-  $("taskFilters").querySelectorAll("button").forEach(b =>
-    b.classList.toggle("active", b === button)
-  );
-  renderTasks();
-});
-
+// Display tasks
 function renderTasks() {
-  let shown = tasks.filter(t =>
-    taskFilter === "all" ||
-    (taskFilter === "completed" ? t.completed : !t.completed)
-  );
+    taskList.replaceChildren();
 
-  shown.sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
+    const filterValue = taskFilter.value;
 
-  $("taskList").innerHTML = shown.length ? shown.map(t => `
-    <div class="item ${t.completed ? "completed" : ""}">
-      <input type="checkbox" aria-label="Mark task complete"
-        ${t.completed ? "checked" : ""}
-        onchange="toggleTask('${t.id}', this.checked)">
-      <div class="item-body">
-        <div class="item-title">${safe(t.title)}</div>
-        <div class="meta">${safe(t.subject || "General study")} · ${prettyDate(t.date)}${t.time ? " · " + safe(t.time) : ""}${t.duration ? " · " + safe(t.duration) + " min" : ""}</div>
-        ${t.notes ? `<div class="notes">${safe(t.notes)}</div>` : ""}
-        <div class="item-actions">
-          <button class="secondary-btn" onclick="openTaskForm(tasks.find(t=>t.id==='${t.id}'))">Edit</button>
-          <button class="delete-btn" onclick="deleteTask('${t.id}')">Delete</button>
-        </div>
-      </div>
-    </div>
-  `).join("") : `<div class="empty">No ${taskFilter === "all" ? "" : taskFilter + " "}study tasks yet.</div>`;
+    const filteredTasks = tasks.filter(function (task) {
+        if (filterValue === "pending") {
+            return !task.completed;
+        }
+
+        if (filterValue === "completed") {
+            return task.completed;
+        }
+
+        return true;
+    });
+
+    // Sort pending tasks first, then by due date
+    filteredTasks.sort(function (a, b) {
+        if (a.completed !== b.completed) {
+            return a.completed ? 1 : -1;
+        }
+
+        return (a.date || "").localeCompare(b.date || "");
+    });
+
+    taskEmptyMessage.classList.toggle(
+        "hidden",
+        filteredTasks.length > 0
+    );
+
+    if (filteredTasks.length === 0) {
+        if (tasks.length > 0 && filterValue !== "all") {
+            taskEmptyMessage.textContent =
+                filterValue === "pending"
+                    ? "🎉 No pending tasks. Great work!"
+                    : "No completed tasks yet. Keep going!";
+        } else {
+            taskEmptyMessage.textContent =
+                "🌱 No study tasks yet. Add your first task above!";
+        }
+    }
+
+    filteredTasks.forEach(function (task) {
+        const taskItem = createElement(
+            "article",
+            `task-item${task.completed ? " is-completed" : ""}`
+        );
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "task-checkbox";
+        checkbox.checked = Boolean(task.completed);
+        checkbox.setAttribute(
+            "aria-label",
+            `Mark ${task.title} as ${task.completed ? "pending" : "completed"}`
+        );
+
+        checkbox.addEventListener("change", function () {
+            toggleTask(task.id, checkbox.checked);
+        });
+
+        const content = createElement("div", "task-content");
+
+        const title = createElement("h4", "task-title", task.title);
+        content.appendChild(title);
+
+        const meta = createElement("div", "task-meta");
+
+        if (task.subject) {
+            meta.appendChild(
+                createElement("span", "", `📘 ${task.subject}`)
+            );
+        }
+
+        meta.appendChild(
+            createElement("span", "", `📅 ${formatDate(task.date)}`)
+        );
+
+        meta.appendChild(
+            createElement("span", "", `⏱ ${task.duration}`)
+        );
+
+        const priorityClass = {
+            High: "priority-high",
+            Medium: "priority-medium",
+            Low: "priority-low"
+        }[task.priority] || "priority-medium";
+
+        const priority = createElement(
+            "span",
+            `priority ${priorityClass}`,
+            task.priority || "Medium"
+        );
+
+        meta.appendChild(priority);
+        content.appendChild(meta);
+
+        if (task.notes) {
+            content.appendChild(
+                createElement("p", "task-notes", task.notes)
+            );
+        }
+
+        const actions = createElement("div", "task-actions");
+
+        const editButton = createElement("button", "small-action", "✎");
+        editButton.type = "button";
+        editButton.title = "Edit task";
+        editButton.setAttribute("aria-label", `Edit ${task.title}`);
+
+        editButton.addEventListener("click", function () {
+            editTask(task.id);
+        });
+
+        const deleteButton = createElement(
+            "button",
+            "small-action delete",
+            "×"
+        );
+
+        deleteButton.type = "button";
+        deleteButton.title = "Delete task";
+        deleteButton.setAttribute("aria-label", `Delete ${task.title}`);
+
+        deleteButton.addEventListener("click", function () {
+            deleteTask(task.id);
+        });
+
+        actions.append(editButton, deleteButton);
+        taskItem.append(checkbox, content, actions);
+        taskList.appendChild(taskItem);
+    });
 }
 
-/* Academic reminder form */
-$("showEventForm").onclick = () => openEventForm();
-$("cancelEvent").onclick = () => closeEventForm();
+// Mark task as completed or pending
+function toggleTask(id, completed) {
+    tasks = tasks.map(function (task) {
+        if (task.id === id) {
+            return {
+                ...task,
+                completed: completed
+            };
+        }
 
-function openEventForm(event = null) {
-  editingEvent = event ? event.id : null;
-  $("eventForm").reset();
-  $("eventTitle").value = event?.title || "";
-  $("eventType").value = event?.type || "Theory exam";
-  $("eventDate").value = event?.date || selectedDate || todayString;
-  $("eventTime").value = event?.time || "";
-  $("eventSubject").value = event?.subject || "";
-  $("eventNotes").value = event?.notes || "";
-  $("eventForm").classList.remove("hidden");
+        return task;
+    });
+
+    saveData(TASKS_KEY, tasks);
+    renderTasks();
+    updateStatistics();
 }
 
-function closeEventForm() {
-  $("eventForm").classList.add("hidden");
-  editingEvent = null;
+// Edit a task
+function editTask(id) {
+    const task = tasks.find(function (item) {
+        return item.id === id;
+    });
+
+    if (!task) return;
+
+    editingTaskId = id;
+
+    taskTitle.value = task.title || "";
+    taskSubject.value = task.subject || "";
+    taskDate.value = task.date || getLocalDateString();
+    taskPriority.value = task.priority || "Medium";
+    taskDuration.value = task.duration || "30 minutes";
+    taskNotes.value = task.notes || "";
+
+    taskSubmitButton.textContent = "Save Changes";
+    cancelEditButton.classList.remove("hidden");
+
+    taskForm.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+
+    taskTitle.focus();
 }
 
-$("eventForm").addEventListener("submit", e => {
-  e.preventDefault();
+// Delete a task
+function deleteTask(id) {
+    const task = tasks.find(function (item) {
+        return item.id === id;
+    });
 
-  const data = {
-    title: $("eventTitle").value.trim(),
-    type: $("eventType").value,
-    date: $("eventDate").value,
-    time: $("eventTime").value,
-    subject: $("eventSubject").value.trim(),
-    notes: $("eventNotes").value.trim()
-  };
+    if (!task) return;
 
-  if (!data.title || !data.date) return;
+    const confirmed = confirm(
+        `Delete the task "${task.title}"?`
+    );
 
-  if (editingEvent) {
-    const event = events.find(x => x.id === editingEvent);
-    if (event) Object.assign(event, data);
-    notify("Academic date updated");
-  } else {
-    events.push({id:id(), ...data, completed:false});
-    notify("Academic reminder added");
-  }
+    if (!confirmed) return;
 
-  selectedDate = data.date;
-  shownMonth = new Date(data.date + "T12:00:00");
-  save();
-  closeEventForm();
-  renderAll();
+    tasks = tasks.filter(function (item) {
+        return item.id !== id;
+    });
+
+    if (editingTaskId === id) {
+        resetTaskForm();
+    }
+
+    saveData(TASKS_KEY, tasks);
+    renderTasks();
+    updateStatistics();
+}
+
+// Filter tasks
+taskFilter.addEventListener("change", renderTasks);
+
+// ========================================
+// PROGRESS STATISTICS
+// ========================================
+
+function updateStatistics() {
+    const total = tasks.length;
+
+    const completed = tasks.filter(function (task) {
+        return task.completed;
+    }).length;
+
+    const pending = total - completed;
+
+    const percentage = total === 0
+        ? 0
+        : Math.round((completed / total) * 100);
+
+    totalTasksElement.textContent = total;
+    pendingTasksElement.textContent = pending;
+    completedTasksElement.textContent = completed;
+    progressPercentElement.textContent = `${percentage}%`;
+    progressLabel.textContent = `${percentage}% completed`;
+    progressFill.style.width = `${percentage}%`;
+    progressFill.setAttribute("aria-valuenow", percentage);
+}
+
+// ========================================
+// ACADEMIC CALENDAR
+// ========================================
+
+// Change month
+previousMonthButton.addEventListener("click", function () {
+    visibleMonth--;
+
+    if (visibleMonth < 0) {
+        visibleMonth = 11;
+        visibleYear--;
+    }
+
+    renderCalendar();
 });
 
-function toggleEvent(eventId, checked) {
-  const event = events.find(x => x.id === eventId);
-  if (!event) return;
-  event.completed = checked;
-  save();
-  renderAll();
-  notify(checked ? "Event completed" : "Event marked pending");
-}
+nextMonthButton.addEventListener("click", function () {
+    visibleMonth++;
 
-function deleteEvent(eventId) {
-  if (!confirm("Delete this academic date?")) return;
-  events = events.filter(x => x.id !== eventId);
-  save();
-  renderAll();
-  notify("Academic date deleted");
-}
+    if (visibleMonth > 11) {
+        visibleMonth = 0;
+        visibleYear++;
+    }
 
-$("eventFilters").addEventListener("click", e => {
-  const button = e.target.closest("[data-filter]");
-  if (!button) return;
-  eventFilter = button.dataset.filter;
-  $("eventFilters").querySelectorAll("button").forEach(b =>
-    b.classList.toggle("active", b === button)
-  );
-  renderEvents();
+    renderCalendar();
 });
 
-function eventHTML(event) {
-  return `
-    <div class="item ${event.completed ? "completed" : ""}">
-      <input type="checkbox" aria-label="Mark event complete"
-        ${event.completed ? "checked" : ""}
-        onchange="toggleEvent('${event.id}', this.checked)">
-      <div class="item-body">
-        <div class="item-title">${safe(event.title)}</div>
-        <div class="meta">${safe(event.type)} · ${prettyDate(event.date)}${event.time ? " · " + safe(event.time) : ""}${event.subject ? " · " + safe(event.subject) : ""}</div>
-        ${event.notes ? `<div class="notes">${safe(event.notes)}</div>` : ""}
-        <div class="item-actions">
-          <button class="secondary-btn" onclick="openEventForm(events.find(x=>x.id==='${event.id}'))">Edit</button>
-          <button class="delete-btn" onclick="deleteEvent('${event.id}')">Delete</button>
-        </div>
-      </div>
-    </div>`;
-}
-
-function renderEvents() {
-  const shown = events.filter(e =>
-    eventFilter === "all" ||
-    (eventFilter === "completed" ? e.completed : !e.completed)
-  ).sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
-
-  $("eventList").innerHTML = shown.length
-    ? shown.map(eventHTML).join("")
-    : `<div class="empty">No ${eventFilter} academic dates.</div>`;
-
-  const daily = [
-    ...events.filter(e => e.date === selectedDate),
-    ...tasks.filter(t => t.date === selectedDate).map(t => ({
-      ...t, type:"Study task", isTask:true
-    }))
-  ].sort((a,b) => (a.time || "").localeCompare(b.time || ""));
-
-  $("selectedDateLabel").textContent = "Events for " + prettyDate(selectedDate);
-
-  $("dayEvents").innerHTML = daily.length ? daily.map(item => `
-    <div class="item ${item.completed ? "completed" : ""}">
-      <input type="checkbox" aria-label="Mark complete"
-        ${item.completed ? "checked" : ""}
-        onchange="${item.isTask ? "toggleTask" : "toggleEvent"}('${item.id}', this.checked)">
-      <div class="item-body">
-        <div class="item-title">${safe(item.title)}</div>
-        <div class="meta">${safe(item.type || item.subject || "Study task")}${item.time ? " · " + safe(item.time) : ""}</div>
-      </div>
-    </div>
-  `).join("") : `<div class="empty">No tasks or academic events on this date.</div>`;
-}
-
-/* Calendar */
-$("prevMonth").onclick = () => changeMonth(-1);
-$("nextMonth").onclick = () => changeMonth(1);
-
-function changeMonth(amount) {
-  shownMonth = new Date(shownMonth.getFullYear(), shownMonth.getMonth()+amount, 1);
-  renderCalendar();
-}
-
-function selectDay(date) {
-  selectedDate = date;
-  renderCalendar();
-  renderEvents();
-}
-
+// Draw calendar
 function renderCalendar() {
-  const year = shownMonth.getFullYear();
-  const month = shownMonth.getMonth();
+    calendarDays.replaceChildren();
 
-  $("monthLabel").textContent = shownMonth.toLocaleDateString(undefined, {
-    month:"long", year:"numeric"
-  });
+    const monthDate = new Date(visibleYear, visibleMonth, 1);
 
-  const firstDay = new Date(year, month, 1).getDay();
-  const start = new Date(year, month, 1-firstDay);
-  const weekdays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    calendarMonth.textContent = monthDate.toLocaleDateString("en-IN", {
+        month: "long",
+        year: "numeric"
+    });
 
-  let html = weekdays.map(d => `<div class="weekday">${d}</div>`).join("");
+    const firstDay = new Date(
+        visibleYear,
+        visibleMonth,
+        1
+    ).getDay();
 
-  for (let i=0; i<42; i++) {
-    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate()+i);
-    const key = dateString(date);
-    const dayEvents = events.filter(e => e.date === key);
-    const dayTasks = tasks.filter(t => t.date === key);
-    const items = [...dayEvents, ...dayTasks];
+    const daysInMonth = new Date(
+        visibleYear,
+        visibleMonth + 1,
+        0
+    ).getDate();
 
-    const classes = ["day"];
-    if (date.getMonth() !== month) classes.push("other");
-    if (key === todayString) classes.push("today");
-    if (key === selectedDate) classes.push("selected");
+    const daysInPreviousMonth = new Date(
+        visibleYear,
+        visibleMonth,
+        0
+    ).getDate();
 
-    const dots = items.slice(0,5).map(item => {
-      let type = "";
-      if (item.completed) type = "done";
-      else if (item.type && item.type.toLowerCase().includes("exam")) type = "exam";
-      else if (item.type && item.type.toLowerCase().includes("assignment")) type = "assignment";
-      return `<span class="dot ${type}"></span>`;
-    }).join("");
+    // Show six rows to keep the calendar height consistent
+    for (let cell = 0; cell < 42; cell++) {
+        let dayNumber;
+        let dateObject;
+        let outsideMonth = false;
 
-    html += `<button class="${classes.join(" ")}" onclick="selectDay('${key}')" aria-label="${prettyDate(key)}">
-      <div class="day-num">${date.getDate()}</div>
-      <div class="dots">${dots}</div>
-    </button>`;
-  }
+        if (cell < firstDay) {
+            dayNumber = daysInPreviousMonth - firstDay + cell + 1;
 
-  $("calendar").innerHTML = html;
+            dateObject = new Date(
+                visibleYear,
+                visibleMonth - 1,
+                dayNumber
+            );
+
+            outsideMonth = true;
+        } else if (cell >= firstDay + daysInMonth) {
+            dayNumber = cell - firstDay - daysInMonth + 1;
+
+            dateObject = new Date(
+                visibleYear,
+                visibleMonth + 1,
+                dayNumber
+            );
+
+            outsideMonth = true;
+        } else {
+            dayNumber = cell - firstDay + 1;
+
+            dateObject = new Date(
+                visibleYear,
+                visibleMonth,
+                dayNumber
+            );
+        }
+
+        const dateString = getLocalDateString(dateObject);
+
+        const dayButton = createElement(
+            "button",
+            "calendar-day",
+            String(dayNumber)
+        );
+
+        dayButton.type = "button";
+        dayButton.setAttribute("aria-label", formatDate(dateString));
+
+        if (outsideMonth) {
+            dayButton.classList.add("outside-month");
+        }
+
+        if (dateString === today) {
+            dayButton.classList.add("is-today");
+        }
+
+        if (dateString === selectedDate) {
+            dayButton.classList.add("is-selected");
+        }
+
+        const hasEvent = events.some(function (item) {
+            return item.date === dateString;
+        });
+
+        if (hasEvent) {
+            dayButton.classList.add("has-event");
+        }
+
+        dayButton.addEventListener("click", function () {
+            selectedDate = dateString;
+
+            visibleMonth = dateObject.getMonth();
+            visibleYear = dateObject.getFullYear();
+
+            eventDate.value = selectedDate;
+
+            renderCalendar();
+            renderEvents();
+        });
+
+        calendarDays.appendChild(dayButton);
+    }
 }
 
-/* Dashboard summary */
-function renderStats() {
-  const completed = tasks.filter(t => t.completed).length;
-  const total = tasks.length;
-  $("totalTasks").textContent = total;
-  $("completedTasks").textContent = completed;
-  $("upcomingEvents").textContent =
-    events.filter(e => !e.completed && e.date >= todayString).length;
+// ========================================
+// ACADEMIC EVENTS
+// ========================================
 
-  const percentage = total ? Math.round(completed / total * 100) : 0;
-  $("completionPercent").textContent = percentage + "%";
-  $("progressFill").style.width = percentage + "%";
+// Add or update event
+eventForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const title = eventTitle.value.trim();
+
+    if (!title) {
+        alert("Please enter an event name.");
+        eventTitle.focus();
+        return;
+    }
+
+    if (!eventDate.value) {
+        alert("Please select an event date.");
+        eventDate.focus();
+        return;
+    }
+
+    const eventData = {
+        title: title,
+        type: eventType.value,
+        date: eventDate.value,
+        notes: eventNotes.value.trim()
+    };
+
+    if (editingEventId !== null) {
+        events = events.map(function (item) {
+            if (item.id === editingEventId) {
+                return {
+                    ...item,
+                    ...eventData
+                };
+            }
+
+            return item;
+        });
+    } else {
+        events.push({
+            id: createId(),
+            ...eventData,
+            createdAt: new Date().toISOString()
+        });
+    }
+
+    selectedDate = eventDate.value;
+
+    const selected = selectedDate.split("-");
+
+    visibleYear = Number(selected[0]);
+    visibleMonth = Number(selected[1]) - 1;
+
+    saveData(EVENTS_KEY, events);
+
+    resetEventForm();
+    renderCalendar();
+    renderEvents();
+});
+
+function resetEventForm() {
+    eventForm.reset();
+
+    editingEventId = null;
+
+    eventFormHeading.textContent = "Add Academic Event";
+    eventSubmitButton.textContent = "+ Add Event";
+    cancelEventEditButton.classList.add("hidden");
+
+    eventDate.value = selectedDate;
 }
 
-function renderAll() {
-  renderStats();
-  renderTasks();
-  renderEvents();
-  renderCalendar();
+cancelEventEditButton.addEventListener("click", resetEventForm);
+
+// Display events for selected date
+function renderEvents() {
+    eventList.replaceChildren();
+
+    selectedDateLabel.textContent = formatDate(selectedDate);
+
+    const selectedEvents = events
+        .filter(function (item) {
+            return item.date === selectedDate;
+        })
+        .sort(function (a, b) {
+            return (a.title || "").localeCompare(b.title || "");
+        });
+
+    eventEmptyMessage.classList.toggle(
+        "hidden",
+        selectedEvents.length > 0
+    );
+
+    selectedEvents.forEach(function (item) {
+        const eventCard = createElement("article", "event-item");
+
+        const title = createElement("h4", "event-title", item.title);
+
+        const type = createElement(
+            "span",
+            "event-type",
+            item.type || "Other"
+        );
+
+        eventCard.append(title, type);
+
+        if (item.notes) {
+            eventCard.appendChild(
+                createElement("p", "event-notes", item.notes)
+            );
+        }
+
+        const bottom = createElement("div", "event-bottom");
+        bottom.appendChild(
+            createElement("span", "task-meta", formatDate(item.date))
+        );
+
+        const actions = createElement("div", "event-actions");
+
+        const editButton = createElement("button", "small-action", "✎");
+        editButton.type = "button";
+        editButton.title = "Edit event";
+        editButton.setAttribute("aria-label", `Edit ${item.title}`);
+
+        editButton.addEventListener("click", function () {
+            editEvent(item.id);
+        });
+
+        const deleteButton = createElement(
+            "button",
+            "small-action delete",
+            "×"
+        );
+
+        deleteButton.type = "button";
+        deleteButton.title = "Delete event";
+        deleteButton.setAttribute("aria-label", `Delete ${item.title}`);
+
+        deleteButton.addEventListener("click", function () {
+            deleteEvent(item.id);
+        });
+
+        actions.append(editButton, deleteButton);
+        bottom.appendChild(actions);
+
+        eventCard.appendChild(bottom);
+        eventList.appendChild(eventCard);
+    });
 }
 
-renderAll();
+// Edit event
+function editEvent(id) {
+    const item = events.find(function (event) {
+        return event.id === id;
+    });
+
+    if (!item) return;
+
+    editingEventId = id;
+
+    eventTitle.value = item.title || "";
+    eventType.value = item.type || "Other";
+    eventDate.value = item.date || selectedDate;
+    eventNotes.value = item.notes || "";
+
+    eventFormHeading.textContent = "Edit Academic Event";
+    eventSubmitButton.textContent = "Save Changes";
+    cancelEventEditButton.classList.remove("hidden");
+
+    eventForm.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+    eventTitle.focus();
+}
+
+// Delete event
+function deleteEvent(id) {
+    const item = events.find(function (event) {
+        return event.id === id;
+    });
+
+    if (!item) return;
+
+    const confirmed = confirm(
+        `Delete the event "${item.title}"?`
+    );
+
+    if (!confirmed) return;
+
+    events = events.filter(function (event) {
+        return event.id !== id;
+    });
+
+    if (editingEventId === id) {
+        resetEventForm();
+    }
+
+    saveData(EVENTS_KEY, events);
+    renderCalendar();
+    renderEvents();
+}
+
+// ========================================
+// INITIAL PAGE SETUP
+// ========================================
+
+function initialisePlanner() {
+    taskDate.value = today;
+    eventDate.value = today;
+
+    renderTasks();
+    updateStatistics();
+    renderCalendar();
+    renderEvents();
+}
+
+initialisePlanner();
