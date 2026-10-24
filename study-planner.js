@@ -1,13 +1,13 @@
+
 document.addEventListener("DOMContentLoaded", () => {
   const TASKS_KEY = "luminaStudyPlannerTasks";
   const EVENTS_KEY = "luminaStudyPlannerEvents";
 
   const $ = (id) => document.getElementById(id);
 
-  const taskForm = $("taskForm");
+  const form = $("unifiedForm");
   const taskList = $("taskList");
   const taskFilter = $("taskFilter");
-  const eventForm = $("eventForm");
   const eventCategories = $("eventCategories");
 
   let tasks = loadData(TASKS_KEY);
@@ -17,10 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function loadData(key) {
     try {
-      const saved = JSON.parse(localStorage.getItem(key) || "[]");
-      return Array.isArray(saved) ? saved : [];
-    } catch (error) {
-      console.error("Could not read saved planner data:", error);
+      const data = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(data) ? data : [];
+    } catch {
       return [];
     }
   }
@@ -29,8 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
-      alert("Your browser could not save the changes. Please check storage.");
       console.error("Could not save planner data:", error);
+      alert("Could not save your changes. Please check your browser storage.");
     }
   }
 
@@ -40,25 +39,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, (character) => {
-      const replacements = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      };
-      return replacements[character];
-    });
+    return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[character]);
   }
 
-  // Parse YYYY-MM-DD as a local date to avoid timezone shifts.
-  function parseLocalDate(dateString) {
-    if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+  function parseLocalDate(value) {
+    if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
       return null;
     }
 
-    const [year, month, day] = dateString.split("-").map(Number);
+    const [year, month, day] = value.split("-").map(Number);
     const date = new Date(year, month - 1, day);
 
     if (
@@ -78,8 +73,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return today;
   }
 
-  function formatDate(dateString) {
-    const date = parseLocalDate(dateString);
+  function formatDate(value) {
+    const date = parseLocalDate(value);
 
     if (!date) return "No date set";
 
@@ -90,199 +85,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------- Task management ----------
-
-  function renderTasks() {
-    const filter = taskFilter.value;
-
-    const filteredTasks = tasks.filter((task) => {
-      if (filter === "pending") return !task.completed;
-      if (filter === "completed") return task.completed;
-      return true;
-    });
-
-    $("totalTasks").textContent = tasks.length;
-
-    const completedCount = tasks.filter(
-      (task) => task.completed
-    ).length;
-
-    $("completedTasks").textContent = completedCount;
-    $("pendingTasks").textContent = tasks.length - completedCount;
-
-    const percentage = tasks.length
-      ? Math.round((completedCount / tasks.length) * 100)
-      : 0;
-
-    $("progressPercent").textContent = percentage + "%";
-    $("progressBar").style.width = percentage + "%";
-    $("progressTrack").setAttribute("aria-valuenow", percentage);
-
-    if (filteredTasks.length === 0) {
-      taskList.innerHTML = `
-        <div class="empty-state">
-          ${
-            tasks.length === 0
-              ? "🌱 No study tasks yet. Add your first task above."
-              : "No tasks match this filter."
-          }
-        </div>
-      `;
-      return;
-    }
-
-    taskList.innerHTML = filteredTasks.map((task) => {
-      const dueDate = parseLocalDate(task.dueDate);
-      const isOverdue = dueDate &&
-        dueDate < todayAtMidnight() &&
-        !task.completed;
-
-      return `
-        <article class="task-item ${task.completed ? "is-completed" : ""}">
-          <input
-            type="checkbox"
-            class="task-checkbox"
-            data-action="toggle-task"
-            data-id="${escapeHTML(task.id)}"
-            aria-label="Mark ${escapeHTML(task.title)} as ${
-              task.completed ? "pending" : "completed"
-            }"
-            ${task.completed ? "checked" : ""}
-          >
-
-          <div class="task-content">
-            <div class="task-title-row">
-              <h3 class="task-title">${escapeHTML(task.title)}</h3>
-              <button
-                type="button"
-                class="delete-button"
-                data-action="delete-task"
-                data-id="${escapeHTML(task.id)}"
-                aria-label="Delete ${escapeHTML(task.title)}"
-              >Delete</button>
-            </div>
-
-            ${
-              task.description
-                ? `<p class="task-description">${escapeHTML(task.description)}</p>`
-                : ""
-            }
-
-            <div class="task-meta">
-              ${task.subject
-                ? `<span class="meta-tag">📘 ${escapeHTML(task.subject)}</span>`
-                : ""
-              }
-
-              <span class="meta-tag">🏷️ ${escapeHTML(task.category || "Study")}</span>
-
-              ${
-                task.dueDate
-                  ? `<span class="meta-tag ${isOverdue ? "overdue-tag" : ""}">
-                      📅 ${isOverdue ? "Overdue · " : ""}${escapeHTML(formatDate(task.dueDate))}
-                    </span>`
-                  : ""
-              }
-
-              ${
-                task.completed
-                  ? `<span class="meta-tag">✓ Completed</span>`
-                  : ""
-              }
-            </div>
-          </div>
-        </article>
-      `;
-    }).join("");
-  }
-
-  taskForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    const title = $("taskTitle").value.trim();
-    const subject = $("taskSubject").value.trim();
-    const category = $("taskCategory").value;
-    const dueDate = $("taskDueDate").value;
-    const description = $("taskDescription").value.trim();
-
-    if (!title || !subject) {
-      alert("Please enter the task name and subject.");
-      return;
-    }
-
-    tasks.unshift({
-      id: createId(),
-      title,
-      subject,
-      category,
-      dueDate,
-      description,
-      completed: false,
-      createdAt: new Date().toISOString()
-    });
-
-    saveData(TASKS_KEY, tasks);
-    taskForm.reset();
-    renderTasks();
-  });
-
-  taskFilter.addEventListener("change", renderTasks);
-
-  taskList.addEventListener("change", (event) => {
-    const checkbox = event.target.closest(
-      '[data-action="toggle-task"]'
-    );
-
-    if (!checkbox) return;
-
-    const task = tasks.find(
-      (item) => item.id === checkbox.dataset.id
-    );
-
-    if (!task) return;
-
-    task.completed = checkbox.checked;
-    saveData(TASKS_KEY, tasks);
-    renderTasks();
-  });
-
-  taskList.addEventListener("click", (event) => {
-    const button = event.target.closest(
-      '[data-action="delete-task"]'
-    );
-
-    if (!button) return;
-
-    const task = tasks.find(
-      (item) => item.id === button.dataset.id
-    );
-
-    if (!task) return;
-
-    if (!confirm(`Delete "${task.title}"?`)) return;
-
-    tasks = tasks.filter(
-      (item) => item.id !== button.dataset.id
-    );
-
-    saveData(TASKS_KEY, tasks);
-    renderTasks();
-  });
-
-  // ---------- Automatic event categorisation ----------
-
-  /*
-    Common event types get familiar category names.
-    Any new type becomes its own category automatically.
-    Capitalisation differences do not create duplicate categories.
-  */
+  // ---------- Category handling ----------
 
   function normaliseEventType(value) {
     const cleaned = String(value || "")
       .trim()
       .replace(/\s+/g, " ");
 
-    if (!cleaned) return "";
+    if (!cleaned) return "Other Events";
 
     const key = cleaned.toLowerCase();
 
@@ -315,6 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
       deadline: "Deadlines",
       deadlines: "Deadlines",
 
+      study: "Study",
       revision: "Revision",
       revisions: "Revision",
 
@@ -327,66 +138,274 @@ document.addEventListener("DOMContentLoaded", () => {
       return standardCategories[key];
     }
 
-    // Preserve a custom category, adding a plural where appropriate.
-    const formatted = cleaned
-      .split(" ")
-      .map((word) => {
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      })
-      .join(" ");
+    // Create a category for a new type.
+    const words = cleaned.split(" ").map((word) => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    });
 
-    if (/\b(s|x|z|ch|sh)$/i.test(formatted)) {
-      return formatted;
+    let category = words.join(" ");
+
+    if (/\b[^aeiou]y$/i.test(category)) {
+      category = category.slice(0, -1) + "ies";
+    } else if (!/(s|x|z|ch|sh)$/i.test(category)) {
+      category += "s";
     }
 
-    if (/[^aeiou]y$/i.test(formatted)) {
-      return formatted.slice(0, -1) + "ies";
-    }
-
-    return formatted + "s";
+    return category;
   }
 
   function getCategoryKey(category) {
     return String(category || "").trim().toLowerCase();
   }
 
-  // ---------- Small event calendar indicators ----------
+  /*
+    Study and Revision are shown in My Study Tasks.
+    All other types are shown in My Academic Events.
+    Both are added through the same form.
+  */
+  function isStudyTask(type) {
+    const key = String(type || "").trim().toLowerCase();
 
-  function getDateReminder(dateString) {
-    const date = parseLocalDate(dateString);
+    return [
+      "study",
+      "revision",
+      "revisions"
+    ].includes(key);
+  }
 
-    if (!date) return "";
+  // ---------- Add everything through ONE form ----------
 
-    const difference = Math.round(
-      (date.getTime() - todayAtMidnight().getTime()) /
-      (24 * 60 * 60 * 1000)
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const title = $("unifiedTitle").value.trim();
+    const type = $("unifiedType").value.trim();
+    const subject = $("unifiedSubject").value.trim();
+    const date = $("unifiedDate").value;
+    const description = $("unifiedDescription").value.trim();
+
+    if (!title || !type || !date) {
+      alert("Please enter the name, type and date.");
+      return;
+    }
+
+    if (!parseLocalDate(date)) {
+      alert("Please choose a valid date.");
+      return;
+    }
+
+    if (isStudyTask(type)) {
+      // Save a study or revision item as a task.
+      tasks.unshift({
+        id: createId(),
+        title,
+        subject,
+        category: normaliseEventType(type),
+        dueDate: date,
+        description,
+        completed: false,
+        createdAt: new Date().toISOString()
+      });
+
+      saveData(TASKS_KEY, tasks);
+      renderTasks();
+    } else {
+      // Save an assignment, exam, project or other type as an event.
+      const category = normaliseEventType(type);
+
+      events.push({
+        id: createId(),
+        title,
+        eventType: type,
+        category,
+        subject,
+        date,
+        description,
+        createdAt: new Date().toISOString()
+      });
+
+      saveData(EVENTS_KEY, events);
+      renderEvents();
+    }
+
+    // Clear the form after successfully adding an item.
+    form.reset();
+
+    // Keep the user's attention on the section where the item appeared.
+    if (isStudyTask(type)) {
+      $("taskList").scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    } else {
+      $("eventCategories").scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }
+  });
+
+  // ---------- Study tasks ----------
+
+  function renderTasks() {
+    const filter = taskFilter.value;
+
+    const filteredTasks = tasks.filter((task) => {
+      if (filter === "pending") return !task.completed;
+      if (filter === "completed") return task.completed;
+      return true;
+    });
+
+    $("totalTasks").textContent = tasks.length;
+
+    const completedCount = tasks.filter(
+      (task) => task.completed
+    ).length;
+
+    $("completedTasks").textContent = completedCount;
+    $("pendingTasks").textContent = tasks.length - completedCount;
+
+    const percentage = tasks.length
+      ? Math.round((completedCount / tasks.length) * 100)
+      : 0;
+
+    $("progressPercent").textContent = percentage + "%";
+    $("progressBar").style.width = percentage + "%";
+    $("progressTrack").setAttribute("aria-valuenow", percentage);
+
+    if (filteredTasks.length === 0) {
+      taskList.innerHTML = `
+        <div class="empty-state">
+          ${
+            tasks.length === 0
+              ? "🌱 No study tasks yet. Add a Study or Revision item using the form above."
+              : "No tasks match this filter."
+          }
+        </div>
+      `;
+      return;
+    }
+
+    filteredTasks.sort((a, b) => {
+      return (a.dueDate || "9999-12-31")
+        .localeCompare(b.dueDate || "9999-12-31");
+    });
+
+    taskList.innerHTML = filteredTasks.map((task) => {
+      const dueDate = parseLocalDate(task.dueDate);
+      const overdue = dueDate &&
+        dueDate < todayAtMidnight() &&
+        !task.completed;
+
+      return `
+        <article class="task-item ${task.completed ? "is-completed" : ""}">
+          <input
+            type="checkbox"
+            class="task-checkbox"
+            data-action="toggle-task"
+            data-id="${escapeHTML(task.id)}"
+            aria-label="Toggle task completion"
+            ${task.completed ? "checked" : ""}
+          >
+
+          <div class="task-content">
+            <div class="task-title-row">
+              <h3 class="task-title">${escapeHTML(task.title)}</h3>
+
+              <button
+                type="button"
+                class="delete-button"
+                data-action="delete-task"
+                data-id="${escapeHTML(task.id)}"
+              >Delete</button>
+            </div>
+
+            ${
+              task.description
+                ? `<p class="task-description">${escapeHTML(task.description)}</p>`
+                : ""
+            }
+
+            <div class="task-meta">
+              ${
+                task.subject
+                  ? `<span class="meta-tag">📘 ${escapeHTML(task.subject)}</span>`
+                  : ""
+              }
+
+              <span class="meta-tag">
+                🏷️ ${escapeHTML(task.category || "Study")}
+              </span>
+
+              ${
+                task.dueDate
+                  ? `<span class="meta-tag ${overdue ? "overdue-tag" : ""}">
+                      📅 ${overdue ? "Overdue · " : ""}${escapeHTML(formatDate(task.dueDate))}
+                    </span>`
+                  : ""
+              }
+
+              ${
+                task.completed
+                  ? `<span class="meta-tag">✓ Completed</span>`
+                  : ""
+              }
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  taskFilter.addEventListener("change", renderTasks);
+
+  taskList.addEventListener("change", (event) => {
+    const checkbox = event.target.closest(
+      '[data-action="toggle-task"]'
     );
 
-    if (difference < 0) {
-      return "";
-    }
+    if (!checkbox) return;
 
-    if (difference === 0) {
-      return `<span class="event-reminder today">🔔 Today</span>`;
-    }
+    const task = tasks.find(
+      (item) => item.id === checkbox.dataset.id
+    );
 
-    if (difference === 1) {
-      return `<span class="event-reminder urgent">🔔 Tomorrow</span>`;
-    }
+    if (!task) return;
 
-    if (difference <= 7) {
-      return `<span class="event-reminder urgent">🔔 In ${difference} days</span>`;
-    }
+    task.completed = checkbox.checked;
+    saveData(TASKS_KEY, tasks);
+    renderTasks();
+  });
 
-    return "";
-  }
+  taskList.addEventListener("click", (event) => {
+    const button = event.target.closest(
+      '[data-action="delete-task"]'
+    );
+
+    if (!button) return;
+
+    const task = tasks.find(
+      (item) => item.id === button.dataset.id
+    );
+
+    if (!task || !confirm(`Delete "${task.title}"?`)) return;
+
+    tasks = tasks.filter(
+      (item) => item.id !== button.dataset.id
+    );
+
+    saveData(TASKS_KEY, tasks);
+    renderTasks();
+  });
+
+  // ---------- Small calendar and date reminders ----------
 
   function renderSmallCalendar(dateString) {
     const date = parseLocalDate(dateString);
 
     if (!date) {
       return `
-        <div class="event-calendar" aria-label="No date set">
+        <div class="event-calendar">
           <span class="calendar-month">Date</span>
           <span class="calendar-day">—</span>
         </div>
@@ -405,7 +424,34 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  // ---------- Academic event management ----------
+  function getDateReminder(dateString) {
+    const date = parseLocalDate(dateString);
+
+    if (!date) return "";
+
+    const difference = Math.round(
+      (date.getTime() - todayAtMidnight().getTime()) /
+      (24 * 60 * 60 * 1000)
+    );
+
+    if (difference < 0) return "";
+
+    if (difference === 0) {
+      return `<span class="event-reminder today">🔔 Today</span>`;
+    }
+
+    if (difference === 1) {
+      return `<span class="event-reminder urgent">🔔 Tomorrow</span>`;
+    }
+
+    if (difference <= 7) {
+      return `<span class="event-reminder urgent">🔔 In ${difference} days</span>`;
+    }
+
+    return "";
+  }
+
+  // ---------- Academic events grouped automatically ----------
 
   function renderEvents() {
     $("eventTotal").textContent =
@@ -414,14 +460,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (events.length === 0) {
       eventCategories.innerHTML = `
         <div class="empty-state">
-          📅 No academic events added yet.<br>
-          Add an exam, assignment, deadline or another event above.
+          📅 No academic events yet.<br>
+          Add an assignment, exam, project or any event using the form above.
         </div>
       `;
       return;
     }
 
-    // Sort dated events from soonest to latest.
     const sortedEvents = [...events].sort((a, b) => {
       const dateA = a.date || "9999-12-31";
       const dateB = b.date || "9999-12-31";
@@ -433,7 +478,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return (a.title || "").localeCompare(b.title || "");
     });
 
-    // Group items by category, creating a category for every new type.
     const groups = new Map();
 
     sortedEvents.forEach((item) => {
@@ -455,49 +499,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
     eventCategories.innerHTML = [...groups.values()]
       .map((group) => {
-        const cards = group.items.map((item) => {
-          return `
-            <article class="event-card">
-              ${renderSmallCalendar(item.date)}
+        const cards = group.items.map((item) => `
+          <article class="event-card">
+            ${renderSmallCalendar(item.date)}
 
-              <div class="event-content">
-                <h4 class="event-title">${escapeHTML(item.title)}</h4>
+            <div class="event-content">
+              <h4 class="event-title">${escapeHTML(item.title)}</h4>
 
-                <div class="task-meta">
-                  <span class="event-type-label">
-                    ${escapeHTML(normaliseEventType(item.eventType || item.category || "Other"))}
-                  </span>
-
-                  ${
-                    item.subject
-                      ? `<span class="meta-tag">📘 ${escapeHTML(item.subject)}</span>`
-                      : ""
-                  }
-                </div>
+              <div class="task-meta">
+                <span class="event-type-label">
+                  ${escapeHTML(normaliseEventType(item.eventType || item.category || "Other"))}
+                </span>
 
                 ${
-                  item.description
-                    ? `<p class="event-description">${escapeHTML(item.description)}</p>`
+                  item.subject
+                    ? `<span class="meta-tag">📘 ${escapeHTML(item.subject)}</span>`
                     : ""
                 }
-
-                <p class="event-date-line">
-                  📅 ${escapeHTML(formatDate(item.date))}
-                </p>
-
-                ${getDateReminder(item.date)}
               </div>
 
-              <button
-                type="button"
-                class="delete-button"
-                data-action="delete-event"
-                data-id="${escapeHTML(item.id)}"
-                aria-label="Delete ${escapeHTML(item.title)}"
-              >Delete</button>
-            </article>
-          `;
-        }).join("");
+              ${
+                item.description
+                  ? `<p class="event-description">${escapeHTML(item.description)}</p>`
+                  : ""
+              }
+
+              <p class="event-date-line">
+                📅 ${escapeHTML(formatDate(item.date))}
+              </p>
+
+              ${getDateReminder(item.date)}
+            </div>
+
+            <button
+              type="button"
+              class="delete-button"
+              data-action="delete-event"
+              data-id="${escapeHTML(item.id)}"
+            >Delete</button>
+          </article>
+        `).join("");
 
         return `
           <section class="event-category">
@@ -514,41 +555,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }).join("");
   }
 
-  eventForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    const title = $("eventTitle").value.trim();
-    const eventType = $("eventType").value.trim();
-    const subject = $("eventSubject").value.trim();
-    const date = $("eventDate").value;
-    const description = $("eventDescription").value.trim();
-
-    if (!title || !eventType || !date) {
-      alert("Please enter the event name, event type and date.");
-      return;
-    }
-
-    if (!parseLocalDate(date)) {
-      alert("Please choose a valid event date.");
-      return;
-    }
-
-    events.push({
-      id: createId(),
-      title,
-      eventType,
-      category: normaliseEventType(eventType),
-      subject,
-      date,
-      description,
-      createdAt: new Date().toISOString()
-    });
-
-    saveData(EVENTS_KEY, events);
-    eventForm.reset();
-    renderEvents();
-  });
-
   eventCategories.addEventListener("click", (event) => {
     const button = event.target.closest(
       '[data-action="delete-event"]'
@@ -560,9 +566,7 @@ document.addEventListener("DOMContentLoaded", () => {
       (eventItem) => eventItem.id === button.dataset.id
     );
 
-    if (!item) return;
-
-    if (!confirm(`Delete "${item.title}"?`)) return;
+    if (!item || !confirm(`Delete "${item.title}"?`)) return;
 
     events = events.filter(
       (eventItem) => eventItem.id !== button.dataset.id
@@ -572,7 +576,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderEvents();
   });
 
-  // ---------- Initial display ----------
+  // ---------- Start the planner ----------
 
   renderTasks();
   renderEvents();
