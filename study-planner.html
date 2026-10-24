@@ -2,202 +2,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study Planner | Lumina AI Study Coach</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Planner | Lumina AI Study Coach</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-
-  <link rel="stylesheet" href="study-planner.css">
-  <script src="study-planner.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="study-planner.css">
 </head>
-
 <body>
-  <header class="top-header">
-    <a href="dashboard.html" class="brand">
-      <span class="brand-icon">🌿</span>
-      <span>Lumina AI Study Coach</span>
-    </a>
+    <header class="top-header">
+        <a href="index.html" class="brand">
+            <span class="brand-icon">🌿</span>
+            <span>Lumina AI <small>Study Coach</small></span>
+        </a>
 
-    <a href="dashboard.html" class="home-link">← Back to Home</a>
-  </header>
+        <a href="dashboard.html" class="back-link">← Back to Home</a>
+    </header>
 
-  <main class="planner-container">
-    <section class="page-heading">
-      <p class="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
-      <h1>Study Planner 📚</h1>
-      <p class="subtitle">
-        Keep your study tasks, assignments and academic events organised in one place.
-      </p>
-    </section>
+    <main class="planner-container">
+        <section class="page-heading">
+            <p class="eyebrow">YOUR PERSONAL PLANNER</p>
+            <h1>Study Planner</h1>
+            <p>Keep your studies, assignments, exams, and events organised in one place.</p>
+        </section>
 
-    <!-- Task summary: no Today count -->
-    <section class="summary-grid" aria-label="Task summary">
-      <article class="summary-card">
-        <span class="summary-icon">📋</span>
-        <div>
-          <p>Total Tasks</p>
-          <h2 id="totalTasks">0</h2>
-        </div>
-      </article>
+        <section class="summary-grid" aria-label="Activity progress">
+            <article class="summary-card">
+                <span class="summary-icon">📚</span>
+                <div>
+                    <p>Total Items</p>
+                    <h2 id="totalCount">0</h2>
+                </div>
+            </article>
 
-      <article class="summary-card">
-        <span class="summary-icon">✅</span>
-        <div>
-          <p>Completed</p>
-          <h2 id="completedTasks">0</h2>
-        </div>
-      </article>
+            <article class="summary-card">
+                <span class="summary-icon">✅</span>
+                <div>
+                    <p>Completed</p>
+                    <h2 id="completedCount">0</h2>
+                </div>
+            </article>
 
-      <article class="summary-card">
-        <span class="summary-icon">⏳</span>
-        <div>
-          <p>Pending</p>
-          <h2 id="pendingTasks">0</h2>
-        </div>
-      </article>
-    </section>
+            <article class="summary-card">
+                <span class="summary-icon">🌱</span>
+                <div>
+                    <p>Pending</p>
+                    <h2 id="pendingCount">0</h2>
+                </div>
+            </article>
+        </section>
 
-    <!-- ONE FORM FOR TASKS AND EVENTS -->
-    <section class="panel" id="addItemSection">
-      <div class="section-heading">
-        <div>
-          <span class="section-icon">✍️</span>
-          <h2>Add a Task or Event</h2>
-        </div>
-      </div>
+        <section class="panel form-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">PLAN SOMETHING</p>
+                    <h2>Add an Activity</h2>
+                    <p>Add any study task or academic event using this form.</p>
+                </div>
+                <span class="heading-icon">✏️</span>
+            </div>
 
-      <p class="section-description">
-        Enter your task or event once. Lumina will organise it according to its type.
-      </p>
+            <form id="unifiedForm" class="form-grid">
+                <div class="form-group full-width">
+                    <label for="unifiedTitle">Name <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        id="unifiedTitle"
+                        placeholder="e.g. Prepare for Computer Science exam"
+                        required
+                        maxlength="120"
+                    >
+                </div>
 
-      <form id="unifiedForm" class="form-grid">
-        <div class="form-group">
-          <label for="unifiedTitle">Task or event name</label>
-          <input
-            type="text"
-            id="unifiedTitle"
-            placeholder="e.g. Complete Unit 1 assignment"
-            required
-          >
-        </div>
+                <div class="form-group">
+                    <label for="unifiedType">Category <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        id="unifiedType"
+                        placeholder="e.g. Exam, Assignment, Hackathon"
+                        list="categorySuggestions"
+                        required
+                        maxlength="50"
+                    >
+                    <datalist id="categorySuggestions">
+                        <option value="Exam"></option>
+                        <option value="Assignment"></option>
+                        <option value="Project"></option>
+                        <option value="Seminar"></option>
+                        <option value="Study"></option>
+                        <option value="Revision"></option>
+                        <option value="Presentation"></option>
+                        <option value="Workshop"></option>
+                        <option value="Class"></option>
+                        <option value="Deadline"></option>
+                    </datalist>
+                </div>
 
-        <div class="form-group">
-          <label for="unifiedType">Type</label>
-          <input
-            type="text"
-            id="unifiedType"
-            list="unifiedTypeOptions"
-            placeholder="e.g. Study, Assignment, Exam"
-            required
-          >
+                <div class="form-group">
+                    <label for="unifiedSubject">Subject <span class="optional">(Optional)</span></label>
+                    <input
+                        type="text"
+                        id="unifiedSubject"
+                        placeholder="e.g. Computer Vision"
+                        maxlength="80"
+                    >
+                </div>
 
-          <datalist id="unifiedTypeOptions">
-            <option value="Study"></option>
-            <option value="Assignment"></option>
-            <option value="Exam"></option>
-            <option value="Project"></option>
-            <option value="Revision"></option>
-            <option value="Seminar"></option>
-            <option value="Workshop"></option>
-            <option value="Presentation"></option>
-            <option value="Class"></option>
-            <option value="Deadline"></option>
-          </datalist>
-        </div>
+                <div class="form-group">
+                    <label for="unifiedDate">Date <span class="optional">(Optional)</span></label>
+                    <input type="date" id="unifiedDate">
+                </div>
 
-        <div class="form-group">
-          <label for="unifiedSubject">Subject (optional)</label>
-          <input
-            type="text"
-            id="unifiedSubject"
-            placeholder="e.g. Computer Vision"
-          >
-        </div>
+                <div class="form-group full-width">
+                    <label for="unifiedDescription">Description <span class="optional">(Optional)</span></label>
+                    <textarea
+                        id="unifiedDescription"
+                        rows="3"
+                        placeholder="Add any details or reminders..."
+                        maxlength="500"
+                    ></textarea>
+                </div>
 
-        <div class="form-group">
-          <label for="unifiedDate">Due date or event date</label>
-          <input type="date" id="unifiedDate" required>
-        </div>
+                <div class="form-actions full-width">
+                    <button type="submit" class="primary-button">+ Add Activity</button>
+                    <button type="reset" class="secondary-button">Clear Form</button>
+                </div>
+            </form>
+        </section>
 
-        <div class="form-group form-wide">
-          <label for="unifiedDescription">Description (optional)</label>
-          <textarea
-            id="unifiedDescription"
-            rows="2"
-            placeholder="Add any important details..."
-          ></textarea>
-        </div>
+        <section class="panel activities-panel">
+            <div class="activities-heading">
+                <div>
+                    <p class="eyebrow">YOUR ORGANISATION SPACE</p>
+                    <h2>My Activities</h2>
+                    <p>Your activities will be organised by category automatically.</p>
+                </div>
+                <span id="eventTotal" class="item-count">0 items</span>
+            </div>
 
-        <div class="form-actions form-wide">
-          <button type="submit" class="primary-button">
-            + Add
-          </button>
-        </div>
-      </form>
-    </section>
+            <div id="eventCategories" class="event-categories"></div>
+        </section>
 
-    <!-- TASK DISPLAY -->
-    <section class="panel">
-      <div class="section-heading task-heading">
-        <div>
-          <span class="section-icon">📝</span>
-          <h2>My Study Tasks</h2>
-        </div>
+        <footer class="page-footer">
+            <p>🌿 Small steps every day lead to big achievements.</p>
+        </footer>
+    </main>
 
-        <select id="taskFilter" class="filter-select" aria-label="Filter tasks">
-          <option value="all">All Tasks</option>
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
-        </select>
-      </div>
-
-      <div id="taskList" class="task-list"></div>
-
-      <div class="progress-area">
-        <div class="progress-label">
-          <span>Overall task progress</span>
-          <strong id="progressPercent">0%</strong>
-        </div>
-
-        <div
-          class="progress-track"
-          id="progressTrack"
-          role="progressbar"
-          aria-label="Overall task progress"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-valuenow="0"
-        >
-          <div id="progressBar" class="progress-bar"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- EVENT DISPLAY: no large calendar -->
-    <section class="panel">
-      <div class="section-heading">
-        <div>
-          <span class="section-icon">📅</span>
-          <h2>My Academic Events</h2>
-        </div>
-
-        <span class="event-total" id="eventTotal">0 events</span>
-      </div>
-
-      <p class="section-description">
-        Assignments, exams, projects and other event types appear in their own categories.
-      </p>
-
-      <div id="eventCategories" class="event-categories"></div>
-    </section>
-
-    <footer class="planner-footer">
-      <p>🌿 Lumina AI Study Coach · Plan your learning, one step at a time.</p>
-    </footer>
-  </main>
+    <script src="study-planner.js"></script>
 </body>
 </html>
