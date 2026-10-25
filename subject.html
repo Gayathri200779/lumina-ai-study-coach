@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f6faf7">
-  <title>Lumina AI Study Coach | Subject</title>
+  <meta name="theme-color" content="#eefdef">
+
+  <title>Lumina AI Study Coach - Subject</title>
 
   <link rel="stylesheet" href="subject.css">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,147 +16,113 @@
   <script src="subject.js" defer></script>
 </head>
 <body>
-
   <header class="navbar">
-    <a href="dashboard.html" class="logo">🌿 Lumina AI Coach</a>
-    <a href="dashboard.html" class="home-button">⌂ <span>Home</span></a>
+    <a href="dashboard.html" class="logo">🌿 Lumina AI</a>
+    <a href="dashboard.html" class="home-button">← Home</a>
   </header>
 
   <main class="container">
-
-    <section class="page-heading">
-      <div>
-        <p class="eyebrow">YOUR LEARNING SPACE</p>
-        <h1 id="subjectTitle">My Subject</h1>
-        <p id="subjectDescription" class="subtitle">
-          Keep your study materials organized in one place.
-        </p>
-      </div>
+    <section class="subject-header">
+      <p class="eyebrow">YOUR LEARNING SPACE</p>
+      <h1 id="subjectTitle">My Subject</h1>
+      <p id="subjectDescription">
+        Keep your notes, materials and important questions organized.
+      </p>
     </section>
 
-    <!-- SUBJECT PROGRESS -->
-    <section class="panel progress-panel">
+    <p id="pageStatus" class="page-status" role="status" aria-live="polite"></p>
+
+    <section class="section-card">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">YOUR LEARNING</p>
-          <h2>Subject Progress</h2>
-        </div>
-        <strong id="progressLabel" class="progress-number">0%</strong>
-      </div>
-
-      <div
-        class="progress-track"
-        role="progressbar"
-        aria-label="Subject progress"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-valuenow="0"
-        id="progressTrack">
-        <div class="progress-fill" id="progressBar"></div>
-      </div>
-
-      <div class="progress-controls">
-        <button type="button" class="secondary-button" id="decreaseProgress">− 5%</button>
-
-        <input
-          type="range"
-          id="progressInput"
-          min="0"
-          max="100"
-          step="5"
-          value="0"
-          aria-label="Adjust subject progress">
-
-        <button type="button" class="secondary-button" id="increaseProgress">+ 5%</button>
-        <button type="button" class="primary-button" id="saveProgress">Save Progress</button>
-      </div>
-    </section>
-
-    <!-- MY STUDY NOTES -->
-    <section class="panel">
-      <div class="section-heading section-heading-wrap">
-        <div>
-          <p class="eyebrow">SAVED LEARNING</p>
+          <p class="eyebrow">YOUR NOTES</p>
           <h2>My Study Notes</h2>
-          <p class="section-description">Select a note title to read the complete note.</p>
+          <p class="section-description">Select a note to read its complete content.</p>
         </div>
-
         <a href="my-notes.html" class="primary-button manage-notes-button">
           Manage Notes
         </a>
       </div>
 
-      <div id="notesList" class="notes-list"></div>
+      <div id="notesList" class="items-grid"></div>
       <p id="notesEmpty" class="empty-message" hidden>
-        No notes have been saved for this subject yet.
-        Create a note from the Manage Notes page.
+        No notes saved for this subject yet. Create a note in My Notes and select this subject.
       </p>
     </section>
 
-    <!-- STUDY PLANNER ACTIVITIES -->
-    <section class="panel">
+    <section class="section-card">
       <div class="section-heading">
         <div>
           <p class="eyebrow">YOUR SCHEDULE</p>
           <h2>Study Planner Activities</h2>
+          <p class="section-description">
+            Activities from your planner that belong to this subject.
+          </p>
         </div>
-        <a href="study-planner.html" class="text-link">Open Study Planner ↗</a>
+        <a href="study-planner.html" class="secondary-button">Open Study Planner</a>
       </div>
 
-      <div id="activitiesList" class="item-list"></div>
+      <div id="activitiesList" class="items-grid"></div>
       <p id="activitiesEmpty" class="empty-message" hidden>
         No planner activities are linked to this subject yet.
       </p>
     </section>
 
-    <!-- STUDY MATERIALS -->
-    <section class="panel">
+    <section class="section-card">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">YOUR RESOURCES</p>
+          <p class="eyebrow">KEEP YOUR RESOURCES</p>
           <h2>Study Materials</h2>
+          <p class="section-description">
+            Upload PDFs, class notes and other study files for this subject.
+          </p>
         </div>
       </div>
 
-      <form id="materialForm" class="upload-form">
+      <form id="materialForm" class="material-form">
         <label for="materialFile">Choose a file</label>
         <input
           type="file"
           id="materialFile"
-          accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.png,.jpg,.jpeg"
-          required>
-
+          accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+          required
+        >
         <button type="submit" class="primary-button">Upload Material</button>
       </form>
 
       <p class="small-note">
-        Uploaded materials are saved in this browser on this device.
+        Materials are stored in this browser on this device, not in cloud storage.
       </p>
 
-      <div id="materialsList" class="item-list"></div>
+      <div id="materialsList" class="items-grid"></div>
       <p id="materialsEmpty" class="empty-message" hidden>
-        No study materials uploaded for this subject yet.
+        No materials uploaded for this subject yet.
       </p>
     </section>
 
-    <!-- IMPORTANT QUESTIONS -->
-    <section class="panel">
+    <section class="section-card">
       <div class="section-heading">
         <div>
           <p class="eyebrow">EXAM PREPARATION</p>
           <h2>Important Questions</h2>
+          <p class="section-description">
+            Keep important questions for revision in one place.
+          </p>
         </div>
       </div>
 
       <form id="questionForm" class="question-form">
-        <label for="questionInput">Add an important question</label>
-        <textarea
-          id="questionInput"
-          rows="3"
-          maxlength="2000"
-          placeholder="Type a question you want to revise..."
-          required></textarea>
-        <button type="submit" class="primary-button">Add Question</button>
+        <label for="questionInput">Add a question</label>
+        <div class="question-input-row">
+          <input
+            type="text"
+            id="questionInput"
+            maxlength="500"
+            placeholder="Enter an important question..."
+            required
+          >
+          <button type="submit" class="primary-button">Add Question</button>
+        </div>
       </form>
 
       <ul id="questionsList" class="questions-list"></ul>
@@ -164,31 +130,24 @@
         No important questions added yet.
       </p>
     </section>
-
-    <p id="pageStatus" class="status-message" role="status" aria-live="polite"></p>
-
   </main>
 
-  <!-- FULL-SCREEN NOTE READER -->
   <dialog id="noteReader" class="note-reader-dialog" aria-labelledby="readerTitle">
     <div class="reader-header">
       <div>
-        <p class="eyebrow">LUMINA STUDY NOTES</p>
-        <h2 id="readerTitle">Note Title</h2>
-        <p id="readerUnit" class="reader-unit"></p>
+        <p class="eyebrow">MY STUDY NOTE</p>
+        <h2 id="readerTitle">Note title</h2>
       </div>
-
-      <button type="button" id="closeNoteReader" class="close-reader-button" aria-label="Close note">
-        ✕
-      </button>
+      <button id="closeNoteReader" type="button" class="close-reader" aria-label="Close note">×</button>
     </div>
 
-    <div id="noteReaderContent" class="note-reader-content"></div>
+    <p id="readerSubject" class="reader-subject"></p>
+    <div id="readerContent" class="reader-content"></div>
   </dialog>
 
   <footer class="footer">
-    <p>🌿 Lumina AI Coach</p>
+    <a href="dashboard.html" class="footer-logo">🌿 Lumina AI Coach</a>
+    <p>Supporting your learning journey, one step at a time.</p>
   </footer>
-
 </body>
 </html>
