@@ -48,11 +48,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (!profile) {
     if (subjectGrid) {
-      subjectGrid.textContent = 'Complete your profile to add and track your subjects.';
+      subjectGrid.textContent =
+        'Complete your profile to add and track your subjects.';
     }
 
     if (progressList) {
-      progressList.textContent = 'Complete your profile to start tracking progress.';
+      progressList.textContent =
+        'Complete your profile to start tracking progress.';
     }
 
     return;
@@ -87,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
     subjectCount.textContent = `📝 Subjects: ${subjects.length}`;
   }
 
-  // ===== Subject cards =====
+  // ===== Subject cards and subject-page navigation =====
   if (subjectGrid) {
     subjectGrid.replaceChildren();
 
@@ -99,7 +101,8 @@ document.addEventListener('DOMContentLoaded', function () {
       icon.textContent = '📚';
 
       const message = document.createElement('p');
-      message.textContent = 'No subjects added yet. Update your profile to add your subjects.';
+      message.textContent =
+        'No subjects added yet. Update your profile to add your subjects.';
 
       empty.append(icon, message);
       subjectGrid.appendChild(empty);
@@ -142,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // ===== Compact subject-wise progress tracker =====
+  // ===== Subject-wise learning progress tracker =====
   const MODE_KEY = 'luminaProgressModes';
   const UNITS_KEY = 'luminaSubjectUnits';
   const PLANNER_KEY = 'luminaStudyPlannerItems';
@@ -153,7 +156,9 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       const value = JSON.parse(localStorage.getItem(key) || '{}');
 
-      return value && typeof value === 'object' && !Array.isArray(value)
+      return value &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
         ? value
         : {};
     } catch (error) {
@@ -173,6 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // Read existing Study Planner activities.
   function readPlannerActivities() {
     try {
       const saved = localStorage.getItem(PLANNER_KEY);
@@ -182,6 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return Array.isArray(parsed) ? parsed : [];
       }
 
+      // Support older Study Planner storage keys.
       const oldTasks = JSON.parse(
         localStorage.getItem(OLD_TASKS_KEY) || '[]'
       );
@@ -206,7 +213,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function getUnits(subject) {
     const allUnits = readObject(UNITS_KEY);
-    return Array.isArray(allUnits[subject]) ? allUnits[subject] : [];
+    return Array.isArray(allUnits[subject])
+      ? allUnits[subject]
+      : [];
   }
 
   function setUnits(subject, units) {
@@ -225,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return saveObject(MODE_KEY, modes);
   }
 
+  // Create a progress bar.
   function makeProgressBar(percent) {
     const track = document.createElement('div');
     track.className = 'subject-progress-track';
@@ -253,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return element;
   }
 
-  // ===== Track syllabus units =====
+  // ===== Track progress by syllabus units =====
   function renderUnitProgress(subject, container) {
     const units = getUnits(subject);
     const completed = units.filter(unit => unit.completed).length;
@@ -266,7 +276,10 @@ document.addEventListener('DOMContentLoaded', function () {
       count.textContent = `${completed}/${units.length} units completed`;
 
       const percent = document.createElement('strong');
-      const percentage = Math.round((completed / units.length) * 100);
+      const percentage = Math.round(
+        (completed / units.length) * 100
+      );
+
       percent.textContent = `${percentage}%`;
 
       summary.append(count, percent);
@@ -277,6 +290,7 @@ document.addEventListener('DOMContentLoaded', function () {
       );
     }
 
+    // Display the saved units with completion checkboxes.
     const unitList = document.createElement('div');
     unitList.className = 'progress-unit-list';
 
@@ -298,7 +312,9 @@ document.addEventListener('DOMContentLoaded', function () {
       checkbox.addEventListener('change', function () {
         const updated = getUnits(subject);
 
-        if (!updated[index]) return;
+        if (!updated[index]) {
+          return;
+        }
 
         updated[index].completed = checkbox.checked;
 
@@ -313,6 +329,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     container.appendChild(unitList);
 
+    // Form for adding syllabus units.
     const form = document.createElement('form');
     form.className = 'progress-add-unit';
 
@@ -333,15 +350,19 @@ document.addEventListener('DOMContentLoaded', function () {
       event.preventDefault();
 
       const title = input.value.trim();
-      if (!title) return;
+
+      if (!title) {
+        return;
+      }
 
       const currentUnits = getUnits(subject);
 
-      if (
-        currentUnits.some(
-          unit => unit.title.toLocaleLowerCase() === title.toLocaleLowerCase()
-        )
-      ) {
+      const alreadyExists = currentUnits.some(
+        unit =>
+          unit.title.toLocaleLowerCase() === title.toLocaleLowerCase()
+      );
+
+      if (alreadyExists) {
         alert('This unit has already been added.');
         return;
       }
@@ -360,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function () {
     container.appendChild(form);
   }
 
-  // ===== Track Study Planner tasks =====
+  // ===== Track progress using Study Planner tasks =====
   function renderPlannerProgress(subject, container) {
     const activities = readPlannerActivities().filter(function (item) {
       return (
@@ -381,13 +402,16 @@ document.addEventListener('DOMContentLoaded', function () {
       item => Boolean(item.completed)
     ).length;
 
-    const percentage = Math.round((completed / activities.length) * 100);
+    const percentage = Math.round(
+      (completed / activities.length) * 100
+    );
 
     const summary = document.createElement('div');
     summary.className = 'subject-progress-summary';
 
     const count = document.createElement('span');
-    count.textContent = `${completed}/${activities.length} tasks completed`;
+    count.textContent =
+      `${completed}/${activities.length} tasks completed`;
 
     const percent = document.createElement('strong');
     percent.textContent = `${percentage}%`;
@@ -396,9 +420,11 @@ document.addEventListener('DOMContentLoaded', function () {
     container.append(summary, makeProgressBar(percentage));
   }
 
-  // ===== Render progress cards =====
+  // ===== Display one progress card for every subject =====
   function renderProgress() {
-    if (!progressList) return;
+    if (!progressList) {
+      return;
+    }
 
     progressList.replaceChildren();
 
@@ -423,13 +449,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const select = document.createElement('select');
       select.className = 'progress-mode-select';
-      select.setAttribute('aria-label', `Progress method for ${subject}`);
+      select.setAttribute(
+        'aria-label',
+        `Progress method for ${subject}`
+      );
 
-      [
+      const options = [
         { value: '', label: 'Choose method' },
         { value: 'units', label: 'Syllabus units' },
         { value: 'planner', label: 'Study Planner tasks' }
-      ].forEach(function (optionData) {
+      ];
+
+      options.forEach(function (optionData) {
         const option = document.createElement('option');
         option.value = optionData.value;
         option.textContent = optionData.label;
@@ -464,22 +495,25 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Initial render.
   renderProgress();
 
+  // Refresh when returning to the dashboard.
   window.addEventListener('pageshow', renderProgress);
   window.addEventListener('focus', renderProgress);
 
+  // Refresh if the profile, progress, or planner data changes in another tab.
   window.addEventListener('storage', function (event) {
-    if (
-      [
-        PLANNER_KEY,
-        OLD_TASKS_KEY,
-        OLD_EVENTS_KEY,
-        MODE_KEY,
-        UNITS_KEY,
-        'luminaProfile'
-      ].includes(event.key)
-    ) {
+    const relevantKeys = [
+      PLANNER_KEY,
+      OLD_TASKS_KEY,
+      OLD_EVENTS_KEY,
+      MODE_KEY,
+      UNITS_KEY,
+      'luminaProfile'
+    ];
+
+    if (relevantKeys.includes(event.key)) {
       renderProgress();
     }
   });
