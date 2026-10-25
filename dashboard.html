@@ -11,12 +11,16 @@
 <body>
   <header class="navbar">
     <a href="dashboard.html" class="logo">🌿 Lumina AI</a>
+
     <nav class="nav-links" aria-label="Main navigation">
       <a href="dashboard.html" class="active" aria-current="page">Home</a>
     </nav>
+
     <div class="nav-icons">
       <div class="avatar-menu">
-        <button class="avatar" id="avatarToggle" type="button" aria-label="Open profile menu" aria-expanded="false" aria-controls="avatarDropdown">👤</button>
+        <button class="avatar" id="avatarToggle" type="button"
+          aria-label="Open profile menu" aria-expanded="false"
+          aria-controls="avatarDropdown">👤</button>
         <div class="avatar-dropdown" id="avatarDropdown">
           <a href="profile-setup.html">Edit Profile</a>
         </div>
@@ -45,12 +49,14 @@
           <p>Choose a subject you want to study today.</p>
         </div>
       </div>
+
       <div class="subject-grid" id="subjectGrid">
         <div class="empty-state">
           <span>📚</span>
           <p>Your subjects will appear here after you complete your profile.</p>
         </div>
       </div>
+
       <a class="primary-link" href="profile-setup.html">Manage My Subjects →</a>
     </section>
 
@@ -62,6 +68,7 @@
           <p>Understand difficult topics and turn your study material into short revision notes.</p>
         </div>
       </div>
+
       <div class="tools-grid tools-grid-single">
         <a href="ai-study-assistant.html" class="tool-card">
           <span class="tool-icon">🧠</span>
@@ -84,6 +91,7 @@
           <p>Your notes and study schedule, together in one place.</p>
         </div>
       </div>
+
       <div class="tools-grid tools-grid-two">
         <a href="my-notes.html" class="tool-card">
           <span class="tool-icon">📝</span>
@@ -91,6 +99,7 @@
           <p>Keep your study notes organized and easy to revisit.</p>
           <span class="open-link">Open my notes →</span>
         </a>
+
         <a href="study-planner.html" class="tool-card">
           <span class="tool-icon">📅</span>
           <h3>Study Planner</h3>
@@ -100,7 +109,7 @@
       </div>
     </section>
 
-    <!-- Subject-wise Learning Progress -->
+    <!-- My Learning Progress -->
     <section class="section-block" id="progressSection">
       <div class="section-heading">
         <div>
@@ -109,6 +118,7 @@
           <p>Track each subject in the way that works for you.</p>
         </div>
       </div>
+
       <div class="progress-panel progress-panel-compact">
         <div id="subjectProgressList" class="subject-progress-list">
           <p class="progress-empty">Loading your subjects...</p>
