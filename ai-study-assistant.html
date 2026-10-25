@@ -1,1375 +1,329 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#eefdef">
-  <title>Lumina AI Coach - AI Study Assistant</title>
-
-  <link rel="stylesheet" href="./dashboard.css">
-
-  <style>
-    /* ===== ChatGPT-style layout with the Lumina green theme ===== */
-    :root {
-      --c-bg: var(--page-bg, #eefdef);
-      --c-text: var(--text-main, #1f2d23);
-      --c-muted: var(--text-muted, #5f7466);
-      --c-accent: var(--accent, #4b7a52);
-      --c-dark: var(--dark-green, #2f5535);
-      --c-soft: var(--soft-green, #dff3e1);
-      --c-border: var(--border-green, #cfe5d2);
-      --c-white: var(--white, #ffffff);
-      --col: 780px;
-      --font: ui-sans-serif, -apple-system, "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      display: flex;
-      flex-direction: row;
-      height: 100vh;
-      height: 100dvh;
-      overflow: hidden;
-      background: var(--c-bg);
-      color: var(--c-text);
-      font-family: var(--font);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    button, input, textarea, select { font-family: inherit; }
-
-    /* ---------- Left icon bar ---------- */
-    .sidebar {
-      display: flex;
-      flex: 0 0 auto;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      width: 64px;
-      padding: 14px 0;
-      background: var(--c-bg);
-      border-right: 1px solid var(--c-border);
-    }
-
-    .side-logo {
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      margin-bottom: 10px;
-      border-radius: 12px;
-      font-size: 24px;
-      text-decoration: none;
-    }
-
-    .side-logo:hover { background: var(--c-soft); }
-
-    .side-btn {
-      position: relative;
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      color: var(--c-dark);
-      background: transparent;
-      border: 0;
-      border-radius: 12px;
-      font-size: 20px;
-      cursor: pointer;
-      transition: background 0.15s ease;
-    }
-
-    .side-btn:hover { background: var(--c-soft); }
-
-    .side-btn[aria-selected="true"] {
-      background: var(--c-soft);
-      box-shadow: inset 0 0 0 1px var(--c-border);
-    }
-
-    /* Hover name */
-    .side-btn::after {
-      content: attr(data-label);
-      position: absolute;
-      left: 54px;
-      padding: 6px 10px;
-      color: var(--c-white);
-      background: var(--c-dark);
-      border-radius: 8px;
-      font-size: 12px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.15s ease;
-      z-index: 20;
-    }
-
-    .side-btn:hover::after { opacity: 1; }
-
-    .side-divider {
-      width: 28px;
-      height: 1px;
-      margin: 8px 0;
-      background: var(--c-border);
-    }
-
-    /* ---------- Main area ---------- */
-    .main {
-      display: flex;
-      flex: 1 1 auto;
-      flex-direction: column;
-      min-width: 0;
-      min-height: 0;
-    }
-
-    .top-header {
-      display: flex;
-      flex: 0 0 auto;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 20px;
-    }
-
-    .mode-title {
-      color: var(--c-dark);
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .home-btn {
-      display: inline-block;
-      padding: 8px 20px;
-      color: var(--c-dark);
-      background: var(--c-white);
-      border: 1px solid var(--c-border);
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      text-decoration: none;
-      transition: background 0.15s ease;
-    }
-
-    .home-btn:hover { background: var(--c-soft); }
-
-    /* ---------- Chat area (uses the full height) ---------- */
-    .chat-scroll {
-      flex: 1 1 auto;
-      min-height: 0;
-      padding: 8px 20px 24px;
-      overflow-y: auto;
-      scroll-behavior: smooth;
-    }
-
-    .chat-thread[hidden] { display: none; }
-
-    .chat-thread {
-      display: flex;
-      flex-direction: column;
-      gap: 30px;
-      width: 100%;
-      max-width: var(--col);
-      margin: 0 auto;
-    }
-
-    /* Welcome screen */
-    .welcome-box {
-      padding: 8vh 10px 10px;
-      text-align: center;
-    }
-
-    .chat-thread.has-messages .welcome-box { display: none; }
-
-    .welcome-icon {
-      margin-bottom: 10px;
-      font-size: 34px;
-    }
-
-    .welcome-box h1 {
-      margin: 0 0 8px;
-      color: var(--c-text);
-      font-size: clamp(22px, 3vw, 28px);
-      font-weight: 600;
-    }
-
-    .welcome-box p {
-      max-width: 520px;
-      margin: 0 auto;
-      color: var(--c-muted);
-      font-size: 16px;
-      line-height: 1.6;
-    }
-
-    .starter-list {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 24px;
-    }
-
-    .starter-btn {
-      padding: 10px 16px;
-      color: var(--c-dark);
-      background: var(--c-white);
-      border: 1px solid var(--c-border);
-      border-radius: 999px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .starter-btn:hover { background: var(--c-soft); }
-
-    /* Messages */
-    .msg { display: flex; max-width: 100%; }
-    .msg.user { justify-content: flex-end; }
-
-    .user-bubble {
-      max-width: 80%;
-      padding: 10px 18px;
-      color: var(--c-text);
-      background: var(--c-soft);
-      border-radius: 22px;
-      font-size: 16px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .avatar-ai, .ai-label { display: none; }
-
-    .ai-body {
-      flex: 1 1 auto;
-      min-width: 0;
-      max-width: 100%;
-    }
-
-    /* AI answer: plain text on the page, no box */
-    .ai-card {
-      color: var(--c-text);
-      font-size: 16px;
-      line-height: 1.8;
-      overflow-wrap: anywhere;
-    }
-
-    .a-heading {
-      margin-top: 24px;
-      color: var(--c-dark);
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .a-heading:first-child { margin-top: 0; }
-
-    .a-para { margin-top: 8px; }
-
-    .a-item {
-      display: flex;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    .a-marker {
-      flex: 0 0 auto;
-      min-width: 24px;
-      color: var(--c-accent);
-      font-weight: 600;
-    }
-
-    /* Action buttons under an answer */
-    .ai-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 14px;
-    }
-
-    .action-btn {
-      padding: 6px 12px;
-      color: var(--c-muted);
-      background: transparent;
-      border: 0;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .action-btn:hover {
-      color: var(--c-dark);
-      background: var(--c-soft);
-    }
-
-    .save-form {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      padding: 12px;
-      background: var(--c-white);
-      border: 1px solid var(--c-border);
-      border-radius: 14px;
-    }
-
-    .save-form[hidden] { display: none; }
-
-    .save-form input {
-      flex: 1 1 200px;
-      min-width: 0;
-      padding: 9px 12px;
-      color: var(--c-text);
-      background: var(--c-white);
-      border: 1px solid var(--c-border);
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    .save-form input:focus {
-      outline: 2px solid var(--c-accent);
-      outline-offset: 1px;
-    }
-
-    .save-btn {
-      padding: 9px 18px;
-      color: var(--c-white);
-      background: var(--c-accent);
-      border: 0;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .save-btn:hover { background: var(--c-dark); }
-
-    .save-note {
-      flex-basis: 100%;
-      color: var(--c-accent);
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .save-note.error { color: #b42318; }
-
-    /* Typing dots */
-    .typing {
-      display: inline-flex;
-      gap: 5px;
-      padding: 8px 0;
-    }
-
-    .typing span {
-      width: 8px;
-      height: 8px;
-      background: var(--c-accent);
-      border-radius: 50%;
-      opacity: 0.35;
-      animation: blink 1.2s infinite ease-in-out;
-    }
-
-    .typing span:nth-child(2) { animation-delay: 0.2s; }
-    .typing span:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes blink {
-      0%, 80%, 100% { opacity: 0.3; }
-      40% { opacity: 1; }
-    }
-
-    /* Error message */
-    .error-card {
-      color: #b42318;
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .error-card .action-btn {
-      margin-top: 10px;
-      border: 1px solid var(--c-border);
-    }
-
-    /* ---------- Message bar ---------- */
-    .composer-wrap {
-      flex: 0 0 auto;
-      padding: 8px 20px 12px;
-      background: linear-gradient(to top, var(--c-bg) 80%, rgba(238, 253, 239, 0));
-    }
-
-    .composer {
-      width: 100%;
-      max-width: var(--col);
-      margin: 0 auto;
-      padding: 12px 14px 10px 20px;
-      background: var(--c-white);
-      border: 1px solid var(--c-border);
-      border-radius: 26px;
-      box-shadow: 0 4px 16px rgba(55, 86, 59, 0.08);
-    }
-
-    .composer:focus-within { border-color: var(--c-accent); }
-
-    .composer textarea {
-      display: block;
-      width: 100%;
-      max-height: 200px;
-      color: var(--c-text);
-      background: transparent;
-      border: 0;
-      outline: none;
-      resize: none;
-      overflow-y: auto;
-      font-size: 16px;
-      line-height: 1.5;
-    }
-
-    .composer textarea::placeholder { color: #8d9c91; }
-
-    .composer-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 6px;
-    }
-
-    .composer-bar select {
-      padding: 6px 10px;
-      color: var(--c-dark);
-      background: var(--c-soft);
-      border: 0;
-      border-radius: 999px;
-      outline: none;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .composer-bar select[hidden] { display: none; }
-
-    .send-btn {
-      display: grid;
-      place-items: center;
-      width: 36px;
-      height: 36px;
-      margin-left: auto;
-      color: var(--c-white);
-      background: var(--c-accent);
-      border: 0;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .send-btn:hover:not(:disabled) { background: var(--c-dark); }
-
-    .send-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .disclaimer {
-      margin: 8px 0 0;
-      color: var(--c-muted);
-      font-size: 12px;
-      text-align: center;
-    }
-
-    /* ---------- Mobile ---------- */
-    @media (max-width: 600px) {
-      .sidebar { width: 52px; padding: 10px 0; }
-      .side-logo, .side-btn { width: 38px; height: 38px; font-size: 18px; }
-      .side-btn::after { display: none; }
-      .top-header { padding: 10px 12px; }
-      .mode-title { font-size: 15px; }
-      .home-btn { padding: 7px 14px; font-size: 13px; }
-      .chat-scroll { padding: 8px 12px 16px; }
-      .composer-wrap { padding: 8px 10px 10px; }
-      .user-bubble { max-width: 90%; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .typing span { animation: none; opacity: 0.7; }
-      .chat-scroll { scroll-behavior: auto; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#eefdef">
+<title>Lumina AI Coach - AI Study Assistant</title>
+<link rel="stylesheet" href="./dashboard.css">
+<style>
+:root{--bg:var(--page-bg,#eefdef);--text:var(--text-main,#1f2d23);--muted:var(--text-muted,#5f7466);--accent:var(--accent,#4b7a52);--dark:var(--dark-green,#2f5535);--soft:var(--soft-green,#dff3e1);--border:var(--border-green,#cfe5d2);--white:#fff;--width:780px}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,textarea,select{font:inherit}
+.sidebar{display:flex;flex-direction:column;align-items:center;gap:6px;width:64px;flex-shrink:0;padding:14px 0;border-right:1px solid var(--border)}
+.side-logo,.side-btn{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:12px;text-decoration:none;color:var(--dark);background:transparent;cursor:pointer}
+.side-logo{font-size:24px;margin-bottom:10px}
+.side-btn{position:relative;font-size:20px}
+.side-btn:hover,.side-logo:hover,.side-btn[aria-selected=true]{background:var(--soft)}
+.side-btn::after{content:attr(data-label);position:absolute;left:50px;z-index:10;padding:6px 10px;border-radius:7px;background:var(--dark);color:white;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none}
+.side-btn:hover::after{opacity:1}
+.side-divider{width:28px;height:1px;margin:8px;background:var(--border)}
+.main{display:flex;flex:1;flex-direction:column;min-width:0;min-height:0}
+.top-header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;gap:12px}
+.mode-title{font-weight:600;color:var(--dark);font-size:18px}
+.home-btn{padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:white;color:var(--dark);text-decoration:none;font-size:14px}
+.chat-scroll{flex:1;min-height:0;overflow-y:auto;padding:8px 20px 24px;scroll-behavior:smooth}
+.chat-thread{display:flex;flex-direction:column;gap:24px;width:100%;max-width:var(--width);margin:auto}
+.chat-thread[hidden]{display:none}
+.welcome-box{padding:8vh 10px 10px;text-align:center}
+.chat-thread.has-messages .welcome-box{display:none}
+.welcome-icon{font-size:34px;margin-bottom:10px}
+.welcome-box h1{margin:0 0 8px;font-size:clamp(22px,3vw,28px);font-weight:600}
+.welcome-box p{max-width:520px;margin:auto;color:var(--muted);font-size:16px;line-height:1.6}
+.starter-list{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:24px}
+.starter-btn{padding:10px 16px;border:1px solid var(--border);border-radius:999px;background:white;color:var(--dark);font-size:14px;cursor:pointer}
+.starter-btn:hover{background:var(--soft)}
+.msg{display:flex;max-width:100%}
+.msg.user{justify-content:flex-end}
+.user-bubble{max-width:85%;padding:10px 18px;background:var(--soft);border-radius:22px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
+.ai-body{flex:1;min-width:0}
+.ai-label{display:none}
+.ai-card{font-size:16px;line-height:1.8;overflow-wrap:anywhere}
+.a-heading{margin-top:20px;color:var(--dark);font-size:18px;font-weight:600}
+.a-heading:first-child{margin-top:0}
+.a-para{margin-top:8px}
+.a-item{display:flex;gap:12px;margin-top:10px}
+.a-marker{flex-shrink:0;min-width:24px;color:var(--accent);font-weight:600}
+.ai-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.action-btn{padding:6px 12px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:13px;cursor:pointer}
+.action-btn:hover{background:var(--soft);color:var(--dark)}
+.save-form{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:14px;background:white}
+.save-form[hidden]{display:none}
+.save-form input{flex:1 1 180px;min-width:0;padding:9px 12px;border:1px solid var(--border);border-radius:8px;color:var(--text);background:white}
+.save-btn{padding:9px 18px;border:0;border-radius:8px;background:var(--accent);color:white;cursor:pointer}
+.save-note{flex-basis:100%;font-size:13px;color:var(--accent)}
+.save-note.error,.error-card{color:#b42318}
+.typing{display:flex;gap:5px;padding:8px 0}
+.typing span{width:8px;height:8px;background:var(--accent);border-radius:50%;animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.error-card{font-size:15px;line-height:1.6}
+.composer-wrap{flex-shrink:0;padding:8px 20px 12px;background:linear-gradient(to top,var(--bg) 80%,transparent)}
+.composer{max-width:var(--width);width:100%;margin:auto;padding:12px 14px 10px 20px;border:1px solid var(--border);border-radius:26px;background:white;box-shadow:0 4px 16px #37563b14}
+.composer:focus-within{border-color:var(--accent)}
+.composer textarea{display:block;width:100%;max-height:200px;resize:none;overflow-y:auto;border:0;outline:0;background:transparent;color:var(--text);font-size:16px;line-height:1.5}
+.composer-bar{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.composer-bar select{padding:6px 10px;border:0;border-radius:999px;background:var(--soft);color:var(--dark);font-size:13px}
+.send-btn{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;background:var(--accent);color:white;cursor:pointer}
+.send-btn:disabled{opacity:.5}
+.disclaimer,.demo-notice{margin:8px 0 0;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:600px){.sidebar{width:52px;padding:10px 0}.side-logo,.side-btn{width:38px;height:38px}.side-btn::after{display:none}.top-header{padding:10px 12px}.mode-title{font-size:15px}.home-btn{padding:7px 14px}.chat-scroll{padding:8px 12px 16px}.composer-wrap{padding:8px 10px 10px}}
+@media(prefers-reduced-motion:reduce){.typing span{animation:none}.chat-scroll{scroll-behavior:auto}}
+</style>
 </head>
 <body>
+<aside class="sidebar" aria-label="Tools">
+<a href="dashboard.html" class="side-logo" title="Lumina AI" aria-label="Lumina AI home">🌿</a>
+<button class="side-btn" id="newChatBtn" type="button" data-label="New chat" aria-label="New chat">✎</button>
+<div class="side-divider"></div>
+<button class="side-btn" id="tab-explain" role="tab" type="button" data-label="Concept Explainer" aria-selected="true">💡</button>
+<button class="side-btn" id="tab-summarize" role="tab" type="button" data-label="Notes Summarizer" aria-selected="false">✨</button>
+</aside>
+<div class="main">
+<header class="top-header"><div class="mode-title" id="modeTitle">Concept Explainer</div><a href="dashboard.html" class="home-btn">Home</a></header>
+<div class="chat-scroll" id="chatScroll">
+<div class="chat-thread" id="thread-explain" role="log" aria-live="polite">
+<div class="welcome-box">
+<div class="welcome-icon">💡</div><h1>Concept Explainer</h1>
+<p>Type a topic or exam question. Choose 2, 5 or 10 marks and get a model answer.</p>
+<div class="starter-list">
+<button class="starter-btn">Explain supervised learning with an example</button>
+<button class="starter-btn">What is normalization in DBMS?</button>
+<button class="starter-btn">Differentiate between TCP and UDP</button>
+<button class="starter-btn">Explain deadlock in operating systems</button>
+</div></div></div>
+<div class="chat-thread" id="thread-summarize" role="log" aria-live="polite" hidden>
+<div class="welcome-box"><div class="welcome-icon">✨</div><h1>Notes Summarizer</h1><p>Paste textbook text or lecture notes to get revision notes, key terms and exam questions.</p></div>
+</div></div>
+<div class="composer-wrap">
+<form class="composer" id="composer">
+<textarea id="promptInput" rows="1" maxlength="20000" aria-label="Message" placeholder="Type a topic or exam question..."></textarea>
+<div class="composer-bar">
+<select id="marksSelect" aria-label="Answer type"><option value="2">2 marks</option><option value="5" selected>5 marks</option><option value="10">10 marks</option></select>
+<button class="send-btn" id="sendBtn" type="submit" aria-label="Send">↑</button>
+</div></form>
+<p class="disclaimer">AI can make mistakes. Check important facts and formulas with your textbook.</p>
+<p class="demo-notice">Lumina demo: sample answers are available if the AI service cannot respond.</p>
+</div></div>
+<datalist id="subjectOptions"></datalist>
+<script>
+"use strict";
 
-  <!-- Left icon bar -->
-  <aside class="sidebar" aria-label="Tools">
-    <a href="dashboard.html" class="side-logo" title="Lumina AI" aria-label="Lumina AI home">🌿</a>
+const $ = id => document.getElementById(id);
+const NOTES_KEY = "luminaNotes";
+const CACHE_KEY = "luminaAnswerCache";
+const CACHE_LIMIT = 30;
+const REQUEST_TIMEOUT_MS = 120000;
 
-    <button class="side-btn" id="newChatBtn" type="button"
-            data-label="New chat" aria-label="New chat">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 20h9"></path>
-        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-      </svg>
-    </button>
+const modes = {
+  explain:{tab:$("tab-explain"),thread:$("thread-explain"),placeholder:"Type a topic or exam question...",maxLength:500,label:"Concept Explainer",source:"ai-chat"},
+  summarize:{tab:$("tab-summarize"),thread:$("thread-summarize"),placeholder:"Paste your study material here...",maxLength:20000,label:"Notes Summarizer",source:"ai-summary"}
+};
 
-    <div class="side-divider"></div>
+const input=$("promptInput");
+const sendBtn=$("sendBtn");
+const marksSelect=$("marksSelect");
+const chatScroll=$("chatScroll");
+let currentMode="explain";
+let busy=false;
+const drafts={explain:"",summarize:""};
 
-    <button class="side-btn" id="tab-explain" role="tab" type="button"
-            data-label="Concept Explainer" aria-label="Concept Explainer"
-            aria-selected="true">💡</button>
+function cleanAnswer(text){
+ return String(text).replace(/\*\*/g,"").replace(/^#{1,6}\s*/gm,"").replace(/^\s*[\*-]\s+/gm,"• ").replace(/[*_`]/g,"").trim();
+}
 
-    <button class="side-btn" id="tab-summarize" role="tab" type="button"
-            data-label="Notes Summarizer" aria-label="Notes Summarizer"
-            aria-selected="false">✨</button>
-  </aside>
+function buildExplainPrompt(topic,marks){
+ const base=`You are an experienced university professor writing a model answer for a college exam.\nQuestion or topic: "${topic}"\n`;
+ const rules=`\nFormatting rules:\n- Use plain text without markdown symbols.\n- Put each heading on its own line ending with a colon.\n- Use numbered points for lists.\n- Use correct technical terms and accurate explanations.`;
+ if(marks==="2")return base+`\nWrite a 2-mark answer of about 60–80 words.\nDefinition:\nGive a precise definition.\nKey Points:\nGive 2–3 important points.`+rules;
+ if(marks==="10")return base+`\nWrite a 10-mark answer of about 450–550 words.\nIntroduction:\nDefinition:\nDetailed Explanation:\nExplain in 4–6 numbered subheadings.\nTypes or Components:\nAdvantages and Limitations:\nApplications:\nExample:\nConclusion:`+rules;
+ return base+`\nWrite a 5-mark answer of about 200–250 words.\nDefinition:\nExplanation:\nGive 4–6 numbered points.\nExample:\nConclusion:`+rules;
+}
 
-  <!-- Main area -->
-  <div class="main">
+function buildSummarizePrompt(material){
+ return `You are a university professor creating exam revision notes from the supplied material. Use this structure:\nTopic:\nKey Definitions:\nMain Points:\nFormulas and Important Facts:\nQuick Revision:\nImportant Exam Questions:\nKeep notes shorter than the original. Preserve facts and formulas from the material and do not invent source details.\n\nStudy material:\n${material}`;
+}
 
-    <div class="top-header">
-      <div class="mode-title" id="modeTitle">Concept Explainer</div>
-      <a href="dashboard.html" class="home-btn">Home</a>
-    </div>
+/* Demo answers are used only when the real API cannot answer. */
+function makeDemoAnswer(topic,marks){
+ const t=topic.toLowerCase();
+ let definition="This is an important computer science concept used to understand and solve computing problems.";
+ let points=["Understand the purpose and basic principles of the concept.","Follow the appropriate steps or techniques to apply it.","Check the result and consider its practical use."];
+ let example="A student can apply this concept while solving a practical computer science problem.";
 
-    <div class="chat-scroll" id="chatScroll">
+ if(t.includes("supervised learning")){
+  definition="Supervised learning is a machine learning method in which a model learns from labelled examples containing inputs and their correct outputs.";
+  points=["Collect labelled training data.","Train the model to learn the relationship between inputs and outputs.","Evaluate the model using unseen data.","Use the trained model to predict outputs for new inputs."];
+  example="An email classifier learns from emails labelled as spam or not spam and then classifies new emails.";
+ }else if(t.includes("normalization")&&t.includes("dbms")){
+  definition="Normalization is the process of organizing database tables to reduce data redundancy and prevent data anomalies.";
+  points=["First Normal Form (1NF) requires atomic values in fields.","Second Normal Form (2NF) removes partial dependency on a composite key.","Third Normal Form (3NF) removes transitive dependency.","Normalization improves consistency and database maintenance."];
+  example="Store department details in a separate table and link them to students using a department ID instead of repeating the details in every student record.";
+ }else if(t.includes("tcp")&&t.includes("udp")){
+  definition="TCP and UDP are transport-layer protocols used to transfer data across networks.";
+  points=["TCP establishes a connection before data transmission.","TCP provides reliable and ordered delivery.","UDP sends data without establishing a connection.","UDP has lower overhead but does not guarantee delivery or order."];
+  example="TCP is used for reliable web communication, while UDP is useful for applications such as live streaming and online gaming.";
+ }else if(t.includes("deadlock")){
+  definition="A deadlock is a condition in which two or more processes wait indefinitely for resources held by one another.";
+  points=["Mutual exclusion means a resource can be used by one process at a time.","Hold and wait means a process holds one resource while waiting for another.","No preemption means resources cannot be forcibly taken away.","Circular wait occurs when processes form a cycle of waiting."];
+  example="Process P1 holds R1 and waits for R2, while P2 holds R2 and waits for R1. Neither can continue.";
+ }else if(t.includes("artificial intelligence")||t==="what is ai"){
+  definition="Artificial Intelligence (AI) is a branch of computer science that develops systems capable of tasks such as learning, reasoning and problem-solving.";
+  points=["Machine learning enables systems to learn from data.","Natural language processing helps systems work with human language.","Computer vision enables systems to analyse images and videos.","AI is used in education, healthcare and automation."];
+  example="An AI study assistant can explain concepts, summarize notes and generate practice questions.";
+ }else if(t.includes("process synchronization")||t.includes("synchronization")){
+  definition="Process synchronization coordinates concurrent processes that share data or resources so that their operations occur safely.";
+  points=["It helps prevent race conditions.","A critical section is the part of a program that accesses shared resources.","Mutual exclusion allows only one process at a time in the critical section.","Semaphores and mutex locks are common synchronization tools."];
+  example="A mutex lock can ensure that only one process updates a shared bank balance at a time.";
+ }
 
-      <div class="chat-thread" id="thread-explain" role="log" aria-live="polite">
-        <div class="welcome-box">
-          <div class="welcome-icon">💡</div>
-          <h1>Concept Explainer</h1>
-          <p>Type any topic or exam question. Choose 2, 5 or 10 marks and get a proper model answer.</p>
-          <div class="starter-list">
-            <button class="starter-btn" type="button">Explain supervised learning with an example</button>
-            <button class="starter-btn" type="button">What is normalization in DBMS?</button>
-            <button class="starter-btn" type="button">Differentiate between TCP and UDP</button>
-            <button class="starter-btn" type="button">Explain deadlock in operating systems</button>
-          </div>
-        </div>
-      </div>
+ if(marks==="2")return "Definition:\n"+definition+"\n\nKey Points:\n1. "+points[0]+"\n2. "+points[1];
+ if(marks==="10")return "Introduction:\n"+topic+" is an important topic in computer science.\n\nDefinition:\n"+definition+"\n\nDetailed Explanation:\n"+points.map((p,i)=>(i+1)+". "+p).join("\n")+"\n\nTypes or Components:\nThe components depend on the problem and the way the concept is applied.\n\nAdvantages and Limitations:\n1. It provides a systematic way to solve relevant problems.\n2. It supports practical computing applications.\n3. The result depends on correct implementation and suitable inputs.\n\nApplications:\n1. Education and learning.\n2. Computer-based problem-solving.\n3. Information processing.\n\nExample:\n"+example+"\n\nConclusion:\nUnderstanding "+topic+" helps connect the basic concept with its practical applications.";
+ return "Definition:\n"+definition+"\n\nExplanation:\n"+points.map((p,i)=>(i+1)+". "+p).join("\n")+"\n\nExample:\n"+example+"\n\nConclusion:\nUnderstanding "+topic+" helps students learn its principles and practical applications.\n\nDemo notice:\nThis is a sample fallback answer. Connect the AI service for a genuine AI-generated answer.";
+}
 
-      <div class="chat-thread" id="thread-summarize" role="log" aria-live="polite" hidden>
-        <div class="welcome-box">
-          <div class="welcome-icon">✨</div>
-          <h1>Notes Summarizer</h1>
-          <p>Paste your textbook text or lecture notes below. You will get short revision notes with key terms, formulas and likely exam questions.</p>
-        </div>
-      </div>
+function makeDemoSummary(material){
+ const lines=material.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+ const excerpts=lines.slice(0,6);
+ return "Topic:\nStudy Material — Demo Revision Summary\n\nKey Definitions:\n• Identify each important term and its meaning from the supplied material.\n\nMain Points:\n"+(excerpts.length?excerpts.map((s,i)=>(i+1)+". "+s).join("\n"):"1. Identify the main ideas in the material.")+"\n\nFormulas and Important Facts:\nCheck the original material for exact formulas, figures and facts.\n\nQuick Revision:\n1. Review key terms.\n2. Memorise important steps and facts.\n3. Practise explaining the main ideas in your own words.\n\nImportant Exam Questions:\n1. Define the main concept in the material.\n2. Explain its important points.\n3. Give an example based on the material.\n\nDemo notice:\nThis is a sample summary of the supplied text, not a full AI-generated summary.";
+}
 
-    </div>
-
-    <!-- Message bar -->
-    <div class="composer-wrap">
-      <form class="composer" id="composer">
-        <textarea id="promptInput" rows="1" maxlength="500"
-                  aria-label="Message"
-                  placeholder="Type a topic or exam question..."></textarea>
-
-        <div class="composer-bar">
-          <select id="marksSelect" aria-label="Answer type">
-            <option value="2">2 marks</option>
-            <option value="5" selected>5 marks</option>
-            <option value="10">10 marks</option>
-          </select>
-
-          <button class="send-btn" id="sendBtn" type="submit" aria-label="Send">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.2"
-                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 19V5"></path>
-              <path d="M5 12l7-7 7 7"></path>
-            </svg>
-          </button>
-        </div>
-      </form>
-
-      <p class="disclaimer">AI can make mistakes. Check important facts and formulas with your textbook.</p>
-    </div>
-
-  </div>
-
-  <datalist id="subjectOptions"></datalist>
-
-  <script>
-  "use strict";
-
-  /* =========================================================
-     PROMPTS  (sent to your existing /api/chat)
-     ========================================================= */
-
-  const FORMAT_RULES = `
-Formatting rules:
-- Write in plain text only. Do NOT use the symbols * # _ or backticks.
-- Write each section heading on its own line, followed by a colon.
-- For lists, use numbers (1. 2. 3.) or the bullet symbol •
-- Leave one empty line between sections.
-- Use correct technical terms. Be accurate. Do not invent facts.
-- Do not add any greeting, emoji or closing remark.`;
-
-  function buildExplainPrompt(topic, marks) {
-    const intro =
-      `You are an experienced university professor writing a model answer for a college exam.
-Question or topic: "${topic}"
-`;
-
-    if (marks === "2") {
-      return intro + `
-This is a 2-mark answer. Write about 60 to 80 words using exactly this structure:
-
-Definition:
-A clear, precise definition in 2 to 3 sentences.
-
-Key Points:
-Give 2 to 3 short numbered points that a student must mention.
-${FORMAT_RULES}`;
-    }
-
-    if (marks === "10") {
-      return intro + `
-This is a 10-mark answer. Write about 450 to 550 words using exactly this structure:
-
-Introduction:
-2 to 3 sentences that introduce the topic and why it matters.
-
-Definition:
-A precise textbook-style definition.
-
-Detailed Explanation:
-Explain the concept step by step under 4 to 6 numbered sub-headings, each with 2 to 3 sentences. Include how it works, important terms, formulas or algorithms where relevant.
-
-Types or Components:
-List and briefly describe the main types, parts or stages (skip only if not applicable).
-
-Advantages and Limitations:
-Give 3 advantages and 2 to 3 limitations as numbered points.
-
-Applications:
-Give 3 to 4 real-world applications.
-
-Example:
-One clear, worked example.
-
-Conclusion:
-2 to 3 sentences that sum up the answer.
-${FORMAT_RULES}`;
-    }
-
-    return intro + `
-This is a 5-mark answer. Write about 200 to 250 words using exactly this structure:
-
-Definition:
-A clear, precise definition in 2 to 3 sentences.
-
-Explanation:
-Explain the concept in 4 to 6 numbered points, each 1 to 2 sentences. Include important terms and how it works.
-
-Example:
-One clear, simple example.
-
-Conclusion:
-1 to 2 sentences that sum up the answer.
-${FORMAT_RULES}`;
+async function askAI(mode,text,marks,onUpdate){
+ const prompt=mode==="explain"?buildExplainPrompt(text,marks):buildSummarizePrompt(text);
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),REQUEST_TIMEOUT_MS);
+ try{
+  const response=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:prompt,stream:true}),signal:controller.signal});
+  if(!response.ok)throw new Error("AI service returned an error.");
+  const type=response.headers.get("content-type")||"";
+  if(!type.includes("application/json")&&response.body&&response.body.getReader){
+   const reader=response.body.getReader();const decoder=new TextDecoder();let full="";
+   while(true){const {done,value}=await reader.read();if(done)break;full+=decoder.decode(value,{stream:true});if(onUpdate)onUpdate(cleanAnswer(full));}
+   full+=decoder.decode();const result=cleanAnswer(full);
+   if(!result)throw new Error("The AI service returned an empty answer.");
+   return result;
   }
-
-  function buildSummarizePrompt(material) {
-    return `You are an experienced university professor preparing exam revision notes for a college student.
-Convert the study material below into clear, well-organized revision notes.
-
-Use exactly this structure:
-
-Topic:
-One line naming the topic.
-
-Key Definitions:
-List each important term with its definition, using the bullet symbol •
-
-Main Points:
-Group the content under short headings. Under each heading give numbered points of 1 to 2 sentences each.
-
-Formulas and Important Facts:
-List any formulas, rules, numbers, dates or steps exactly as given in the material (skip this section only if there are none).
-
-Quick Revision:
-3 to 5 short one-line points that the student should memorise before the exam.
-
-Important Exam Questions:
-2 to 3 likely exam questions based on this material.
-
-Rules:
-- Keep every term, formula and number exactly as in the material. Do not add facts that are not in the material.
-- Make the notes much shorter than the original.
-${FORMAT_RULES}
-
-Study material:
-${material}`;
-  }
-
-  /* =========================================================
-     ASKING THE AI  (streaming + time limit)
-     ========================================================= */
-
-  const REQUEST_TIMEOUT_MS = 120000; // 2 minutes
-
-  function cleanAnswer(text) {
-    return String(text)
-      .replace(/\*\*/g, "")
-      .replace(/^#{1,6}\s*/gm, "")
-      .replace(/^\s*[\*\-]\s+/gm, "• ")
-      .replace(/[*_`]/g, "")
-      .trim();
-  }
-
-  /*
-    onUpdate(partialText) is called while the answer is arriving.
-    If your server streams plain text, the words appear one by one.
-    If your server still sends JSON { reply: "..." }, it works as before.
-  */
-  async function askAI(mode, input, marks, onUpdate) {
-    const prompt = mode === "explain"
-      ? buildExplainPrompt(input, marks)
-      : buildSummarizePrompt(input);
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: prompt, stream: true }),
-        signal: controller.signal
-      });
-
-      if (!response.ok) {
-        throw new Error("No answer came. Please try again in a moment.");
-      }
-
-      const type = response.headers.get("content-type") || "";
-
-      /* Streaming answer (plain text pieces) */
-      if (!type.includes("application/json") && response.body && response.body.getReader) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let full = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          full += decoder.decode(value, { stream: true });
-          if (onUpdate) onUpdate(cleanAnswer(full));
-        }
-
-        full += decoder.decode();
-        const finalText = cleanAnswer(full);
-
-        if (!finalText) {
-          throw new Error("No answer came. Please try again in a moment.");
-        }
-
-        return finalText;
-      }
-
-      /* Normal JSON answer */
-      let data = null;
-
-      try {
-        data = await response.json();
-      } catch (error) {
-        data = null;
-      }
-
-      if (!data || !data.reply) {
-        throw new Error("No answer came. Please try again in a moment.");
-      }
-
-      return cleanAnswer(data.reply);
-
-    } catch (error) {
-      if (error.name === "AbortError") {
-        throw new Error("The answer is taking too long. Please try again.");
-      }
-      throw error;
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
-  /* =========================================================
-     SAVED ANSWERS (same question = instant answer)
-     ========================================================= */
-
-  const CACHE_KEY = "luminaAnswerCache";
-  const CACHE_LIMIT = 30;
-
-  function cacheKey(mode, text, marks) {
-    return mode + "|" + (mode === "explain" ? marks : "-") + "|" +
-      text.trim().toLowerCase().replace(/\s+/g, " ");
-  }
-
-  function readCache() {
-    try {
-      const data = JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-  function getCached(mode, text, marks) {
-    const key = cacheKey(mode, text, marks);
-    const hit = readCache().find(item => item.key === key);
-    return hit ? hit.answer : null;
-  }
-
-  function setCached(mode, text, marks, answer) {
-    try {
-      const key = cacheKey(mode, text, marks);
-      const list = readCache().filter(item => item.key !== key);
-      list.push({ key, answer });
-      localStorage.setItem(CACHE_KEY, JSON.stringify(list.slice(-CACHE_LIMIT)));
-    } catch (error) {
-      /* storage full or blocked: ignore */
-    }
-  }
-
-  /* =========================================================
-     PAGE STATE
-     ========================================================= */
-
-  const NOTES_KEY = "luminaNotes";
-
-  const $ = id => document.getElementById(id);
-
-  const modes = {
-    explain: {
-      tab: $("tab-explain"),
-      thread: $("thread-explain"),
-      placeholder: "Type a topic or exam question...",
-      maxLength: 500,
-      label: "Concept Explainer",
-      source: "ai-chat"
-    },
-    summarize: {
-      tab: $("tab-summarize"),
-      thread: $("thread-summarize"),
-      placeholder: "Paste your study material here...",
-      maxLength: 20000,
-      label: "Notes Summarizer",
-      source: "ai-summary"
-    }
-  };
-
-  const chatScroll = $("chatScroll");
-  const input = $("promptInput");
-  const sendBtn = $("sendBtn");
-  const marksSelect = $("marksSelect");
-
-  let currentMode = "explain";
-  let busy = false;
-  const drafts = { explain: "", summarize: "" };
-
-  /* ---------- Mode switching ---------- */
-  function setMode(name) {
-    if (!modes[name]) name = "explain";
-
-    drafts[currentMode] = input.value;
-    currentMode = name;
-
-    Object.entries(modes).forEach(([key, m]) => {
-      const active = key === name;
-      m.tab.setAttribute("aria-selected", String(active));
-      m.thread.hidden = !active;
-    });
-
-    $("modeTitle").textContent = modes[name].label;
-    input.maxLength = modes[name].maxLength;
-    input.placeholder = modes[name].placeholder;
-    input.value = drafts[name] || "";
-    marksSelect.hidden = name !== "explain";
-
-    resizeInput();
-    scrollToBottom(true);
-    history.replaceState(null, "", "#" + name);
-  }
-
-  modes.explain.tab.addEventListener("click", () => setMode("explain"));
-  modes.summarize.tab.addEventListener("click", () => setMode("summarize"));
-
-  /* ---------- Starter questions ---------- */
-  document.querySelectorAll(".starter-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      input.value = btn.textContent.trim();
-      resizeInput();
-      input.focus();
-    });
-  });
-
-  /* ---------- New chat ---------- */
-  $("newChatBtn").addEventListener("click", () => {
-    if (busy) return;
-
-    const thread = modes[currentMode].thread;
-    thread.querySelectorAll(".msg").forEach(el => el.remove());
-    thread.classList.remove("has-messages");
-    input.focus();
-  });
-
-  /* ---------- Input box ---------- */
-  function resizeInput() {
-    input.style.height = "auto";
-    input.style.height = Math.min(input.scrollHeight, 200) + "px";
-  }
-
-  input.addEventListener("input", resizeInput);
-
-  input.addEventListener("keydown", event => {
-    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
-      event.preventDefault();
-      $("composer").requestSubmit();
-    }
-  });
-
-  function scrollToBottom(instant) {
-    requestAnimationFrame(() => {
-      chatScroll.scrollTo({
-        top: chatScroll.scrollHeight,
-        behavior: instant ? "auto" : "smooth"
-      });
-    });
-  }
-
-  /* =========================================================
-     MESSAGES
-     ========================================================= */
-
-  function addUserMessage(mode, text) {
-    const thread = modes[mode].thread;
-
-    const row = document.createElement("div");
-    row.className = "msg user";
-
-    const bubble = document.createElement("div");
-    bubble.className = "user-bubble";
-    bubble.textContent = text;
-
-    row.appendChild(bubble);
-    thread.appendChild(row);
-    thread.classList.add("has-messages");
-    scrollToBottom();
-  }
-
-  function makeAiRow() {
-    const row = document.createElement("div");
-    row.className = "msg ai";
-
-    const avatar = document.createElement("div");
-    avatar.className = "avatar-ai";
-    avatar.textContent = "🌿";
-    avatar.setAttribute("aria-hidden", "true");
-
-    const body = document.createElement("div");
-    body.className = "ai-body";
-
-    row.append(avatar, body);
-    return { row, body };
-  }
-
-  function addTyping(mode) {
-    const { row, body } = makeAiRow();
-
-    const dots = document.createElement("div");
-    dots.className = "typing";
-    dots.setAttribute("aria-label", "Lumina AI is writing");
-    dots.innerHTML = "<span></span><span></span><span></span>";
-
-    body.appendChild(dots);
-    modes[mode].thread.appendChild(row);
-    scrollToBottom();
-    return row;
-  }
-
-  /* Turn plain text into headings, paragraphs and list items */
-  function renderAnswer(container, text) {
-    text.split("\n").forEach(rawLine => {
-      const line = rawLine.trim();
-      if (!line) return;
-
-      const item = line.match(/^(\d+[.)]|•)\s+(.*)$/);
-
-      if (item) {
-        const row = document.createElement("div");
-        row.className = "a-item";
-
-        const marker = document.createElement("span");
-        marker.className = "a-marker";
-        marker.textContent = item[1];
-
-        const content = document.createElement("span");
-        content.textContent = item[2];
-
-        row.append(marker, content);
-        container.appendChild(row);
-        return;
-      }
-
-      if (/:$/.test(line) && line.length <= 60 && !/[.!?]:$/.test(line)) {
-        const heading = document.createElement("div");
-        heading.className = "a-heading";
-        heading.textContent = line.slice(0, -1);
-        container.appendChild(heading);
-        return;
-      }
-
-      const para = document.createElement("div");
-      para.className = "a-para";
-      para.textContent = line;
-      container.appendChild(para);
-    });
-  }
-
-  function getNoteTitle(mode, answer, question, marks) {
-    if (mode === "explain") {
-      const q = question.replace(/\s+/g, " ").trim();
-      const short = q.length > 55 ? q.slice(0, 55).trim() + "..." : q;
-      return short + " (" + marks + " marks)";
-    }
-
-    const topic = answer.match(/Topic:\s*\n?\s*(.+)/i);
-    if (topic && topic[1].trim()) {
-      const t = topic[1].trim();
-      return "Summary: " + (t.length > 55 ? t.slice(0, 55).trim() + "..." : t);
-    }
-
-    const q = question.replace(/\s+/g, " ").trim();
-    return "Summary: " + (q.length > 40 ? q.slice(0, 40).trim() + "..." : q);
-  }
-
-  /* The empty answer row (label + card) */
-  function buildAnswerShell(mode, meta) {
-    const { row, body } = makeAiRow();
-
-    const label = document.createElement("div");
-    label.className = "ai-label";
-    label.textContent = mode === "explain"
-      ? "Lumina AI · " + meta.marks + "-mark answer"
-      : "Lumina AI · Revision notes";
-
-    const card = document.createElement("div");
-    card.className = "ai-card";
-
-    body.append(label, card);
-    modes[mode].thread.appendChild(row);
-
-    return { row, body, card };
-  }
-
-  /* Copy / Save buttons and the Subject + Title save form */
-  function attachActions(body, mode, answer, meta) {
-    const actions = document.createElement("div");
-    actions.className = "ai-actions";
-
-    const copyBtn = document.createElement("button");
-    copyBtn.type = "button";
-    copyBtn.className = "action-btn";
-    copyBtn.textContent = "Copy";
-
-    const saveToggle = document.createElement("button");
-    saveToggle.type = "button";
-    saveToggle.className = "action-btn";
-    saveToggle.textContent = "Save to My Notes";
-
-    actions.append(copyBtn, saveToggle);
-
-    const defaultTitle = getNoteTitle(mode, answer, meta.question, meta.marks);
-
-    const form = document.createElement("div");
-    form.className = "save-form";
-    form.hidden = true;
-
-    const subjectInput = document.createElement("input");
-    subjectInput.type = "text";
-    subjectInput.setAttribute("list", "subjectOptions");
-    subjectInput.placeholder = "Subject name, e.g. Artificial Intelligence";
-    subjectInput.setAttribute("aria-label", "Subject name");
-
-    const titleInput = document.createElement("input");
-    titleInput.type = "text";
-    titleInput.maxLength = 120;
-    titleInput.value = defaultTitle;
-    titleInput.placeholder = "Title / topic, e.g. Supervised learning";
-    titleInput.setAttribute("aria-label", "Title");
-
-    const saveBtn = document.createElement("button");
-    saveBtn.type = "button";
-    saveBtn.className = "save-btn";
-    saveBtn.textContent = "Save";
-
-    const note = document.createElement("div");
-    note.className = "save-note";
-    note.setAttribute("role", "status");
-
-    form.append(subjectInput, titleInput, saveBtn, note);
-
-    copyBtn.addEventListener("click", () => {
-      if (!navigator.clipboard) {
-        copyBtn.textContent = "Copy not supported";
-        return;
-      }
-
-      navigator.clipboard.writeText(answer).then(() => {
-        copyBtn.textContent = "Copied ✓";
-        setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
-      }).catch(() => {
-        copyBtn.textContent = "Could not copy";
-        setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
-      });
-    });
-
-    saveToggle.addEventListener("click", () => {
-      form.hidden = !form.hidden;
-      if (!form.hidden) subjectInput.focus();
-      scrollToBottom();
-    });
-
-    function doSave() {
-      const subject = subjectInput.value.trim();
-      const title = titleInput.value.trim() || defaultTitle;
-      note.classList.remove("error");
-
-      if (!subject) {
-        note.textContent = "Please enter a subject name.";
-        note.classList.add("error");
-        subjectInput.focus();
-        return;
-      }
-
-      try {
-        saveToNotes(title, subject, answer, modes[mode].source);
-        note.textContent = "✓ Saved to My Notes under " + subject + " as \"" + title + "\".";
-        fillSubjects();
-      } catch (error) {
-        console.error(error);
-        note.textContent = "Unable to save the note. Please try again.";
-        note.classList.add("error");
-      }
-    }
-
-    saveBtn.addEventListener("click", doSave);
-
-    [subjectInput, titleInput].forEach(field => {
-      field.addEventListener("keydown", event => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          doSave();
-        }
-      });
-    });
-
-    body.append(actions, form);
-  }
-
-  /* A finished answer shown all at once */
-  function addAnswer(mode, answer, meta) {
-    const shell = buildAnswerShell(mode, meta);
-    renderAnswer(shell.card, answer);
-    attachActions(shell.body, mode, answer, meta);
-    scrollToBottom();
-  }
-
-  /* An answer that fills in while it is arriving */
-  function createLiveAnswer(mode, meta) {
-    const shell = buildAnswerShell(mode, meta);
-    let pending = null;
-    let scheduled = false;
-
-    function paint() {
-      scheduled = false;
-      shell.card.innerHTML = "";
-      renderAnswer(shell.card, pending);
-      scrollToBottom(true);
-    }
-
-    return {
-      row: shell.row,
-      update(text) {
-        pending = text;
-        if (!scheduled) {
-          scheduled = true;
-          requestAnimationFrame(paint);
-        }
-      },
-      finish(answer) {
-        pending = answer;
-        shell.card.innerHTML = "";
-        renderAnswer(shell.card, answer);
-        attachActions(shell.body, mode, answer, meta);
-        scrollToBottom();
-      }
-    };
-  }
-
-  function addError(mode, message, retry) {
-    const { row, body } = makeAiRow();
-
-    const card = document.createElement("div");
-    card.className = "error-card";
-    card.textContent = message;
-
-    const retryBtn = document.createElement("button");
-    retryBtn.type = "button";
-    retryBtn.className = "action-btn";
-    retryBtn.textContent = "Try again";
-
-    retryBtn.addEventListener("click", () => {
-      if (busy) return;
-      row.remove();
-      retry();
-    });
-
-    card.appendChild(document.createElement("br"));
-    card.appendChild(retryBtn);
-    body.appendChild(card);
-    modes[mode].thread.appendChild(row);
-    scrollToBottom();
-  }
-
-  /* =========================================================
-     RUNNING A REQUEST
-     ========================================================= */
-
-  async function runRequest(mode, text, marks) {
-    const meta = { question: text, marks };
-
-    /* Same question asked before: show it instantly */
-    const cached = getCached(mode, text, marks);
-    if (cached) {
-      addAnswer(mode, cached, meta);
-      if (currentMode === mode) input.focus();
-      return;
-    }
-
-    busy = true;
-    sendBtn.disabled = true;
-
-    const typing = addTyping(mode);
-    let live = null;
-
-    try {
-      const answer = await askAI(mode, text, marks, partial => {
-        if (!partial) return;
-
-        if (!live) {
-          typing.remove();
-          live = createLiveAnswer(mode, meta);
-        }
-
-        live.update(partial);
-      });
-
-      if (live) {
-        live.finish(answer);
-      } else {
-        typing.remove();
-        addAnswer(mode, answer, meta);
-      }
-
-      setCached(mode, text, marks, answer);
-    } catch (error) {
-      console.error(error);
-      typing.remove();
-      if (live) live.row.remove();
-
-      addError(
-        mode,
-        error.message || "Something went wrong. Please try again.",
-        () => runRequest(mode, text, marks)
-      );
-    } finally {
-      busy = false;
-      sendBtn.disabled = false;
-      if (currentMode === mode) input.focus();
-    }
-  }
-
-  $("composer").addEventListener("submit", event => {
-    event.preventDefault();
-
-    if (busy) return;
-
-    const text = input.value.trim();
-
-    if (!text) {
-      input.focus();
-      return;
-    }
-
-    const mode = currentMode;
-    const marks = marksSelect.value;
-
-    const shown = mode === "summarize" && text.length > 300
-      ? text.slice(0, 300).trim() + "…\n(" + text.length + " characters pasted)"
-      : text;
-
-    addUserMessage(mode, shown);
-
-    input.value = "";
-    drafts[mode] = "";
-    resizeInput();
-
-    runRequest(mode, text, marks);
-  });
-
-  /* =========================================================
-     MY NOTES
-     ========================================================= */
-
-  function readNotes() {
-    try {
-      const data = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-  function fillSubjects() {
-    const list = $("subjectOptions");
-    list.innerHTML = "";
-
-    [...new Set(readNotes().map(n => n.subject).filter(Boolean))]
-      .forEach(subject => {
-        const option = document.createElement("option");
-        option.value = subject;
-        list.appendChild(option);
-      });
-  }
-
-  function saveToNotes(title, subject, content, source) {
-    const notes = readNotes();
-    const now = new Date().toISOString();
-
-    notes.push({
-      id: window.crypto?.randomUUID?.() ||
-        "note-" + Date.now() + "-" + Math.random().toString(36).slice(2),
-      title,
-      subject,
-      content,
-      source,
-      createdAt: now,
-      updatedAt: now
-    });
-
-    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-  }
-
-  /* ---------- Start ---------- */
-  fillSubjects();
-  setMode(location.hash === "#summarize" || location.hash === "#summarizer"
-    ? "summarize"
-    : "explain");
-  </script>
+  const data=await response.json();
+  if(!data||!data.reply)throw new Error("The AI service returned an empty answer.");
+  return cleanAnswer(data.reply);
+ }catch(error){
+  console.warn("Lumina AI unavailable; using demo response.",error);
+  return mode==="summarize"?makeDemoSummary(text):makeDemoAnswer(text,marks);
+ }finally{clearTimeout(timer);}
+}
+
+function readCache(){try{const d=JSON.parse(localStorage.getItem(CACHE_KEY)||"[]");return Array.isArray(d)?d:[];}catch(e){return[];}}
+function cacheKey(mode,text,marks){return mode+"|"+(mode==="explain"?marks:"-")+"|"+text.trim().toLowerCase().replace(/\s+/g," ");}
+function getCached(mode,text,marks){const hit=readCache().find(x=>x.key===cacheKey(mode,text,marks));return hit?hit.answer:null;}
+function setCached(mode,text,marks,answer){try{const key=cacheKey(mode,text,marks);const list=readCache().filter(x=>x.key!==key);list.push({key,answer});localStorage.setItem(CACHE_KEY,JSON.stringify(list.slice(-CACHE_LIMIT)));}catch(e){}}
+
+function setMode(name){
+ if(!modes[name])name="explain";
+ drafts[currentMode]=input.value;currentMode=name;
+ Object.entries(modes).forEach(([key,m])=>{m.tab.setAttribute("aria-selected",String(key===name));m.thread.hidden=key!==name;});
+ $("modeTitle").textContent=modes[name].label;
+ input.maxLength=modes[name].maxLength;input.placeholder=modes[name].placeholder;input.value=drafts[name]||"";
+ marksSelect.hidden=name!=="explain";resizeInput();scrollToBottom(true);
+ history.replaceState(null,"","#"+name);
+}
+modes.explain.tab.addEventListener("click",()=>setMode("explain"));
+modes.summarize.tab.addEventListener("click",()=>setMode("summarize"));
+
+document.querySelectorAll(".starter-btn").forEach(btn=>btn.addEventListener("click",()=>{setMode("explain");input.value=btn.textContent.trim();resizeInput();input.focus();}));
+
+$("newChatBtn").addEventListener("click",()=>{if(busy)return;const thread=modes[currentMode].thread;thread.querySelectorAll(".msg").forEach(el=>el.remove());thread.classList.remove("has-messages");input.value="";drafts[currentMode]="";resizeInput();input.focus();});
+
+function resizeInput(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,200)+"px";}
+input.addEventListener("input",resizeInput);
+input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("composer").requestSubmit();}});
+function scrollToBottom(instant=false){requestAnimationFrame(()=>chatScroll.scrollTo({top:chatScroll.scrollHeight,behavior:instant?"auto":"smooth"}));}
+
+function addUserMessage(mode,text){
+ const row=document.createElement("div");row.className="msg user";
+ const bubble=document.createElement("div");bubble.className="user-bubble";bubble.textContent=text;
+ row.appendChild(bubble);modes[mode].thread.appendChild(row);modes[mode].thread.classList.add("has-messages");scrollToBottom();
+}
+function makeAiRow(){const row=document.createElement("div");row.className="msg ai";const body=document.createElement("div");body.className="ai-body";row.appendChild(body);return{row,body};}
+function addTyping(mode){const {row,body}=makeAiRow();const dots=document.createElement("div");dots.className="typing";dots.innerHTML="<span></span><span></span><span></span>";body.appendChild(dots);modes[mode].thread.appendChild(row);scrollToBottom();return row;}
+
+function renderAnswer(container,text){
+ container.textContent="";
+ text.split("\n").forEach(raw=>{
+  const line=raw.trim();if(!line)return;
+  const item=line.match(/^(\d+[.)]|•)\s+(.*)$/);
+  if(item){const row=document.createElement("div");row.className="a-item";const marker=document.createElement("span");marker.className="a-marker";marker.textContent=item[1];const content=document.createElement("span");content.textContent=item[2];row.append(marker,content);container.appendChild(row);return;}
+  if(/:$/.test(line)&&line.length<=80){const h=document.createElement("div");h.className="a-heading";h.textContent=line.slice(0,-1);container.appendChild(h);return;}
+  const p=document.createElement("div");p.className="a-para";p.textContent=line;container.appendChild(p);
+ });
+}
+
+function readNotes(){try{const d=JSON.parse(localStorage.getItem(NOTES_KEY)||"[]");return Array.isArray(d)?d:[];}catch(e){return[];}}
+function fillSubjects(){const list=$("subjectOptions");list.innerHTML="";[...new Set(readNotes().map(n=>n.subject).filter(Boolean))].forEach(subject=>{const o=document.createElement("option");o.value=subject;list.appendChild(o);});}
+function saveToNotes(title,subject,content,source){
+ const notes=readNotes();const now=new Date().toISOString();
+ notes.push({id:window.crypto?.randomUUID?.()||"note-"+Date.now(),title,subject,content,source,createdAt:now,updatedAt:now});
+ localStorage.setItem(NOTES_KEY,JSON.stringify(notes));
+}
+function getNoteTitle(mode,answer,question,marks){
+ if(mode==="explain"){const q=question.replace(/\s+/g," ").trim();return(q.length>55?q.slice(0,55)+"...":q)+" ("+marks+" marks)";}
+ const match=answer.match(/Topic:\s*\n?\s*(.+)/i);return "Summary: "+(match?match[1].trim():question.slice(0,45));
+}
+
+function attachActions(body,mode,answer,meta){
+ const actions=document.createElement("div");actions.className="ai-actions";
+ const copy=document.createElement("button");copy.type="button";copy.className="action-btn";copy.textContent="Copy";
+ const toggle=document.createElement("button");toggle.type="button";toggle.className="action-btn";toggle.textContent="Save to My Notes";
+ actions.append(copy,toggle);
+ const form=document.createElement("div");form.className="save-form";form.hidden=true;
+ const subject=document.createElement("input");subject.placeholder="Subject name, e.g. Artificial Intelligence";subject.setAttribute("list","subjectOptions");subject.setAttribute("aria-label","Subject name");
+ const title=document.createElement("input");title.maxLength=120;title.value=getNoteTitle(mode,answer,meta.question,meta.marks);title.placeholder="Title / topic";title.setAttribute("aria-label","Title");
+ const save=document.createElement("button");save.type="button";save.className="save-btn";save.textContent="Save";
+ const status=document.createElement("div");status.className="save-note";status.setAttribute("role","status");
+ form.append(subject,title,save,status);
+ copy.addEventListener("click",async()=>{
+  try{if(navigator.clipboard&&navigator.clipboard.writeText)await navigator.clipboard.writeText(answer);else{const temp=document.createElement("textarea");temp.value=answer;document.body.appendChild(temp);temp.select();if(!document.execCommand("copy"))throw Error("Copy failed");temp.remove();}copy.textContent="Copied ✓";}
+  catch(e){copy.textContent="Could not copy";}
+  setTimeout(()=>copy.textContent="Copy",1500);
+ });
+ toggle.addEventListener("click",()=>{form.hidden=!form.hidden;if(!form.hidden)subject.focus();});
+ function doSave(){
+  if(!subject.value.trim()){status.textContent="Please enter a subject name.";status.classList.add("error");subject.focus();return;}
+  try{saveToNotes(title.value.trim()||getNoteTitle(mode,answer,meta.question,meta.marks),subject.value.trim(),answer,modes[mode].source);status.classList.remove("error");status.textContent="✓ Saved to My Notes under "+subject.value.trim()+".";fillSubjects();}
+  catch(e){status.textContent="Unable to save. Please try again.";status.classList.add("error");}
+ }
+ save.addEventListener("click",doSave);
+ [subject,title].forEach(el=>el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doSave();}}));
+ body.append(actions,form);
+}
+function addAnswer(mode,answer,meta){const {row,body}=makeAiRow();const card=document.createElement("div");card.className="ai-card";body.appendChild(card);renderAnswer(card,answer);attachActions(body,mode,answer,meta);modes[mode].thread.appendChild(row);scrollToBottom();}
+
+async function runRequest(mode,text,marks){
+ const meta={question:text,marks};
+ const cached=getCached(mode,text,marks);
+ if(cached){addAnswer(mode,cached,meta);return;}
+ busy=true;sendBtn.disabled=true;
+ const typing=addTyping(mode);
+ try{
+  const answer=await askAI(mode,text,marks);
+  typing.remove();addAnswer(mode,answer,meta);setCached(mode,text,marks,answer);
+ }catch(error){typing.remove();const {row,body}=makeAiRow();const card=document.createElement("div");card.className="error-card";card.textContent="Something went wrong. Please try again.";body.appendChild(card);modes[mode].thread.appendChild(row);}
+ finally{busy=false;sendBtn.disabled=false;if(currentMode===mode)input.focus();}
+}
+
+$("composer").addEventListener("submit",e=>{
+ e.preventDefault();if(busy)return;
+ const text=input.value.trim();if(!text){input.focus();return;}
+ const mode=currentMode;const marks=marksSelect.value;
+ const shown=mode==="summarize"&&text.length>300?text.slice(0,300)+"…\n("+text.length+" characters pasted)":text;
+ addUserMessage(mode,shown);input.value="";drafts[mode]="";resizeInput();runRequest(mode,text,marks);
+});
+
+fillSubjects();
+setMode(location.hash==="#summarize"||location.hash==="#summarizer"?"summarize":"explain");
+</script>
 </body>
 </html>
