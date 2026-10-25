@@ -2,7 +2,6 @@
 "use strict";
 
 const NOTES_KEY = "luminaNotes";
-const PROGRESS_KEY = "luminaSubjectProgress";
 const QUESTIONS_KEY = "luminaSubjectQuestions";
 const DB_NAME = "luminaSubjectMaterials";
 const STORE_NAME = "files";
@@ -11,13 +10,12 @@ const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(window.location.search);
 const subject = params.get("subject") || "My Subject";
 
-const reader = $("noteReader");
-let currentNote = null;
-
 $("subjectTitle").textContent = subject;
 $("subjectDescription").textContent =
-  `Keep your ${subject} notes, materials, questions and progress organized.`;
+  `Keep your ${subject} notes, materials, activities and important questions organized.`;
 document.title = `${subject} | Lumina AI Study Coach`;
+
+/* ---------- Shared helpers ---------- */
 
 function readJSON(key, fallback) {
   try {
@@ -38,194 +36,84 @@ function getNotes() {
 }
 
 function getNoteContent(note) {
-  return String(
-    note.content ??
-    note.text ??
+  return note.content ??
     note.noteContent ??
+    note.text ??
     note.body ??
-    ""
-  );
+    "";
 }
 
-function getNoteUnit(note) {
-  return String(
-    note.unit ??
-    note.unitName ??
-    note.unitTitle ??
-    ""
-  ).trim();
+function matchesSubject(item) {
+  return String(item.subject || "").trim().toLowerCase() ===
+    subject.trim().toLowerCase();
 }
 
-/* ---------------- FULL-SCREEN NOTE READER ---------------- */
+/* ---------- Read complete note ---------- */
+
+const noteReader = $("noteReader");
 
 function openNote(note) {
-  currentNote = note;
-
   $("readerTitle").textContent = note.title || "Untitled note";
-  $("readerUnit").textContent = getNoteUnit(note);
-  $("readerUnit").hidden = !getNoteUnit(note);
+  $("readerSubject").textContent = note.subject || subject;
+  $("readerContent").textContent =
+    getNoteContent(note) || "This note has no content yet.";
 
-  // textContent preserves the saved text and line breaks safely.
-  $("noteReaderContent").textContent = getNoteContent(note);
-
-  if (typeof reader.showModal === "function") {
-    reader.showModal();
+  if (typeof noteReader.showModal === "function") {
+    noteReader.showModal();
   } else {
-    reader.setAttribute("open", "");
+    noteReader.setAttribute("open", "");
   }
-
-  document.body.style.overflow = "hidden";
 }
 
-function closeNote() {
-  if (reader.open && typeof reader.close === "function") {
-    reader.close();
+$("closeNoteReader").addEventListener("click", () => {
+  if (typeof noteReader.close === "function") {
+    noteReader.close();
   } else {
-    reader.removeAttribute("open");
-  }
-
-  document.body.style.overflow = "";
-  currentNote = null;
-}
-
-$("closeNoteReader").addEventListener("click", closeNote);
-
-reader.addEventListener("click", (event) => {
-  if (event.target === reader) closeNote();
-});
-
-reader.addEventListener("close", () => {
-  document.body.style.overflow = "";
-  currentNote = null;
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && reader.open) {
-    document.body.style.overflow = "";
+    noteReader.removeAttribute("open");
   }
 });
 
-/* ---------------- MY STUDY NOTES ---------------- */
+noteReader.addEventListener("click", (event) => {
+  if (event.target === noteReader) {
+    noteReader.close();
+  }
+});
 
 function renderNotes() {
-  const notes = getNotes().filter((note) => {
-    return String(note.subject || "").trim().toLowerCase() ===
-      subject.trim().toLowerCase();
-  });
-
+  const notes = getNotes().filter(matchesSubject);
   const list = $("notesList");
+
   list.innerHTML = "";
   $("notesEmpty").hidden = notes.length > 0;
 
-  if (!notes.length) return;
-
-  // Notes with a unit are grouped by that unit.
-  // Notes without a unit remain visible under "Other Notes".
-  const groups = new Map();
-
   notes.forEach((note) => {
-    const unit = getNoteUnit(note) || "Other Notes";
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "item-card note-card";
 
-    if (!groups.has(unit)) groups.set(unit, []);
-    groups.get(unit).push(note);
-  });
+    const title = document.createElement("h3");
+    title.textContent = note.title || "Untitled note";
 
-  groups.forEach((groupNotes, unit) => {
-    const group = document.createElement("div");
-    group.className = "note-group";
+    const content = getNoteContent(note);
+    const preview = document.createElement("p");
+    preview.textContent = content
+      ? content.slice(0, 150) + (content.length > 150 ? "…" : "")
+      : "No note content available.";
 
-    if (unit !== "Other Notes") {
-      const heading = document.createElement("h3");
-      heading.className = "unit-heading";
-      heading.textContent = unit;
-      group.appendChild(heading);
-    }
+    const hint = document.createElement("span");
+    hint.className = "note-open-hint";
+    hint.textContent = "Open full note →";
 
-    groupNotes.forEach((note) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "note-title-button";
+    card.append(title, preview, hint);
+    card.addEventListener("click", () => openNote(note));
 
-      const title = document.createElement("span");
-      title.textContent = note.title || "Untitled note";
-
-      const icon = document.createElement("span");
-      icon.className = "open-icon";
-      icon.textContent = "↗";
-      icon.setAttribute("aria-hidden", "true");
-
-      button.append(title, icon);
-      button.addEventListener("click", () => openNote(note));
-
-      group.appendChild(button);
-    });
-
-    list.appendChild(group);
+    list.appendChild(card);
   });
 }
 
-/* ---------------- SUBJECT PROGRESS ---------------- */
+/* ---------- Important questions ---------- */
 
-function getProgress() {
-  const value = readJSON(PROGRESS_KEY, {});
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? value
-    : {};
-}
-
-function clampProgress(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return 0;
-  return Math.max(0, Math.min(100, number));
-}
-
-function updateProgressDisplay(value) {
-  const progressValue = clampProgress(value);
-
-  $("progressInput").value = progressValue;
-  $("progressLabel").textContent = `${progressValue}%`;
-  $("progressBar").style.width = `${progressValue}%`;
-  $("progressTrack").setAttribute("aria-valuenow", progressValue);
-}
-
-function renderProgress() {
-  const progress = getProgress();
-  updateProgressDisplay(progress[subject] ?? 0);
-}
-
-function changeProgress(amount) {
-  const current = Number($("progressInput").value) || 0;
-  updateProgressDisplay(clampProgress(current + amount));
-}
-
-$("progressInput").addEventListener("input", () => {
-  updateProgressDisplay($("progressInput").value);
-});
-
-$("decreaseProgress").addEventListener("click", () => {
-  changeProgress(-5);
-});
-
-$("increaseProgress").addEventListener("click", () => {
-  changeProgress(5);
-});
-
-$("saveProgress").addEventListener("click", () => {
-  const progress = getProgress();
-  progress[subject] = clampProgress($("progressInput").value);
-
-  try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
-    updateProgressDisplay(progress[subject]);
-    showStatus("Subject progress saved.");
-  } catch (error) {
-    showStatus("Could not save progress in this browser.");
-  }
-});
-
-/* ---------------- IMPORTANT QUESTIONS ---------------- */
-
-function getQuestions() {
+function getAllQuestions() {
   const data = readJSON(QUESTIONS_KEY, {});
   return data && typeof data === "object" && !Array.isArray(data)
     ? data
@@ -233,7 +121,7 @@ function getQuestions() {
 }
 
 function renderQuestions() {
-  const allQuestions = getQuestions();
+  const allQuestions = getAllQuestions();
   const questions = Array.isArray(allQuestions[subject])
     ? allQuestions[subject]
     : [];
@@ -246,31 +134,29 @@ function renderQuestions() {
     const li = document.createElement("li");
 
     const text = document.createElement("span");
-    text.textContent = String(question);
+    text.textContent = question;
 
     const remove = document.createElement("button");
     remove.type = "button";
-    remove.className = "primary-button";
+    remove.className = "primary-button delete-button";
     remove.textContent = "Delete";
 
     remove.addEventListener("click", () => {
-      const latest = getQuestions();
-      const latestQuestions = Array.isArray(latest[subject])
+      if (!confirm("Delete this important question?")) return;
+
+      const latest = getAllQuestions();
+      const current = Array.isArray(latest[subject])
         ? latest[subject]
         : [];
 
-      latest[subject] = latestQuestions.filter((_, i) => i !== index);
+      latest[subject] = current.filter((_, i) => i !== index);
+      localStorage.setItem(QUESTIONS_KEY, JSON.stringify(latest));
 
-      try {
-        localStorage.setItem(QUESTIONS_KEY, JSON.stringify(latest));
-        renderQuestions();
-        showStatus("Question deleted.");
-      } catch {
-        showStatus("Could not delete this question.");
-      }
+      renderQuestions();
+      showStatus("Question deleted.");
     });
 
-    li.append(text, document.createElement("br"), remove);
+    li.append(text, remove);
     list.appendChild(li);
   });
 }
@@ -281,29 +167,26 @@ $("questionForm").addEventListener("submit", (event) => {
   const question = $("questionInput").value.trim();
   if (!question) return;
 
-  const allQuestions = getQuestions();
+  const allQuestions = getAllQuestions();
+
   if (!Array.isArray(allQuestions[subject])) {
     allQuestions[subject] = [];
   }
 
   allQuestions[subject].push(question);
+  localStorage.setItem(QUESTIONS_KEY, JSON.stringify(allQuestions));
 
-  try {
-    localStorage.setItem(QUESTIONS_KEY, JSON.stringify(allQuestions));
-    $("questionInput").value = "";
-    renderQuestions();
-    showStatus("Important question added.");
-  } catch {
-    showStatus("Could not save this question.");
-  }
+  $("questionInput").value = "";
+  renderQuestions();
+  showStatus("Important question added.");
 });
 
-/* ---------------- UPLOADED STUDY MATERIALS ---------------- */
+/* ---------- Study materials: IndexedDB ---------- */
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
     if (!("indexedDB" in window)) {
-      reject(new Error("This browser does not support local file storage."));
+      reject(new Error("Your browser does not support local file storage."));
       return;
     }
 
@@ -318,7 +201,9 @@ function openDatabase() {
     };
 
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onerror = () => reject(
+      request.error || new Error("Could not open material storage.")
+    );
   });
 }
 
@@ -330,14 +215,14 @@ async function getMaterials() {
     const request = transaction.objectStore(STORE_NAME).getAll();
 
     request.onsuccess = () => {
-      const files = request.result.filter((file) => file.subject === subject);
+      const files = Array.isArray(request.result) ? request.result : [];
       db.close();
-      resolve(files);
+      resolve(files.filter(file => file.subject === subject));
     };
 
     request.onerror = () => {
       db.close();
-      reject(request.error);
+      reject(request.error || new Error("Could not read materials."));
     };
   });
 }
@@ -365,7 +250,12 @@ async function saveMaterial(file) {
 
     transaction.onerror = () => {
       db.close();
-      reject(transaction.error);
+      reject(transaction.error || new Error("Could not save the material."));
+    };
+
+    transaction.onabort = () => {
+      db.close();
+      reject(transaction.error || new Error("Material saving was cancelled."));
     };
   });
 }
@@ -384,7 +274,7 @@ async function deleteMaterial(id) {
 
     transaction.onerror = () => {
       db.close();
-      reject(transaction.error);
+      reject(transaction.error || new Error("Could not delete the material."));
     };
   });
 }
@@ -405,11 +295,7 @@ async function renderMaterials() {
       title.textContent = material.name;
 
       const info = document.createElement("p");
-      info.textContent =
-        `${(Number(material.size || 0) / 1024).toFixed(1)} KB`;
-
-      const actions = document.createElement("div");
-      actions.className = "item-actions";
+      info.textContent = `${(material.size / 1024).toFixed(1)} KB`;
 
       const download = document.createElement("button");
       download.type = "button";
@@ -431,29 +317,32 @@ async function renderMaterials() {
 
       const remove = document.createElement("button");
       remove.type = "button";
-      remove.className = "secondary-button";
+      remove.className = "primary-button delete-button";
       remove.textContent = "Delete";
 
       remove.addEventListener("click", async () => {
-        if (!confirm(`Delete ${material.name}?`)) return;
+        if (!confirm(`Delete "${material.name}"?`)) return;
 
         try {
           await deleteMaterial(material.id);
           await renderMaterials();
           showStatus("Material deleted.");
-        } catch {
-          showStatus("Could not delete this material.");
+        } catch (error) {
+          showStatus(error.message || "Could not delete this material.");
         }
       });
 
+      const actions = document.createElement("div");
+      actions.className = "material-actions";
       actions.append(download, remove);
+
       card.append(title, info, actions);
       list.appendChild(card);
     });
   } catch (error) {
     $("materialsEmpty").hidden = false;
     $("materialsEmpty").textContent =
-      error.message || "Could not load study materials.";
+      error.message || "Could not load materials.";
   }
 }
 
@@ -464,7 +353,7 @@ $("materialForm").addEventListener("submit", async (event) => {
   const file = fileInput.files[0];
 
   if (!file) {
-    showStatus("Choose a file first.");
+    showStatus("Please choose a file first.");
     return;
   }
 
@@ -478,7 +367,7 @@ $("materialForm").addEventListener("submit", async (event) => {
   }
 });
 
-/* ---------------- STUDY PLANNER ACTIVITIES ---------------- */
+/* ---------- Study Planner activities ---------- */
 
 function renderActivities() {
   const plannerKeys = [
@@ -494,9 +383,22 @@ function renderActivities() {
     if (Array.isArray(data)) activities.push(...data);
   });
 
+  // Avoid showing the same item more than once if it appears in multiple keys.
+  const seen = new Set();
+
   const filtered = activities.filter((item) => {
-    return String(item.subject || "").trim().toLowerCase() ===
-      subject.trim().toLowerCase();
+    if (!matchesSubject(item)) return false;
+
+    const identity = JSON.stringify([
+      item.id ?? "",
+      item.title ?? "",
+      item.date ?? "",
+      item.category ?? ""
+    ]);
+
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
   });
 
   const list = $("activitiesList");
@@ -508,26 +410,28 @@ function renderActivities() {
     card.className = "item-card";
 
     const title = document.createElement("h3");
-    title.textContent = item.title || "Study activity";
+    title.textContent = item.title || item.name || "Study activity";
 
-    const info = document.createElement("p");
-    info.textContent = [
+    const details = [
       item.category || "",
       item.date || "",
       item.completed ? "Completed" : ""
-    ].filter(Boolean).join(" • ");
+    ].filter(Boolean);
+
+    const info = document.createElement("p");
+    info.textContent = details.length
+      ? details.join(" • ")
+      : "Scheduled study activity";
 
     card.append(title, info);
     list.appendChild(card);
   });
 }
 
-/* ---------------- REFRESH SAVED DATA ---------------- */
+/* ---------- Refresh when saved data changes ---------- */
 
 window.addEventListener("storage", (event) => {
   if (!event.key || event.key === NOTES_KEY) renderNotes();
-  if (!event.key || event.key === PROGRESS_KEY) renderProgress();
-  if (!event.key || event.key === QUESTIONS_KEY) renderQuestions();
 
   if (
     !event.key ||
@@ -537,10 +441,13 @@ window.addEventListener("storage", (event) => {
   ) {
     renderActivities();
   }
+
+  if (!event.key || event.key === QUESTIONS_KEY) renderQuestions();
 });
 
+/* ---------- Initial page load ---------- */
+
 renderNotes();
-renderProgress();
 renderQuestions();
 renderActivities();
 renderMaterials();
