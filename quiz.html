@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,12 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lumina AI Coach - AI Quiz Generator</title>
 <link rel="stylesheet" href="quiz.css">
+
 <style>
   .settings-link {
     text-decoration: none;
     color: inherit;
     cursor: pointer;
   }
+
   .avatar-default {
     width: 40px;
     height: 40px;
@@ -23,19 +26,20 @@
     text-decoration: none;
     cursor: pointer;
   }
+
   .avatar-default svg {
     width: 28px;
     height: 28px;
     fill: currentColor;
   }
 
-  /* Saved subject buttons */
   .saved-subjects {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 10px;
   }
+
   .subject-chip {
     border: 1px solid #b9d8bf;
     background: #eef6ee;
@@ -46,410 +50,1438 @@
     cursor: pointer;
     font-family: inherit;
   }
+
   .subject-chip.selected {
     background: #2f5d3a;
     color: #ffffff;
     border-color: #2f5d3a;
   }
+
   .subject-hint {
     font-size: 13px;
     color: #6b7a6e;
     margin-top: 8px;
   }
+
   .subject-hint a {
     color: #2f5d3a;
     font-weight: 600;
   }
+
+  /* Quiz history */
+  .history-panel {
+    display: none;
+    margin-top: 15px;
+    padding: 16px;
+    border: 1px solid #d7e6d9;
+    border-radius: 12px;
+    background: #fbfcfa;
+  }
+
+  .history-panel.show {
+    display: block;
+  }
+
+  .history-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #e1eae1;
+  }
+
+  .history-item:last-child {
+    border-bottom: none;
+  }
+
+  .history-item strong {
+    display: block;
+    color: #37563b;
+    margin-bottom: 5px;
+  }
+
+  .history-item p {
+    margin: 4px 0;
+    font-size: 13px;
+    color: #58665a;
+  }
+
+  .history-empty {
+    font-size: 14px;
+    color: #6b7a6e;
+    line-height: 1.6;
+  }
+
+  .demo-notice {
+    display: none;
+    padding: 12px 14px;
+    margin: 14px 0;
+    background: #eef6ee;
+    border: 1px solid #cfe3d1;
+    border-radius: 10px;
+    color: #37563b;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .demo-notice.show {
+    display: block;
+  }
+
+  .insights-card .insight p {
+    margin-bottom: 5px;
+  }
+
+  .weak-note {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .history-clear-btn {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: 1px solid #b9d8bf;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #2f5d3a;
+    cursor: pointer;
+  }
+
+  .history-btn {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 </style>
 </head>
+
 <body>
 
-  <!-- Header -->
-  <header class="navbar">
-    <div class="logo">🎓 Lumina AI Coach</div>
-    <nav class="nav-links">
-      <a href="dashboard.html">Dashboard</a>
-      <a href="concept-explainer.html">AI Concept Explainer</a>
-      <a href="quiz.html" class="active">AI Quiz Generator</a>
-      <a href="my-notes.html">My Notes</a>
-      <a href="study-planner.html">Study Plan</a>
-      <a href="dashboard.html">Progress Tracker</a>
-    </nav>
-    <div class="nav-icons">
-      <a href="profile-setup.html" class="settings-link" title="Settings"><span class="icon">⚙️</span></a>
-      <a href="profile-setup.html" class="avatar-default" title="Profile">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-      </a>
-    </div>
-  </header>
+<!-- Header -->
+<header class="navbar">
+  <div class="logo">🎓 Lumina AI Coach</div>
 
-  <div class="page-title">AI Quiz Generator ✨</div>
+  <nav class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="concept-explainer.html">AI Concept Explainer</a>
+    <a href="quiz.html" class="active">AI Quiz Generator</a>
+    <a href="my-notes.html">My Notes</a>
+    <a href="study-planner.html">Study Plan</a>
+    <a href="dashboard.html">Progress Tracker</a>
+  </nav>
 
-  <main class="container">
+  <div class="nav-icons">
+    <a href="profile-setup.html" class="settings-link" title="Settings">
+      <span class="icon">⚙️</span>
+    </a>
 
-    <div class="main-col">
+    <a href="profile-setup.html" class="avatar-default" title="Profile">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+      </svg>
+    </a>
+  </div>
+</header>
 
-      <!-- Config Card -->
-      <section class="card config-card">
-        <div class="config-top">
-          <p class="config-desc">Create targeted assessments to pinpoint your learning gaps and accelerate mastery.</p>
-          <button class="history-btn">🕘 History</button>
-        </div>
+<div class="page-title">AI Quiz Generator ✨</div>
 
-        <div class="form-group">
-          <label for="subjectArea">Subject</label>
-          <input type="text" id="subjectArea" placeholder="Type your subject, e.g., Data Structures" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false">
-          <div class="saved-subjects" id="savedSubjects"></div>
-          <div class="subject-hint" id="subjectHint"></div>
-        </div>
+<main class="container">
 
-        <div class="form-group">
-          <label for="specificTopic">Specific Topic (Optional)</label>
-          <input type="text" id="specificTopic" placeholder="e.g., Binary Trees" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false">
-        </div>
+  <div class="main-col">
 
-        <div class="difficulty-block">
-          <label>Target Difficulty</label>
-          <div class="gauge-wrap">
-            <div class="gauge-label" id="gaugeLabel">MEDIUM</div>
-            <svg viewBox="0 0 200 110" class="gauge">
-              <path d="M10 100 A90 90 0 0 1 68 20" class="zone zone-easy" data-diff="easy"></path>
-              <path d="M68 20 A90 90 0 0 1 132 20" class="zone zone-med" data-diff="medium"></path>
-              <path d="M132 20 A90 90 0 0 1 190 100" class="zone zone-hard" data-diff="hard"></path>
-            </svg>
-            <div class="needle" id="needle"></div>
-            <div class="gauge-endlabels">
-              <span class="end-label" data-diff="easy">EASY</span>
-              <span class="end-label" data-diff="hard">HARD</span>
-            </div>
+    <!-- Quiz Settings -->
+    <section class="card config-card">
+
+      <div class="config-top">
+        <p class="config-desc">
+          Create targeted assessments to pinpoint your learning gaps and accelerate mastery.
+        </p>
+        <button class="history-btn" id="historyBtn" type="button">
+          🕘 History
+        </button>
+      </div>
+
+      <!-- Saved Quiz History -->
+      <div class="history-panel" id="historyPanel">
+        <h3>📚 Quiz History</h3>
+        <div id="historyList"></div>
+        <button class="history-clear-btn" id="clearHistoryBtn" type="button">
+          Clear History
+        </button>
+      </div>
+
+      <!-- Subject -->
+      <div class="form-group">
+        <label for="subjectArea">Subject</label>
+
+        <input
+          type="text"
+          id="subjectArea"
+          placeholder="Type your subject, e.g., Data Structures"
+          data-gramm="false"
+          data-gramm_editor="false"
+          data-enable-grammarly="false"
+        >
+
+        <div class="saved-subjects" id="savedSubjects"></div>
+        <div class="subject-hint" id="subjectHint"></div>
+      </div>
+
+      <!-- Topic -->
+      <div class="form-group">
+        <label for="specificTopic">Specific Topic (Optional)</label>
+
+        <input
+          type="text"
+          id="specificTopic"
+          placeholder="e.g., Binary Trees"
+          data-gramm="false"
+          data-gramm_editor="false"
+          data-enable-grammarly="false"
+        >
+      </div>
+
+      <!-- Difficulty -->
+      <div class="difficulty-block">
+        <label>Target Difficulty</label>
+
+        <div class="gauge-wrap">
+          <div class="gauge-label" id="gaugeLabel">MEDIUM</div>
+
+          <svg viewBox="0 0 200 110" class="gauge">
+            <path d="M10 100 A90 90 0 0 1 68 20"
+                  class="zone zone-easy" data-diff="easy"></path>
+
+            <path d="M68 20 A90 90 0 0 1 132 20"
+                  class="zone zone-med" data-diff="medium"></path>
+
+            <path d="M132 20 A90 90 0 0 1 190 100"
+                  class="zone zone-hard" data-diff="hard"></path>
+          </svg>
+
+          <div class="needle" id="needle"></div>
+
+          <div class="gauge-endlabels">
+            <span class="end-label" data-diff="easy">EASY</span>
+            <span class="end-label" data-diff="hard">HARD</span>
           </div>
         </div>
+      </div>
 
-        <div class="questions-block">
-          <label>Questions</label>
-          <div class="count-buttons">
-            <button class="count-btn" data-count="5">5</button>
-            <button class="count-btn active" data-count="10">10</button>
-            <button class="count-btn" data-count="15">15</button>
-          </div>
+      <!-- Question Count -->
+      <div class="questions-block">
+        <label>Questions</label>
+
+        <div class="count-buttons">
+          <button class="count-btn" data-count="5" type="button">5</button>
+          <button class="count-btn active" data-count="10" type="button">10</button>
+          <button class="count-btn" data-count="15" type="button">15</button>
         </div>
+      </div>
 
-        <button class="generate-btn" id="generateBtn">✨ Generate Quiz</button>
-      </section>
+      <div class="demo-notice" id="demoNotice" role="status"></div>
 
-      <!-- Quiz Question Card -->
-      <section class="card quiz-card" id="quizSection" hidden>
-        <div class="quiz-meta">
-          <span class="q-count"><span id="qNum">1</span> of <span id="qTotal">10</span></span>
-          <span class="timer">⏱ <span id="timerDisplay">14:59</span></span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
+      <button class="generate-btn" id="generateBtn" type="button">
+        ✨ Generate Quiz
+      </button>
 
-        <h2 class="question-text" id="questionText"></h2>
+    </section>
 
-        <div class="options" id="optionsContainer"></div>
+    <!-- Quiz Questions -->
+    <section class="card quiz-card" id="quizSection" hidden>
 
-        <div class="quiz-nav">
-          <button class="prev-btn" id="prevBtn">‹ Previous</button>
-          <button class="next-btn" id="nextBtn">Next ›</button>
-        </div>
-      </section>
+      <div class="quiz-meta">
+        <span class="q-count">
+          <span id="qNum">1</span> of <span id="qTotal">10</span>
+        </span>
 
+        <span class="timer">
+          ⏱ <span id="timerDisplay">14:59</span>
+        </span>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <h2 class="question-text" id="questionText"></h2>
+
+      <div class="options" id="optionsContainer"></div>
+
+      <div class="quiz-nav">
+        <button class="prev-btn" id="prevBtn" type="button">
+          ‹ Previous
+        </button>
+
+        <button class="next-btn" id="nextBtn" type="button">
+          Next ›
+        </button>
+      </div>
+
+      <div id="quizResult" hidden></div>
+    </section>
+
+  </div>
+
+  <!-- AI Insights -->
+  <aside class="card insights-card">
+
+    <h3>🧠 AI Insights</h3>
+
+    <p class="insights-intro" id="insightsIntro">
+      Based on your recent performance, Lumina suggests focusing on these areas.
+    </p>
+
+    <div class="insight strong">
+      <span class="dot green"></span>
+      <div>
+        <strong>Strong Topic</strong>
+        <p id="strongTopic">Probability Basics</p>
+      </div>
     </div>
 
-    <!-- AI Insights Sidebar -->
-    <aside class="card insights-card">
-      <h3>🧠 AI Insights</h3>
-      <p class="insights-intro">Based on your recent performance, Lumina suggests focusing on these areas.</p>
+    <div class="insight practice">
+      <span class="dot yellow"></span>
+      <div>
+        <strong>Needs Practice</strong>
+        <p id="practiceTopic">Conditional Probability</p>
+      </div>
+    </div>
 
-      <div class="insight strong">
-        <span class="dot green"></span>
-        <div>
-          <strong>Strong Topic</strong>
-          <p>Probability Basics</p>
+    <div class="insight weak">
+      <span class="dot red"></span>
+      <div>
+        <strong>Weak Topic</strong>
+        <p id="weakTopic">Bayes' Theorem Applications</p>
+        <div class="weak-note" id="weakNote">
+          Complete a quiz to get suggestions based on your answers.
         </div>
       </div>
+    </div>
 
-      <div class="insight practice">
-        <span class="dot yellow"></span>
-        <div>
-          <strong>Needs Practice</strong>
-          <p>Conditional Probability</p>
-        </div>
-      </div>
+    <button class="practice-btn" id="practiceBtn" type="button">
+      ⟳ Practice Weak Topics
+    </button>
 
-      <div class="insight weak">
-        <span class="dot red"></span>
-        <div>
-          <strong>Weak Topic</strong>
-          <p>Bayes' Theorem Applications</p>
-          <div class="weak-note">Struggling with identifying prior probabilities from word problems.</div>
-        </div>
-      </div>
+    <button class="review-btn" id="reviewBtn" type="button">
+      📖 Review Concepts
+    </button>
 
-      <button class="practice-btn">⟳ Practice Weak Topics</button>
-      <button class="review-btn">📖 Review Concepts</button>
-    </aside>
+  </aside>
 
-  </main>
+</main>
 
 <script>
-  // ---------- STATE ----------
-  let selectedDifficulty = "medium";
-  let selectedCount = 10;
-  let quiz = [];
-  let currentIndex = 0;
-  let selectedAnswers = [];
-  let timerInterval = null;
-  let secondsLeft = 0;
+/* =====================================================
+   LUMINA AI QUIZ GENERATOR
+   AI quiz generation, demo questions, quiz history,
+   timer, score tracking and learning insights.
+===================================================== */
 
-  // ---------- SAVED PROFILE (subjects from profile page) ----------
-  let profile = null;
-  try {
-    profile = JSON.parse(localStorage.getItem("luminaProfile") || "null");
-  } catch (err) {
-    profile = null;
+/* ---------- STATE ---------- */
+
+let selectedDifficulty = "medium";
+let selectedCount = 10;
+let quiz = [];
+let currentIndex = 0;
+let selectedAnswers = [];
+let timerInterval = null;
+let secondsLeft = 0;
+let quizStartedAt = null;
+let quizSubject = "";
+let quizTopic = "";
+let isDemoQuiz = false;
+let quizFinished = false;
+
+const HISTORY_KEY = "luminaQuizHistory";
+
+const subjectInput = document.getElementById("subjectArea");
+const topicInput = document.getElementById("specificTopic");
+const savedSubjectsBox = document.getElementById("savedSubjects");
+const subjectHint = document.getElementById("subjectHint");
+const generateBtn = document.getElementById("generateBtn");
+const quizSection = document.getElementById("quizSection");
+const optionsContainer = document.getElementById("optionsContainer");
+const questionText = document.getElementById("questionText");
+const qNum = document.getElementById("qNum");
+const progressFill = document.getElementById("progressFill");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const historyBtn = document.getElementById("historyBtn");
+const historyPanel = document.getElementById("historyPanel");
+const historyList = document.getElementById("historyList");
+const demoNotice = document.getElementById("demoNotice");
+
+const letters = ["A", "B", "C", "D", "E"];
+
+/* ---------- PROFILE ---------- */
+
+let profile = null;
+
+try {
+  profile = JSON.parse(localStorage.getItem("luminaProfile") || "null");
+} catch (error) {
+  profile = null;
+}
+
+/* ---------- SAMPLE DEMO QUESTIONS ---------- */
+/*
+  These questions allow the project to demonstrate a quiz
+  even when the AI API is temporarily unavailable.
+
+  They are sample questions, not questions generated by AI.
+*/
+
+const demoQuestionBank = [
+
+  {
+    question: "What is the main purpose of an algorithm?",
+    options: [
+      "To solve a problem step by step",
+      "To store pictures only",
+      "To increase screen brightness",
+      "To connect a computer to electricity"
+    ],
+    correctIndex: 0,
+    topic: "Algorithms"
+  },
+
+  {
+    question: "Which data structure follows FIFO?",
+    options: [
+      "Stack",
+      "Queue",
+      "Tree",
+      "Graph"
+    ],
+    correctIndex: 1,
+    topic: "Data Structures"
+  },
+
+  {
+    question: "Which data structure follows LIFO?",
+    options: [
+      "Queue",
+      "Array",
+      "Stack",
+      "Linked list"
+    ],
+    correctIndex: 2,
+    topic: "Data Structures"
+  },
+
+  {
+    question: "What does CPU stand for?",
+    options: [
+      "Central Processing Unit",
+      "Computer Personal Utility",
+      "Central Program User",
+      "Control Power Unit"
+    ],
+    correctIndex: 0,
+    topic: "Computer Fundamentals"
+  },
+
+  {
+    question: "Which language is commonly used for AI development?",
+    options: [
+      "HTML only",
+      "CSS only",
+      "Python",
+      "Plain text"
+    ],
+    correctIndex: 2,
+    topic: "Artificial Intelligence"
+  },
+
+  {
+    question: "What is the purpose of a database?",
+    options: [
+      "To organize and store data",
+      "To clean a monitor",
+      "To increase keyboard size",
+      "To replace the operating system"
+    ],
+    correctIndex: 0,
+    topic: "Database Management"
+  },
+
+  {
+    question: "Which of these is an operating system?",
+    options: [
+      "HTML",
+      "Windows",
+      "SQL",
+      "JavaScript"
+    ],
+    correctIndex: 1,
+    topic: "Operating Systems"
+  },
+
+  {
+    question: "What does HTML mainly define?",
+    options: [
+      "The structure of a web page",
+      "The computer's battery",
+      "The speed of the processor",
+      "The internet connection"
+    ],
+    correctIndex: 0,
+    topic: "Web Development"
+  },
+
+  {
+    question: "Which technology is mainly used to style web pages?",
+    options: [
+      "SQL",
+      "CSS",
+      "Python",
+      "C"
+    ],
+    correctIndex: 1,
+    topic: "Web Development"
+  },
+
+  {
+    question: "What is machine learning?",
+    options: [
+      "A method that allows systems to learn patterns from data",
+      "A type of computer monitor",
+      "A keyboard layout",
+      "A file compression format"
+    ],
+    correctIndex: 0,
+    topic: "Machine Learning"
+  },
+
+  {
+    question: "Which key is commonly used to remove a character before the cursor?",
+    options: [
+      "Shift",
+      "Backspace",
+      "Caps Lock",
+      "Tab"
+    ],
+    correctIndex: 1,
+    topic: "Computer Fundamentals"
+  },
+
+  {
+    question: "What is the binary representation of decimal 2?",
+    options: [
+      "01",
+      "10",
+      "11",
+      "100"
+    ],
+    correctIndex: 1,
+    topic: "Number Systems"
+  },
+
+  {
+    question: "What is the main purpose of a function in programming?",
+    options: [
+      "To group reusable instructions",
+      "To turn off the computer",
+      "To increase file size",
+      "To replace all variables"
+    ],
+    correctIndex: 0,
+    topic: "Programming"
+  },
+
+  {
+    question: "Which of these is a valid example of a relational database system?",
+    options: [
+      "MySQL",
+      "Paint",
+      "Calculator",
+      "Notepad"
+    ],
+    correctIndex: 0,
+    topic: "Database Management"
+  },
+
+  {
+    question: "What is debugging?",
+    options: [
+      "Finding and fixing errors in a program",
+      "Designing a keyboard",
+      "Deleting every file",
+      "Increasing screen resolution"
+    ],
+    correctIndex: 0,
+    topic: "Programming"
   }
+];
 
-  const subjectInput = document.getElementById("subjectArea");
-  const savedSubjectsBox = document.getElementById("savedSubjects");
-  const subjectHint = document.getElementById("subjectHint");
+/* ---------- SAVED SUBJECTS ---------- */
 
-  function highlightChips() {
-    const current = subjectInput.value.trim().toLowerCase();
-    document.querySelectorAll(".subject-chip").forEach(chip => {
-      chip.classList.toggle("selected", chip.textContent.toLowerCase() === current);
-    });
-  }
+function highlightChips() {
+  const current = subjectInput.value.trim().toLowerCase();
 
-  function renderSavedSubjects() {
-    savedSubjectsBox.innerHTML = "";
+  document.querySelectorAll(".subject-chip").forEach(chip => {
+    chip.classList.toggle(
+      "selected",
+      chip.textContent.trim().toLowerCase() === current
+    );
+  });
+}
 
-    if (profile && Array.isArray(profile.subjects) && profile.subjects.length > 0) {
-      profile.subjects.forEach(subj => {
-        const chip = document.createElement("button");
-        chip.type = "button";
-        chip.className = "subject-chip";
-        chip.textContent = subj;
-        chip.addEventListener("click", () => {
-          subjectInput.value = subj;
-          highlightChips();
-        });
-        savedSubjectsBox.appendChild(chip);
+function renderSavedSubjects() {
+  savedSubjectsBox.innerHTML = "";
+
+  if (
+    profile &&
+    Array.isArray(profile.subjects) &&
+    profile.subjects.length > 0
+  ) {
+    profile.subjects.forEach(subject => {
+      const chip = document.createElement("button");
+
+      chip.type = "button";
+      chip.className = "subject-chip";
+      chip.textContent = subject;
+
+      chip.addEventListener("click", () => {
+        subjectInput.value = subject;
+        highlightChips();
       });
-      subjectHint.textContent = "Tap one of your subjects, or type a new one.";
-    } else {
-      subjectHint.innerHTML = 'Tip: add your subjects in your <a href="profile-setup.html">profile</a> and they will show here.';
-    }
-  }
 
-  subjectInput.addEventListener("input", highlightChips);
-  renderSavedSubjects();
-
-  // ---------- DIFFICULTY GAUGE ----------
-  const needle = document.getElementById("needle");
-  const gaugeLabel = document.getElementById("gaugeLabel");
-  const diffAngles = { easy: -55, medium: 0, hard: 55 };
-
-  function setDifficulty(diff) {
-    selectedDifficulty = diff;
-    needle.style.transform = `rotate(${diffAngles[diff]}deg)`;
-    gaugeLabel.textContent = diff.toUpperCase();
-    document.querySelectorAll(".zone").forEach(z => {
-      z.classList.toggle("zone-active", z.dataset.diff === diff);
+      savedSubjectsBox.appendChild(chip);
     });
-    document.querySelectorAll(".end-label").forEach(l => {
-      l.classList.toggle("active", l.dataset.diff === diff);
-    });
+
+    subjectHint.textContent =
+      "Tap one of your subjects, or type a new one.";
+  } else {
+    subjectHint.innerHTML =
+      'Tip: add your subjects in your <a href="profile-setup.html">profile</a> and they will show here.';
   }
+}
+
+subjectInput.addEventListener("input", highlightChips);
+renderSavedSubjects();
+
+/* ---------- DIFFICULTY GAUGE ---------- */
+
+const needle = document.getElementById("needle");
+const gaugeLabel = document.getElementById("gaugeLabel");
+
+const diffAngles = {
+  easy: -55,
+  medium: 0,
+  hard: 55
+};
+
+function setDifficulty(difficulty) {
+  selectedDifficulty = difficulty;
+
+  needle.style.transform =
+    `rotate(${diffAngles[difficulty]}deg)`;
+
+  gaugeLabel.textContent = difficulty.toUpperCase();
 
   document.querySelectorAll(".zone").forEach(zone => {
-    zone.addEventListener("click", () => setDifficulty(zone.dataset.diff));
-  });
-  document.querySelectorAll(".end-label").forEach(label => {
-    label.addEventListener("click", () => setDifficulty(label.dataset.diff));
-  });
-  setDifficulty("medium");
-
-  // ---------- QUESTION COUNT ----------
-  document.querySelectorAll(".count-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".count-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedCount = parseInt(btn.dataset.count, 10);
-    });
-  });
-
-  // ---------- QUIZ GENERATION (real AI) ----------
-  function parseQuiz(text) {
-    const cleaned = text.replace(/```json|```/g, "").trim();
-    const start = cleaned.indexOf("[");
-    const end = cleaned.lastIndexOf("]");
-    if (start === -1 || end === -1) throw new Error("No quiz found");
-
-    const arr = JSON.parse(cleaned.slice(start, end + 1));
-    return arr.filter(q =>
-      q && q.question &&
-      Array.isArray(q.options) && q.options.length >= 2 &&
-      Number.isInteger(q.correctIndex) &&
-      q.correctIndex >= 0 && q.correctIndex < q.options.length
+    zone.classList.toggle(
+      "zone-active",
+      zone.dataset.diff === difficulty
     );
+  });
+
+  document.querySelectorAll(".end-label").forEach(label => {
+    label.classList.toggle(
+      "active",
+      label.dataset.diff === difficulty
+    );
+  });
+}
+
+document.querySelectorAll(".zone").forEach(zone => {
+  zone.addEventListener("click", () => {
+    setDifficulty(zone.dataset.diff);
+  });
+});
+
+document.querySelectorAll(".end-label").forEach(label => {
+  label.addEventListener("click", () => {
+    setDifficulty(label.dataset.diff);
+  });
+});
+
+setDifficulty("medium");
+
+/* ---------- QUESTION COUNT ---------- */
+
+document.querySelectorAll(".count-btn").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".count-btn").forEach(item => {
+      item.classList.remove("active");
+    });
+
+    button.classList.add("active");
+    selectedCount = parseInt(button.dataset.count, 10);
+  });
+});
+
+/* ---------- AI RESPONSE PARSER ---------- */
+
+function parseQuiz(text) {
+  const cleaned = text
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  const start = cleaned.indexOf("[");
+  const end = cleaned.lastIndexOf("]");
+
+  if (start === -1 || end === -1) {
+    throw new Error("No quiz found in AI response.");
   }
 
-  async function generateQuizWithAI(count, subject, topic, difficulty) {
-    const degree = profile && profile.course ? profile.course : "";
-    const audience = degree ? `college students studying ${degree}` : "college students";
-    const focus = topic ? `${topic} (subject: ${subject})` : subject;
+  const array = JSON.parse(
+    cleaned.slice(start, end + 1)
+  );
 
-    const prompt = `Create a multiple choice quiz for ${audience}. Subject and topic: "${focus}". Difficulty: ${difficulty}. Number of questions: ${count}.
+  return array.filter(question =>
+    question &&
+    typeof question.question === "string" &&
+    Array.isArray(question.options) &&
+    question.options.length >= 2 &&
+    Number.isInteger(question.correctIndex) &&
+    question.correctIndex >= 0 &&
+    question.correctIndex < question.options.length
+  );
+}
+
+/* ---------- REAL AI QUIZ GENERATION ---------- */
+
+async function generateQuizWithAI(
+  count,
+  subject,
+  topic,
+  difficulty
+) {
+  const degree =
+    profile && profile.course ? profile.course : "";
+
+  const audience = degree
+    ? `college students studying ${degree}`
+    : "college students";
+
+  const focus = topic
+    ? `${topic} (subject: ${subject})`
+    : subject;
+
+  const prompt = `
+Create a multiple choice quiz for ${audience}.
+
+Subject and topic: "${focus}"
+Difficulty: ${difficulty}
+Number of questions: ${count}
+
 Rules:
-1. Each question must have exactly 4 options.
-2. Only one option is correct. The other 3 must be believable but wrong.
-3. Use simple, clear words. Keep each question and option short.
-4. Put the correct answer in different positions across questions.
-5. Reply with ONLY a JSON array. No extra words, no markdown.
-Use exactly this format:
-[{"question":"...","options":["...","...","...","..."],"correctIndex":0}]
-correctIndex is the position of the correct option (0, 1, 2, or 3).`;
+1. Create exactly ${count} questions.
+2. Each question must have exactly 4 options.
+3. Only one option must be correct.
+4. The other options must be believable but incorrect.
+5. Use simple, clear words.
+6. Keep each question and option short.
+7. Place correct answers in different positions.
+8. Return only a valid JSON array.
+9. Do not include markdown or extra explanation.
 
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: prompt })
-    });
-    const data = await response.json();
-    if (!data.reply) throw new Error("No reply");
+Use this format:
+[
+  {
+    "question": "Question text",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctIndex": 0
+  }
+]
 
-    const questions = parseQuiz(data.reply);
-    if (questions.length === 0) throw new Error("Empty quiz");
-    return questions;
+correctIndex must be 0, 1, 2, or 3.
+`;
+
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      message: prompt
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error("AI API request failed.");
   }
 
-  // ---------- GENERATE BUTTON ----------
-  const generateBtn = document.getElementById("generateBtn");
+  const data = await response.json();
 
-  generateBtn.addEventListener("click", async () => {
-    const subject = subjectInput.value.trim();
-    const topic = document.getElementById("specificTopic").value.trim();
+  if (!data.reply) {
+    throw new Error("The AI returned no quiz.");
+  }
 
-    if (!subject && !topic) {
-      alert("Please type a subject or tap one of your subjects.");
-      return;
+  const questions = parseQuiz(data.reply);
+
+  if (questions.length === 0) {
+    throw new Error("The AI returned no valid questions.");
+  }
+
+  return questions.slice(0, count).map(question => ({
+    question: question.question,
+    options: question.options,
+    correctIndex: question.correctIndex,
+    topic: topic || subject
+  }));
+}
+
+/* ---------- DEMO QUIZ GENERATION ---------- */
+
+function generateDemoQuiz(count, subject, topic) {
+  const combinedText = `${subject} ${topic}`.toLowerCase();
+
+  let bank = [...demoQuestionBank];
+
+  /*
+    If the selected topic is about programming, computer
+    science or databases, use the matching sample questions.
+    Otherwise, the available general computer science
+    questions are used for the demonstration.
+  */
+
+  const matching = bank.filter(question => {
+    const questionTopic = question.topic.toLowerCase();
+
+    return combinedText
+      .split(/[\s,]+/)
+      .filter(word => word.length > 3)
+      .some(word => questionTopic.includes(word));
+  });
+
+  if (matching.length >= 5) {
+    bank = matching;
+  }
+
+  const shuffled = bank
+    .map(question => ({
+      ...question,
+      options: [...question.options]
+    }))
+    .sort(() => Math.random() - 0.5);
+
+  const selected = [];
+
+  while (selected.length < count) {
+    const question = shuffled[selected.length % shuffled.length];
+
+    selected.push({
+      ...question,
+      options: [...question.options]
+    });
+  }
+
+  return selected;
+}
+
+/* ---------- GENERATE BUTTON ---------- */
+
+generateBtn.addEventListener("click", async () => {
+  const subject = subjectInput.value.trim();
+  const topic = topicInput.value.trim();
+
+  if (!subject && !topic) {
+    alert("Please type a subject or tap one of your saved subjects.");
+    return;
+  }
+
+  clearInterval(timerInterval);
+
+  generateBtn.disabled = true;
+  generateBtn.textContent = "⏳ Generating...";
+
+  demoNotice.classList.remove("show");
+  demoNotice.textContent = "";
+
+  quizSubject = subject || topic;
+  quizTopic = topic || subject;
+  quizStartedAt = new Date().toISOString();
+  quizFinished = false;
+  isDemoQuiz = false;
+
+  try {
+    quiz = await generateQuizWithAI(
+      selectedCount,
+      quizSubject,
+      topic,
+      selectedDifficulty
+    );
+
+    if (quiz.length === 0) {
+      throw new Error("No questions were generated.");
     }
 
-    generateBtn.disabled = true;
-    generateBtn.textContent = "⏳ Generating...";
+  } catch (error) {
+    /*
+      The AI request may fail if the API is unavailable,
+      offline, or incorrectly configured. In that case,
+      use sample questions so the page can still be
+      demonstrated during the project review.
+    */
 
-    try {
-      quiz = await generateQuizWithAI(selectedCount, subject || topic, topic, selectedDifficulty);
-    } catch (error) {
-      alert("Sorry, the quiz could not be made. Please try again in a moment.");
-      generateBtn.disabled = false;
-      generateBtn.textContent = "✨ Generate Quiz";
-      return;
+    quiz = generateDemoQuiz(
+      selectedCount,
+      quizSubject,
+      topic
+    );
+
+    isDemoQuiz = true;
+
+    demoNotice.textContent =
+      "📝 Demo mode: sample questions are being used because the AI quiz could not be generated. Sample results may not match your selected subject.";
+
+    demoNotice.classList.add("show");
+  }
+
+  generateBtn.disabled = false;
+  generateBtn.textContent = "✨ Generate Quiz";
+
+  selectedAnswers = new Array(quiz.length).fill(null);
+  currentIndex = 0;
+
+  document.getElementById("qTotal").textContent = quiz.length;
+
+  quizSection.hidden = false;
+
+  renderQuestion();
+  startTimer(15 * 60 - 1);
+
+  quizSection.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+});
+
+/* ---------- RENDER QUESTION ---------- */
+
+function renderQuestion() {
+  if (!quiz.length || !quiz[currentIndex]) {
+    return;
+  }
+
+  const question = quiz[currentIndex];
+
+  qNum.textContent = currentIndex + 1;
+
+  questionText.textContent = question.question;
+
+  progressFill.style.width =
+    `${((currentIndex + 1) / quiz.length) * 100}%`;
+
+  optionsContainer.innerHTML = "";
+
+  question.options.forEach((option, index) => {
+    const optionElement = document.createElement("div");
+
+    optionElement.className = "option";
+
+    if (selectedAnswers[currentIndex] === index) {
+      optionElement.classList.add("selected");
     }
 
-    generateBtn.disabled = false;
-    generateBtn.textContent = "✨ Generate Quiz";
+    const dot = document.createElement("span");
+    dot.className = "radio-dot";
 
-    selectedAnswers = new Array(quiz.length).fill(null);
-    currentIndex = 0;
+    const wrapper = document.createElement("div");
 
-    document.getElementById("qTotal").textContent = quiz.length;
-    document.getElementById("quizSection").hidden = false;
-    document.getElementById("quizSection").scrollIntoView({ behavior: "smooth" });
+    const letter = document.createElement("strong");
+    letter.textContent = letters[index] || String(index + 1);
 
-    startTimer(15 * 60 - 1); // 14:59 style countdown
+    const optionText = document.createElement("p");
+    optionText.textContent = option;
+
+    wrapper.appendChild(letter);
+    wrapper.appendChild(optionText);
+
+    optionElement.appendChild(dot);
+    optionElement.appendChild(wrapper);
+
+    optionElement.addEventListener("click", () => {
+      if (quizFinished) return;
+
+      selectedAnswers[currentIndex] = index;
+      renderQuestion();
+    });
+
+    optionsContainer.appendChild(optionElement);
+  });
+
+  prevBtn.disabled = currentIndex === 0;
+
+  nextBtn.disabled = false;
+
+  nextBtn.textContent =
+    currentIndex === quiz.length - 1
+      ? "Finish ✓"
+      : "Next ›";
+}
+
+/* ---------- PREVIOUS / NEXT ---------- */
+
+prevBtn.addEventListener("click", () => {
+  if (currentIndex > 0 && !quizFinished) {
+    currentIndex--;
     renderQuestion();
+  }
+});
+
+nextBtn.addEventListener("click", () => {
+  if (!quiz.length || quizFinished) {
+    return;
+  }
+
+  if (currentIndex < quiz.length - 1) {
+    currentIndex++;
+    renderQuestion();
+  } else {
+    finishQuiz("completed");
+  }
+});
+
+/* ---------- TIMER ---------- */
+
+function startTimer(seconds) {
+  clearInterval(timerInterval);
+
+  secondsLeft = seconds;
+  updateTimerDisplay();
+
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+
+    if (secondsLeft <= 0) {
+      secondsLeft = 0;
+      clearInterval(timerInterval);
+      updateTimerDisplay();
+
+      if (!quizFinished && quiz.length > 0) {
+        finishQuiz("time-up");
+      }
+
+      return;
+    }
+
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const minutes = Math.floor(secondsLeft / 60);
+  const seconds = secondsLeft % 60;
+
+  document.getElementById("timerDisplay").textContent =
+    `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+/* ---------- SAVE QUIZ HISTORY ---------- */
+
+function getQuizHistory() {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(HISTORY_KEY) || "[]"
+    );
+
+    return Array.isArray(saved) ? saved : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveQuizResult(result) {
+  const history = getQuizHistory();
+
+  history.unshift(result);
+
+  /*
+    Keep the latest 50 results to prevent local storage
+    from growing indefinitely.
+  */
+
+  try {
+    localStorage.setItem(
+      HISTORY_KEY,
+      JSON.stringify(history.slice(0, 50))
+    );
+  } catch (error) {
+    console.warn("Quiz history could not be saved.", error);
+  }
+}
+
+/* ---------- FINISH QUIZ ---------- */
+
+function finishQuiz(reason) {
+  if (quizFinished || !quiz.length) {
+    return;
+  }
+
+  quizFinished = true;
+
+  clearInterval(timerInterval);
+
+  const score = selectedAnswers.filter(
+    (answer, index) =>
+      answer === quiz[index].correctIndex
+  ).length;
+
+  const unanswered = selectedAnswers.filter(
+    answer => answer === null
+  ).length;
+
+  const percentage = Math.round(
+    (score / quiz.length) * 100
+  );
+
+  const result = {
+    id: Date.now(),
+    subject: quizSubject,
+    topic: quizTopic,
+    difficulty: selectedDifficulty,
+    total: quiz.length,
+    score: score,
+    percentage: percentage,
+    unanswered: unanswered,
+    demo: isDemoQuiz,
+    date: new Date().toISOString(),
+    questions: quiz.map((question, index) => ({
+      question: question.question,
+      topic: question.topic || quizTopic,
+      selectedAnswer: selectedAnswers[index],
+      correctIndex: question.correctIndex,
+      correct: selectedAnswers[index] === question.correctIndex
+    }))
+  };
+
+  saveQuizResult(result);
+
+  updateInsights();
+  renderHistory();
+  showQuizResult(result, reason);
+
+  nextBtn.disabled = true;
+  prevBtn.disabled = true;
+}
+
+/* ---------- SHOW RESULT ---------- */
+
+function showQuizResult(result, reason) {
+  const oldResult = document.getElementById("quizResult");
+
+  oldResult.hidden = false;
+  oldResult.innerHTML = "";
+
+  const heading = document.createElement("h3");
+  heading.textContent =
+    reason === "time-up"
+      ? "⏰ Time's Up!"
+      : "🎉 Quiz Completed!";
+
+  const scoreText = document.createElement("p");
+  scoreText.textContent =
+    `Your score: ${result.score} out of ${result.total} (${result.percentage}%).`;
+
+  const unansweredText = document.createElement("p");
+  unansweredText.textContent =
+    `Unanswered questions: ${result.unanswered}.`;
+
+  const feedback = document.createElement("p");
+
+  if (result.percentage >= 80) {
+    feedback.textContent =
+      "Excellent work! Keep practising to maintain your progress.";
+  } else if (result.percentage >= 50) {
+    feedback.textContent =
+      "Good effort! Review the questions you missed and try again.";
+  } else {
+    feedback.textContent =
+      "Keep learning! Review the concepts and practise again.";
+  }
+
+  const note = document.createElement("p");
+
+  note.textContent = result.demo
+    ? "This result came from the sample demo quiz."
+    : "This result came from your AI-generated quiz.";
+
+  const retryButton = document.createElement("button");
+  retryButton.type = "button";
+  retryButton.className = "generate-btn";
+  retryButton.textContent = "↻ Try Another Quiz";
+
+  retryButton.addEventListener("click", () => {
+    oldResult.hidden = true;
+    quizSection.hidden = true;
+
+    nextBtn.disabled = false;
+
+    generateBtn.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
   });
 
-  // ---------- RENDER QUESTION ----------
-  const optionsContainer = document.getElementById("optionsContainer");
-  const questionText = document.getElementById("questionText");
-  const qNum = document.getElementById("qNum");
-  const progressFill = document.getElementById("progressFill");
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
-  const letters = ["A", "B", "C", "D", "E"];
+  oldResult.appendChild(heading);
+  oldResult.appendChild(scoreText);
+  oldResult.appendChild(unansweredText);
+  oldResult.appendChild(feedback);
+  oldResult.appendChild(note);
+  oldResult.appendChild(retryButton);
 
-  function renderQuestion() {
-    const q = quiz[currentIndex];
-    qNum.textContent = currentIndex + 1;
-    questionText.textContent = q.question;
-    progressFill.style.width = `${((currentIndex + 1) / quiz.length) * 100}%`;
+  oldResult.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest"
+  });
+}
 
-    optionsContainer.innerHTML = "";
-    q.options.forEach((opt, i) => {
-      const div = document.createElement("div");
-      div.className = "option";
-      if (selectedAnswers[currentIndex] === i) div.classList.add("selected");
+/* ---------- HISTORY PANEL ---------- */
 
-      const dot = document.createElement("span");
-      dot.className = "radio-dot";
+historyBtn.addEventListener("click", () => {
+  historyPanel.classList.toggle("show");
 
-      const wrap = document.createElement("div");
-      const letter = document.createElement("strong");
-      letter.textContent = letters[i];
-      const text = document.createElement("p");
-      text.textContent = opt;
-      wrap.appendChild(letter);
-      wrap.appendChild(text);
+  if (historyPanel.classList.contains("show")) {
+    renderHistory();
 
-      div.appendChild(dot);
-      div.appendChild(wrap);
+    historyPanel.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest"
+    });
+  }
+});
 
-      div.addEventListener("click", () => {
-        selectedAnswers[currentIndex] = i;
-        renderQuestion();
-      });
-      optionsContainer.appendChild(div);
+function renderHistory() {
+  const history = getQuizHistory();
+
+  historyList.innerHTML = "";
+
+  if (history.length === 0) {
+    const empty = document.createElement("p");
+
+    empty.className = "history-empty";
+    empty.textContent =
+      "No completed quizzes yet. Generate and finish a quiz to see your results here.";
+
+    historyList.appendChild(empty);
+    return;
+  }
+
+  history.slice(0, 10).forEach(result => {
+    const item = document.createElement("div");
+    item.className = "history-item";
+
+    const title = document.createElement("strong");
+    title.textContent =
+      `${result.subject || "Quiz"} — ${result.score}/${result.total}`;
+
+    const percentage = document.createElement("p");
+    percentage.textContent =
+      `Score: ${result.percentage}% | Difficulty: ${result.difficulty}`;
+
+    const date = document.createElement("p");
+
+    const parsedDate = new Date(result.date);
+
+    date.textContent =
+      `Date: ${Number.isNaN(parsedDate.getTime())
+        ? "Unknown"
+        : parsedDate.toLocaleString()}`;
+
+    const mode = document.createElement("p");
+
+    mode.textContent = result.demo
+      ? "Mode: Sample demo quiz"
+      : "Mode: AI-generated quiz";
+
+    item.appendChild(title);
+    item.appendChild(percentage);
+    item.appendChild(date);
+    item.appendChild(mode);
+
+    historyList.appendChild(item);
+  });
+}
+
+/* ---------- CLEAR HISTORY ---------- */
+
+document.getElementById("clearHistoryBtn")
+  .addEventListener("click", () => {
+    const confirmed = confirm(
+      "Are you sure you want to clear your saved quiz history?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    localStorage.removeItem(HISTORY_KEY);
+
+    renderHistory();
+    updateInsights();
+  });
+
+/* ---------- LEARNING INSIGHTS ---------- */
+
+function updateInsights() {
+  const history = getQuizHistory();
+
+  const strongTopicElement =
+    document.getElementById("strongTopic");
+
+  const practiceTopicElement =
+    document.getElementById("practiceTopic");
+
+  const weakTopicElement =
+    document.getElementById("weakTopic");
+
+  const weakNoteElement =
+    document.getElementById("weakNote");
+
+  const insightsIntro =
+    document.getElementById("insightsIntro");
+
+  if (history.length === 0) {
+    strongTopicElement.textContent = "No results yet";
+    practiceTopicElement.textContent = "Complete a quiz";
+    weakTopicElement.textContent = "Not identified yet";
+
+    weakNoteElement.textContent =
+      "Complete a quiz to get suggestions based on your answers.";
+
+    insightsIntro.textContent =
+      "Your learning insights will update after you complete a quiz.";
+
+    return;
+  }
+
+  const topicStats = {};
+
+  history.forEach(result => {
+    (result.questions || []).forEach(question => {
+      const topic =
+        question.topic ||
+        result.topic ||
+        result.subject ||
+        "General";
+
+      if (!topicStats[topic]) {
+        topicStats[topic] = {
+          correct: 0,
+          total: 0
+        };
+      }
+
+      topicStats[topic].total++;
+
+      if (question.correct) {
+        topicStats[topic].correct++;
+      }
+    });
+  });
+
+  const topics = Object.entries(topicStats)
+    .map(([name, stats]) => ({
+      name,
+      total: stats.total,
+      correct: stats.correct,
+      percentage: Math.round(
+        (stats.correct / stats.total) * 100
+      )
+    }))
+    .sort((a, b) => b.percentage - a.percentage);
+
+  if (topics.length === 0) {
+    insightsIntro.textContent =
+      "Complete another quiz to build your learning insights.";
+
+    return;
+  }
+
+  const strongest = topics[0];
+
+  const weakest = topics[topics.length - 1];
+
+  const middle = topics.length > 2
+    ? topics[Math.floor(topics.length / 2)]
+    : weakest;
+
+  strongTopicElement.textContent = strongest.name;
+  practiceTopicElement.textContent = middle.name;
+  weakTopicElement.textContent = weakest.name;
+
+  weakNoteElement.textContent =
+    `Your recorded accuracy for ${weakest.name} is ${weakest.percentage}%. Review this topic and practise more questions.`;
+
+  insightsIntro.textContent =
+    `Insights are based on your saved quiz answers across ${history.length} completed quiz${history.length === 1 ? "" : "zes"}.`;
+}
+
+/* ---------- PRACTISE WEAK TOPIC ---------- */
+
+document.getElementById("practiceBtn")
+  .addEventListener("click", () => {
+    const weakTopic =
+      document.getElementById("weakTopic").textContent.trim();
+
+    if (
+      !weakTopic ||
+      weakTopic === "Not identified yet"
+    ) {
+      alert("Complete a quiz first to identify a topic to practise.");
+      return;
+    }
+
+    topicInput.value = weakTopic;
+
+    if (
+      !subjectInput.value.trim() &&
+      profile &&
+      Array.isArray(profile.subjects) &&
+      profile.subjects.length > 0
+    ) {
+      subjectInput.value = profile.subjects[0];
+      highlightChips();
+    }
+
+    subjectInput.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
     });
 
-    prevBtn.disabled = currentIndex === 0;
-    nextBtn.textContent = currentIndex === quiz.length - 1 ? "Finish ✓" : "Next ›";
-  }
-
-  prevBtn.addEventListener("click", () => {
-    if (currentIndex > 0) {
-      currentIndex--;
-      renderQuestion();
-    }
+    subjectInput.focus();
   });
 
-  nextBtn.addEventListener("click", () => {
-    if (currentIndex < quiz.length - 1) {
-      currentIndex++;
-      renderQuestion();
-    } else {
-      clearInterval(timerInterval);
-      const score = selectedAnswers.filter((a, i) => a === quiz[i].correctIndex).length;
-      alert(`Quiz complete! You scored ${score} out of ${quiz.length}.`);
+/* ---------- REVIEW CONCEPTS ---------- */
+
+document.getElementById("reviewBtn")
+  .addEventListener("click", () => {
+    const topic =
+      document.getElementById("weakTopic").textContent.trim();
+
+    const subject = subjectInput.value.trim();
+
+    const query = topic && topic !== "Not identified yet"
+      ? topic
+      : subject;
+
+    if (query) {
+      localStorage.setItem("luminaReviewTopic", query);
     }
+
+    window.location.href = "concept-explainer.html";
   });
 
-  // ---------- TIMER ----------
-  function startTimer(seconds) {
-    clearInterval(timerInterval);
-    secondsLeft = seconds;
-    updateTimerDisplay();
-    timerInterval = setInterval(() => {
-      secondsLeft--;
-      if (secondsLeft <= 0) {
-        clearInterval(timerInterval);
-        secondsLeft = 0;
-      }
-      updateTimerDisplay();
-    }, 1000);
-  }
+/* ---------- INITIAL PAGE SETUP ---------- */
 
-  function updateTimerDisplay() {
-    const m = Math.floor(secondsLeft / 60);
-    const s = secondsLeft % 60;
-    document.getElementById("timerDisplay").textContent =
-      `${m}:${s.toString().padStart(2, "0")}`;
-  }
+renderHistory();
+updateInsights();
 </script>
 
 </body>
