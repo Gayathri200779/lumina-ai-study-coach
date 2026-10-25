@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#eefdef">
-
   <title>Lumina AI Study Coach - Subject</title>
 
   <link rel="stylesheet" href="subject.css">
@@ -25,9 +24,7 @@
     <section class="subject-header">
       <p class="eyebrow">YOUR LEARNING SPACE</p>
       <h1 id="subjectTitle">My Subject</h1>
-      <p id="subjectDescription">
-        Keep your notes, materials and important questions organized.
-      </p>
+      <p id="subjectDescription">Organize your notes, materials and study activities.</p>
     </section>
 
     <p id="pageStatus" class="page-status" role="status" aria-live="polite"></p>
@@ -37,16 +34,14 @@
         <div>
           <p class="eyebrow">YOUR NOTES</p>
           <h2>My Study Notes</h2>
-          <p class="section-description">Select a note to read its complete content.</p>
+          <p class="section-description">Choose a note title to read the complete note.</p>
         </div>
-        <a href="my-notes.html" class="primary-button manage-notes-button">
-          Manage Notes
-        </a>
+        <a href="my-notes.html" class="primary-button">Manage Notes</a>
       </div>
 
-      <div id="notesList" class="items-grid"></div>
+      <div id="notesList" class="notes-groups"></div>
       <p id="notesEmpty" class="empty-message" hidden>
-        No notes saved for this subject yet. Create a note in My Notes and select this subject.
+        No notes have been saved for this subject yet. Create notes in My Notes and choose this subject.
       </p>
     </section>
 
@@ -55,9 +50,7 @@
         <div>
           <p class="eyebrow">YOUR SCHEDULE</p>
           <h2>Study Planner Activities</h2>
-          <p class="section-description">
-            Activities from your planner that belong to this subject.
-          </p>
+          <p class="section-description">Activities linked to this subject.</p>
         </div>
         <a href="study-planner.html" class="secondary-button">Open Study Planner</a>
       </div>
@@ -71,11 +64,9 @@
     <section class="section-card">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">KEEP YOUR RESOURCES</p>
+          <p class="eyebrow">YOUR RESOURCES</p>
           <h2>Study Materials</h2>
-          <p class="section-description">
-            Upload PDFs, class notes and other study files for this subject.
-          </p>
+          <p class="section-description">Upload and keep study files for this subject.</p>
         </div>
       </div>
 
@@ -91,7 +82,7 @@
       </form>
 
       <p class="small-note">
-        Materials are stored in this browser on this device, not in cloud storage.
+        Files are stored in this browser on this device.
       </p>
 
       <div id="materialsList" class="items-grid"></div>
@@ -103,11 +94,9 @@
     <section class="section-card">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">EXAM PREPARATION</p>
+          <p class="eyebrow">REVISION</p>
           <h2>Important Questions</h2>
-          <p class="section-description">
-            Keep important questions for revision in one place.
-          </p>
+          <p class="section-description">Save important questions for later revision.</p>
         </div>
       </div>
 
@@ -132,18 +121,22 @@
     </section>
   </main>
 
-  <dialog id="noteReader" class="note-reader-dialog" aria-labelledby="readerTitle">
-    <div class="reader-header">
-      <div>
-        <p class="eyebrow">MY STUDY NOTE</p>
-        <h2 id="readerTitle">Note title</h2>
-      </div>
-      <button id="closeNoteReader" type="button" class="close-reader" aria-label="Close note">×</button>
-    </div>
+  <!-- Full-screen note reader -->
+  <div id="noteReader" class="note-reader" role="dialog"
+       aria-modal="true" aria-labelledby="readerTitle" hidden>
+    <header class="reader-header">
+      <a href="dashboard.html" class="reader-logo">🌿 Lumina AI</a>
+      <button id="closeNoteReader" type="button" class="close-reader"
+              aria-label="Close note">✕ Close Note</button>
+    </header>
 
-    <p id="readerSubject" class="reader-subject"></p>
-    <div id="readerContent" class="reader-content"></div>
-  </dialog>
+    <main class="reader-main">
+      <p id="readerUnit" class="reader-unit"></p>
+      <p id="readerSubject" class="reader-subject"></p>
+      <h1 id="readerTitle">Note title</h1>
+      <div id="readerContent" class="reader-content"></div>
+    </main>
+  </div>
 
   <footer class="footer">
     <a href="dashboard.html" class="footer-logo">🌿 Lumina AI Coach</a>
