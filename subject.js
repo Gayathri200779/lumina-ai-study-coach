@@ -12,10 +12,10 @@ const subject = params.get("subject") || "My Subject";
 
 $("subjectTitle").textContent = subject;
 $("subjectDescription").textContent =
-  `Keep your ${subject} notes, materials, activities and important questions organized.`;
+  `Organize your ${subject} notes, materials and study activities.`;
 document.title = `${subject} | Lumina AI Study Coach`;
 
-/* ---------- Shared helpers ---------- */
+/* ---------- Common helpers ---------- */
 
 function readJSON(key, fallback) {
   try {
@@ -28,6 +28,11 @@ function readJSON(key, fallback) {
 
 function showStatus(message) {
   $("pageStatus").textContent = message;
+}
+
+function matchesSubject(item) {
+  return String(item.subject || "").trim().toLowerCase() ===
+    subject.trim().toLowerCase();
 }
 
 function getNotes() {
@@ -43,14 +48,80 @@ function getNoteContent(note) {
     "";
 }
 
-function matchesSubject(item) {
-  return String(item.subject || "").trim().toLowerCase() ===
-    subject.trim().toLowerCase();
+/* ---------- Notes grouped by optional unit ---------- */
+
+function getUnitName(note) {
+  // Supports optional unit fields without requiring students to enter one.
+  return String(
+    note.unit ?? note.unitName ?? note.unitTitle ?? ""
+  ).trim();
 }
 
-/* ---------- Read complete note ---------- */
+function renderNotes() {
+  const notes = getNotes().filter(matchesSubject);
+  const container = $("notesList");
 
-const noteReader = $("noteReader");
+  container.replaceChildren();
+  $("notesEmpty").hidden = notes.length > 0;
+
+  if (!notes.length) return;
+
+  // Group notes by unit. Notes without a unit stay in an unlabelled group.
+  const groups = new Map();
+
+  notes.forEach((note) => {
+    const unit = getUnitName(note);
+    const key = unit || "";
+
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(note);
+  });
+
+  // Put named units first, in their existing order.
+  // Notes without a unit are shown last, without an "Other Unit" heading.
+  const groupEntries = [...groups.entries()].sort((a, b) => {
+    if (!a[0]) return 1;
+    if (!b[0]) return -1;
+    return 0;
+  });
+
+  groupEntries.forEach(([unit, unitNotes]) => {
+    const group = document.createElement("section");
+    group.className = "unit-group";
+
+    if (unit) {
+      const heading = document.createElement("h3");
+      heading.className = "unit-heading";
+      heading.textContent = unit;
+      group.appendChild(heading);
+    }
+
+    const titleList = document.createElement("div");
+    titleList.className = "note-title-list";
+
+    unitNotes.forEach((note) => {
+      const titleButton = document.createElement("button");
+      titleButton.type = "button";
+      titleButton.className = "note-title-button";
+      titleButton.textContent = note.title || "Untitled note";
+      titleButton.setAttribute(
+        "aria-label",
+        `Open note: ${note.title || "Untitled note"}`
+      );
+
+      titleButton.addEventListener("click", () => openNote(note));
+
+      titleList.appendChild(titleButton);
+    });
+
+    group.appendChild(titleList);
+    container.appendChild(group);
+  });
+}
+
+/* ---------- Full-screen note reader ---------- */
+
+let previousBodyOverflow = "";
 
 function openNote(note) {
   $("readerTitle").textContent = note.title || "Untitled note";
@@ -58,58 +129,37 @@ function openNote(note) {
   $("readerContent").textContent =
     getNoteContent(note) || "This note has no content yet.";
 
-  if (typeof noteReader.showModal === "function") {
-    noteReader.showModal();
-  } else {
-    noteReader.setAttribute("open", "");
-  }
+  const unit = getUnitName(note);
+  const unitElement = $("readerUnit");
+
+  unitElement.textContent = unit;
+  unitElement.hidden = !unit;
+
+  previousBodyOverflow = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+  document.body.classList.add("reader-open");
+
+  $("noteReader").hidden = false;
+  $("closeNoteReader").focus();
+
+  // Start each note at the top of the full-screen reader.
+  $("noteReader").scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
-$("closeNoteReader").addEventListener("click", () => {
-  if (typeof noteReader.close === "function") {
-    noteReader.close();
-  } else {
-    noteReader.removeAttribute("open");
-  }
-});
-
-noteReader.addEventListener("click", (event) => {
-  if (event.target === noteReader) {
-    noteReader.close();
-  }
-});
-
-function renderNotes() {
-  const notes = getNotes().filter(matchesSubject);
-  const list = $("notesList");
-
-  list.innerHTML = "";
-  $("notesEmpty").hidden = notes.length > 0;
-
-  notes.forEach((note) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "item-card note-card";
-
-    const title = document.createElement("h3");
-    title.textContent = note.title || "Untitled note";
-
-    const content = getNoteContent(note);
-    const preview = document.createElement("p");
-    preview.textContent = content
-      ? content.slice(0, 150) + (content.length > 150 ? "…" : "")
-      : "No note content available.";
-
-    const hint = document.createElement("span");
-    hint.className = "note-open-hint";
-    hint.textContent = "Open full note →";
-
-    card.append(title, preview, hint);
-    card.addEventListener("click", () => openNote(note));
-
-    list.appendChild(card);
-  });
+function closeNote() {
+  $("noteReader").hidden = true;
+  document.body.classList.remove("reader-open");
+  document.body.style.overflow = previousBodyOverflow;
 }
+
+$("closeNoteReader").addEventListener("click", closeNote);
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !$("noteReader").hidden) {
+    closeNote();
+  }
+});
 
 /* ---------- Important questions ---------- */
 
@@ -127,7 +177,7 @@ function renderQuestions() {
     : [];
 
   const list = $("questionsList");
-  list.innerHTML = "";
+  list.replaceChildren();
   $("questionsEmpty").hidden = questions.length > 0;
 
   questions.forEach((question, index) => {
@@ -164,7 +214,9 @@ function renderQuestions() {
 $("questionForm").addEventListener("submit", (event) => {
   event.preventDefault();
 
-  const question = $("questionInput").value.trim();
+  const input = $("questionInput");
+  const question = input.value.trim();
+
   if (!question) return;
 
   const allQuestions = getAllQuestions();
@@ -176,7 +228,7 @@ $("questionForm").addEventListener("submit", (event) => {
   allQuestions[subject].push(question);
   localStorage.setItem(QUESTIONS_KEY, JSON.stringify(allQuestions));
 
-  $("questionInput").value = "";
+  input.value = "";
   renderQuestions();
   showStatus("Important question added.");
 });
@@ -217,7 +269,7 @@ async function getMaterials() {
     request.onsuccess = () => {
       const files = Array.isArray(request.result) ? request.result : [];
       db.close();
-      resolve(files.filter(file => file.subject === subject));
+      resolve(files.filter((file) => file.subject === subject));
     };
 
     request.onerror = () => {
@@ -281,7 +333,7 @@ async function deleteMaterial(id) {
 
 async function renderMaterials() {
   const list = $("materialsList");
-  list.innerHTML = "";
+  list.replaceChildren();
 
   try {
     const materials = await getMaterials();
@@ -383,7 +435,6 @@ function renderActivities() {
     if (Array.isArray(data)) activities.push(...data);
   });
 
-  // Avoid showing the same item more than once if it appears in multiple keys.
   const seen = new Set();
 
   const filtered = activities.filter((item) => {
@@ -402,7 +453,7 @@ function renderActivities() {
   });
 
   const list = $("activitiesList");
-  list.innerHTML = "";
+  list.replaceChildren();
   $("activitiesEmpty").hidden = filtered.length > 0;
 
   filtered.forEach((item) => {
@@ -428,7 +479,7 @@ function renderActivities() {
   });
 }
 
-/* ---------- Refresh when saved data changes ---------- */
+/* ---------- Refresh data changed on another page ---------- */
 
 window.addEventListener("storage", (event) => {
   if (!event.key || event.key === NOTES_KEY) renderNotes();
@@ -445,7 +496,7 @@ window.addEventListener("storage", (event) => {
   if (!event.key || event.key === QUESTIONS_KEY) renderQuestions();
 });
 
-/* ---------- Initial page load ---------- */
+/* ---------- Initial load ---------- */
 
 renderNotes();
 renderQuestions();
