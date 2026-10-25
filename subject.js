@@ -8,19 +8,16 @@ const DB_NAME = "luminaSubjectMaterials";
 const STORE_NAME = "files";
 
 const $ = (id) => document.getElementById(id);
-
 const params = new URLSearchParams(window.location.search);
-const subject = (params.get("subject") || "My Subject").trim();
+const subject = params.get("subject") || "My Subject";
+
+const reader = $("noteReader");
+let currentNote = null;
 
 $("subjectTitle").textContent = subject;
 $("subjectDescription").textContent =
   `Keep your ${subject} notes, materials, questions and progress organized.`;
-
 document.title = `${subject} | Lumina AI Study Coach`;
-
-/* -------------------------------
-   General helpers
--------------------------------- */
 
 function readJSON(key, fallback) {
   try {
@@ -35,27 +32,19 @@ function showStatus(message) {
   $("pageStatus").textContent = message;
 }
 
-function normalise(value) {
-  return String(value ?? "").trim().toLowerCase();
-}
-
 function getNotes() {
   const notes = readJSON(NOTES_KEY, []);
   return Array.isArray(notes) ? notes : [];
 }
 
 function getNoteContent(note) {
-  const content =
+  return String(
     note.content ??
     note.text ??
     note.noteContent ??
     note.body ??
-    "";
-
-  // Preserve the saved text, line breaks and spacing.
-  return typeof content === "string"
-    ? content
-    : String(content ?? "");
+    ""
+  );
 }
 
 function getNoteUnit(note) {
@@ -67,283 +56,177 @@ function getNoteUnit(note) {
   ).trim();
 }
 
-function getNoteTitle(note) {
-  return String(note.title || "Untitled note").trim();
-}
-
-/* -------------------------------
-   Full note viewer
--------------------------------- */
-
-function createNoteDialog() {
-  const dialog = document.createElement("dialog");
-  dialog.className = "note-dialog";
-  dialog.setAttribute("aria-labelledby", "noteDialogTitle");
-
-  const inner = document.createElement("div");
-  inner.className = "note-dialog-inner";
-
-  const header = document.createElement("div");
-  header.className = "note-dialog-header";
-
-  const title = document.createElement("h2");
-  title.id = "noteDialogTitle";
-
-  const unit = document.createElement("p");
-  unit.className = "note-dialog-unit";
-
-  const content = document.createElement("div");
-  content.className = "note-dialog-content";
-
-  const footer = document.createElement("div");
-  footer.className = "note-dialog-footer";
-
-  const close = document.createElement("button");
-  close.type = "button";
-  close.className = "primary-button";
-  close.textContent = "Close";
-  close.addEventListener("click", () => dialog.close());
-
-  header.append(title, unit);
-  footer.appendChild(close);
-  inner.append(header, content, footer);
-  dialog.appendChild(inner);
-  document.body.appendChild(dialog);
-
-  // Close when the user clicks the dark backdrop.
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) {
-      dialog.close();
-    }
-  });
-
-  return { dialog, title, unit, content };
-}
-
-const noteViewer = createNoteDialog();
+/* ---------------- FULL-SCREEN NOTE READER ---------------- */
 
 function openNote(note) {
-  noteViewer.title.textContent = getNoteTitle(note);
+  currentNote = note;
 
-  const unitName = getNoteUnit(note);
+  $("readerTitle").textContent = note.title || "Untitled note";
+  $("readerUnit").textContent = getNoteUnit(note);
+  $("readerUnit").hidden = !getNoteUnit(note);
 
-  noteViewer.unit.textContent = unitName
-    ? unitName
-    : "No unit assigned";
+  // textContent preserves the saved text and line breaks safely.
+  $("noteReaderContent").textContent = getNoteContent(note);
 
-  // textContent safely displays the actual saved text.
-  // Newlines and spaces are preserved by the CSS.
-  noteViewer.content.textContent =
-    getNoteContent(note) || "This note has no saved content.";
-
-  if (typeof noteViewer.dialog.showModal === "function") {
-    noteViewer.dialog.showModal();
+  if (typeof reader.showModal === "function") {
+    reader.showModal();
   } else {
-    // Fallback for older browsers.
-    alert(
-      `${getNoteTitle(note)}\n\n${getNoteContent(note)}`
-    );
+    reader.setAttribute("open", "");
   }
+
+  document.body.style.overflow = "hidden";
 }
 
-/* -------------------------------
-   Subject notes
--------------------------------- */
-
-function renderNotes() {
-  const allNotes = getNotes();
-
-  const notes = allNotes.filter((note) =>
-    normalise(note.subject) === normalise(subject)
-  );
-
-  const list = $("notesList");
-  list.replaceChildren();
-
-  $("notesEmpty").hidden = notes.length > 0;
-
-  if (notes.length === 0) {
-    return;
+function closeNote() {
+  if (reader.open && typeof reader.close === "function") {
+    reader.close();
+  } else {
+    reader.removeAttribute("open");
   }
 
-  /*
-   * Notes with a unit are grouped together.
-   * Notes without a unit remain available under
-   * "Other Notes"; unit selection is optional.
-   */
+  document.body.style.overflow = "";
+  currentNote = null;
+}
+
+$("closeNoteReader").addEventListener("click", closeNote);
+
+reader.addEventListener("click", (event) => {
+  if (event.target === reader) closeNote();
+});
+
+reader.addEventListener("close", () => {
+  document.body.style.overflow = "";
+  currentNote = null;
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && reader.open) {
+    document.body.style.overflow = "";
+  }
+});
+
+/* ---------------- MY STUDY NOTES ---------------- */
+
+function renderNotes() {
+  const notes = getNotes().filter((note) => {
+    return String(note.subject || "").trim().toLowerCase() ===
+      subject.trim().toLowerCase();
+  });
+
+  const list = $("notesList");
+  list.innerHTML = "";
+  $("notesEmpty").hidden = notes.length > 0;
+
+  if (!notes.length) return;
+
+  // Notes with a unit are grouped by that unit.
+  // Notes without a unit remain visible under "Other Notes".
   const groups = new Map();
 
   notes.forEach((note) => {
-    const unit = getNoteUnit(note);
-    const groupName = unit || "Other Notes";
+    const unit = getNoteUnit(note) || "Other Notes";
 
-    if (!groups.has(groupName)) {
-      groups.set(groupName, []);
-    }
-
-    groups.get(groupName).push(note);
+    if (!groups.has(unit)) groups.set(unit, []);
+    groups.get(unit).push(note);
   });
 
-  // Show numbered units first, then other named units,
-  // and finally notes without a unit.
-  const groupEntries = [...groups.entries()].sort(([a], [b]) => {
-    if (a === "Other Notes") return 1;
-    if (b === "Other Notes") return -1;
+  groups.forEach((groupNotes, unit) => {
+    const group = document.createElement("div");
+    group.className = "note-group";
 
-    const aNumber = a.match(/\d+/);
-    const bNumber = b.match(/\d+/);
-
-    if (aNumber && bNumber) {
-      return Number(aNumber[0]) - Number(bNumber[0]);
+    if (unit !== "Other Notes") {
+      const heading = document.createElement("h3");
+      heading.className = "unit-heading";
+      heading.textContent = unit;
+      group.appendChild(heading);
     }
-
-    if (aNumber) return -1;
-    if (bNumber) return 1;
-
-    return a.localeCompare(b);
-  });
-
-  groupEntries.forEach(([groupName, groupNotes]) => {
-    const group = document.createElement("section");
-    group.className = "unit-group";
-
-    const heading = document.createElement("h3");
-    heading.className = "unit-heading";
-    heading.textContent =
-      groupName === "Other Notes"
-        ? "📄 Other Notes"
-        : `📘 ${groupName}`;
-
-    const noteList = document.createElement("div");
-    noteList.className = "note-list";
 
     groupNotes.forEach((note) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "note-title-button";
 
+      const title = document.createElement("span");
+      title.textContent = note.title || "Untitled note";
+
       const icon = document.createElement("span");
-      icon.className = "note-icon";
-      icon.textContent = "📄";
+      icon.className = "open-icon";
+      icon.textContent = "↗";
       icon.setAttribute("aria-hidden", "true");
 
-      const title = document.createElement("span");
-      title.className = "note-title-text";
-      title.textContent = getNoteTitle(note);
+      button.append(title, icon);
+      button.addEventListener("click", () => openNote(note));
 
-      const arrow = document.createElement("span");
-      arrow.className = "note-open-icon";
-      arrow.textContent = "›";
-      arrow.setAttribute("aria-hidden", "true");
-
-      button.append(icon, title, arrow);
-
-      button.setAttribute(
-        "aria-label",
-        `Open note: ${getNoteTitle(note)}`
-      );
-
-      button.addEventListener("click", () => {
-        openNote(note);
-      });
-
-      noteList.appendChild(button);
+      group.appendChild(button);
     });
 
-    group.append(heading, noteList);
     list.appendChild(group);
   });
 }
 
-/* -------------------------------
-   Subject progress
--------------------------------- */
+/* ---------------- SUBJECT PROGRESS ---------------- */
 
 function getProgress() {
-  const data = readJSON(PROGRESS_KEY, {});
-  return data && typeof data === "object" && !Array.isArray(data)
-    ? data
+  const value = readJSON(PROGRESS_KEY, {});
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value
     : {};
 }
 
 function clampProgress(value) {
   const number = Number(value);
-
-  if (!Number.isFinite(number)) {
-    return 0;
-  }
-
+  if (!Number.isFinite(number)) return 0;
   return Math.max(0, Math.min(100, number));
 }
 
-function saveProgressValue(value, announce = false) {
-  const progress = getProgress();
-  const safeValue = clampProgress(value);
-
-  progress[subject] = safeValue;
-
-  try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
-    showStatus(
-      announce
-        ? "Subject progress saved."
-        : `Progress updated to ${safeValue}%.`
-    );
-  } catch {
-    showStatus("Could not save progress in this browser.");
-  }
-}
-
 function updateProgressDisplay(value) {
-  const safeValue = clampProgress(value);
+  const progressValue = clampProgress(value);
 
-  $("progressInput").value = safeValue;
-  $("progressLabel").textContent = `${safeValue}%`;
-  $("progressBar").style.width = `${safeValue}%`;
-  $("progressTrack").setAttribute("aria-valuenow", safeValue);
-
-  return safeValue;
+  $("progressInput").value = progressValue;
+  $("progressLabel").textContent = `${progressValue}%`;
+  $("progressBar").style.width = `${progressValue}%`;
+  $("progressTrack").setAttribute("aria-valuenow", progressValue);
 }
 
 function renderProgress() {
   const progress = getProgress();
-  const value = clampProgress(progress[subject] ?? 0);
+  updateProgressDisplay(progress[subject] ?? 0);
+}
 
-  updateProgressDisplay(value);
+function changeProgress(amount) {
+  const current = Number($("progressInput").value) || 0;
+  updateProgressDisplay(clampProgress(current + amount));
 }
 
 $("progressInput").addEventListener("input", () => {
-  const value = updateProgressDisplay($("progressInput").value);
-
-  // Save immediately, so the user does not have to
-  // press the Save Progress button every time.
-  saveProgressValue(value);
+  updateProgressDisplay($("progressInput").value);
 });
 
 $("decreaseProgress").addEventListener("click", () => {
-  const current = Number($("progressInput").value);
-  const value = updateProgressDisplay(current - 5);
-  saveProgressValue(value, true);
+  changeProgress(-5);
 });
 
 $("increaseProgress").addEventListener("click", () => {
-  const current = Number($("progressInput").value);
-  const value = updateProgressDisplay(current + 5);
-  saveProgressValue(value, true);
+  changeProgress(5);
 });
 
 $("saveProgress").addEventListener("click", () => {
-  const value = updateProgressDisplay($("progressInput").value);
-  saveProgressValue(value, true);
+  const progress = getProgress();
+  progress[subject] = clampProgress($("progressInput").value);
+
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+    updateProgressDisplay(progress[subject]);
+    showStatus("Subject progress saved.");
+  } catch (error) {
+    showStatus("Could not save progress in this browser.");
+  }
 });
 
-/* -------------------------------
-   Important questions
--------------------------------- */
+/* ---------------- IMPORTANT QUESTIONS ---------------- */
 
 function getQuestions() {
   const data = readJSON(QUESTIONS_KEY, {});
-
   return data && typeof data === "object" && !Array.isArray(data)
     ? data
     : {};
@@ -356,15 +239,14 @@ function renderQuestions() {
     : [];
 
   const list = $("questionsList");
-  list.replaceChildren();
-
+  list.innerHTML = "";
   $("questionsEmpty").hidden = questions.length > 0;
 
   questions.forEach((question, index) => {
     const li = document.createElement("li");
 
     const text = document.createElement("span");
-    text.textContent = question;
+    text.textContent = String(question);
 
     const remove = document.createElement("button");
     remove.type = "button";
@@ -373,19 +255,22 @@ function renderQuestions() {
 
     remove.addEventListener("click", () => {
       const latest = getQuestions();
-
-      latest[subject] = (Array.isArray(latest[subject])
+      const latestQuestions = Array.isArray(latest[subject])
         ? latest[subject]
-        : []
-      ).filter((_, i) => i !== index);
+        : [];
 
-      localStorage.setItem(QUESTIONS_KEY, JSON.stringify(latest));
+      latest[subject] = latestQuestions.filter((_, i) => i !== index);
 
-      renderQuestions();
-      showStatus("Question deleted.");
+      try {
+        localStorage.setItem(QUESTIONS_KEY, JSON.stringify(latest));
+        renderQuestions();
+        showStatus("Question deleted.");
+      } catch {
+        showStatus("Could not delete this question.");
+      }
     });
 
-    li.append(text, document.createTextNode(" "), remove);
+    li.append(text, document.createElement("br"), remove);
     list.appendChild(li);
   });
 }
@@ -394,13 +279,9 @@ $("questionForm").addEventListener("submit", (event) => {
   event.preventDefault();
 
   const question = $("questionInput").value.trim();
-
-  if (!question) {
-    return;
-  }
+  if (!question) return;
 
   const allQuestions = getQuestions();
-
   if (!Array.isArray(allQuestions[subject])) {
     allQuestions[subject] = [];
   }
@@ -413,18 +294,16 @@ $("questionForm").addEventListener("submit", (event) => {
     renderQuestions();
     showStatus("Important question added.");
   } catch {
-    showStatus("Could not save the question.");
+    showStatus("Could not save this question.");
   }
 });
 
-/* -------------------------------
-   Study materials: IndexedDB
--------------------------------- */
+/* ---------------- UPLOADED STUDY MATERIALS ---------------- */
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
     if (!("indexedDB" in window)) {
-      reject(new Error("This browser does not support file storage."));
+      reject(new Error("This browser does not support local file storage."));
       return;
     }
 
@@ -451,12 +330,9 @@ async function getMaterials() {
     const request = transaction.objectStore(STORE_NAME).getAll();
 
     request.onsuccess = () => {
-      const materials = request.result.filter(
-        (file) => normalise(file.subject) === normalise(subject)
-      );
-
+      const files = request.result.filter((file) => file.subject === subject);
       db.close();
-      resolve(materials);
+      resolve(files);
     };
 
     request.onerror = () => {
@@ -491,11 +367,6 @@ async function saveMaterial(file) {
       db.close();
       reject(transaction.error);
     };
-
-    transaction.onabort = () => {
-      db.close();
-      reject(transaction.error || new Error("File saving was cancelled."));
-    };
   });
 }
 
@@ -515,21 +386,15 @@ async function deleteMaterial(id) {
       db.close();
       reject(transaction.error);
     };
-
-    transaction.onabort = () => {
-      db.close();
-      reject(transaction.error || new Error("File deletion was cancelled."));
-    };
   });
 }
 
 async function renderMaterials() {
   const list = $("materialsList");
-  list.replaceChildren();
+  list.innerHTML = "";
 
   try {
     const materials = await getMaterials();
-
     $("materialsEmpty").hidden = materials.length > 0;
 
     materials.forEach((material) => {
@@ -541,7 +406,10 @@ async function renderMaterials() {
 
       const info = document.createElement("p");
       info.textContent =
-        `${(material.size / 1024).toFixed(1)} KB`;
+        `${(Number(material.size || 0) / 1024).toFixed(1)} KB`;
+
+      const actions = document.createElement("div");
+      actions.className = "item-actions";
 
       const download = document.createElement("button");
       download.type = "button";
@@ -563,13 +431,11 @@ async function renderMaterials() {
 
       const remove = document.createElement("button");
       remove.type = "button";
-      remove.className = "primary-button";
+      remove.className = "secondary-button";
       remove.textContent = "Delete";
 
       remove.addEventListener("click", async () => {
-        if (!confirm(`Delete ${material.name}?`)) {
-          return;
-        }
+        if (!confirm(`Delete ${material.name}?`)) return;
 
         try {
           await deleteMaterial(material.id);
@@ -580,39 +446,39 @@ async function renderMaterials() {
         }
       });
 
-      card.append(title, info, download, remove);
+      actions.append(download, remove);
+      card.append(title, info, actions);
       list.appendChild(card);
     });
   } catch (error) {
     $("materialsEmpty").hidden = false;
     $("materialsEmpty").textContent =
-      "Could not load materials. Please check your browser storage.";
-    showStatus(error.message || "Could not load materials.");
+      error.message || "Could not load study materials.";
   }
 }
 
 $("materialForm").addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const file = $("materialFile").files[0];
+  const fileInput = $("materialFile");
+  const file = fileInput.files[0];
 
   if (!file) {
+    showStatus("Choose a file first.");
     return;
   }
 
   try {
     await saveMaterial(file);
-    $("materialFile").value = "";
+    fileInput.value = "";
     await renderMaterials();
-    showStatus("Study material saved in this browser.");
+    showStatus("Study material uploaded to this browser.");
   } catch (error) {
     showStatus(error.message || "Could not save this file.");
   }
 });
 
-/* -------------------------------
-   Study planner activities
--------------------------------- */
+/* ---------------- STUDY PLANNER ACTIVITIES ---------------- */
 
 function renderActivities() {
   const plannerKeys = [
@@ -625,19 +491,16 @@ function renderActivities() {
 
   plannerKeys.forEach((key) => {
     const data = readJSON(key, []);
-
-    if (Array.isArray(data)) {
-      activities.push(...data);
-    }
+    if (Array.isArray(data)) activities.push(...data);
   });
 
-  const filtered = activities.filter(
-    (item) => normalise(item.subject) === normalise(subject)
-  );
+  const filtered = activities.filter((item) => {
+    return String(item.subject || "").trim().toLowerCase() ===
+      subject.trim().toLowerCase();
+  });
 
   const list = $("activitiesList");
-  list.replaceChildren();
-
+  list.innerHTML = "";
   $("activitiesEmpty").hidden = filtered.length > 0;
 
   filtered.forEach((item) => {
@@ -645,12 +508,11 @@ function renderActivities() {
     card.className = "item-card";
 
     const title = document.createElement("h3");
-    title.textContent = item.title || item.task || "Study activity";
+    title.textContent = item.title || "Study activity";
 
     const info = document.createElement("p");
-
     info.textContent = [
-      item.category || item.type || "",
+      item.category || "",
       item.date || "",
       item.completed ? "Completed" : ""
     ].filter(Boolean).join(" • ");
@@ -660,23 +522,22 @@ function renderActivities() {
   });
 }
 
-/* -------------------------------
-   Refresh notes if changed elsewhere
--------------------------------- */
+/* ---------------- REFRESH SAVED DATA ---------------- */
 
 window.addEventListener("storage", (event) => {
-  if (!event.key || event.key === NOTES_KEY) {
-    renderNotes();
-  }
+  if (!event.key || event.key === NOTES_KEY) renderNotes();
+  if (!event.key || event.key === PROGRESS_KEY) renderProgress();
+  if (!event.key || event.key === QUESTIONS_KEY) renderQuestions();
 
-  if (!event.key || event.key === PROGRESS_KEY) {
-    renderProgress();
+  if (
+    !event.key ||
+    event.key === "luminaStudyPlannerItems" ||
+    event.key === "luminaStudyPlannerTasks" ||
+    event.key === "luminaStudyPlannerEvents"
+  ) {
+    renderActivities();
   }
 });
-
-/* -------------------------------
-   Initialise the page
--------------------------------- */
 
 renderNotes();
 renderProgress();
