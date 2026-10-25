@@ -49,6 +49,7 @@ a {
   text-decoration: none;
 }
 
+/* Navigation */
 .navbar {
   display: flex;
   align-items: center;
@@ -103,22 +104,24 @@ a {
   background: #dcefe0;
 }
 
+/* Main page layout */
 .container {
   width: min(1100px, 90%);
   margin: 0 auto;
-  padding: 38px 0 60px;
+  padding: 28px 0 60px;
 }
 
+/* Compact subject heading */
 .subject-header {
-  padding: 30px;
-  margin-bottom: 22px;
+  padding: 18px 24px;
+  margin-bottom: 16px;
   background: linear-gradient(135deg, #e8f8ea, #fbfcfa);
   border: 1px solid var(--border-green);
-  border-radius: 20px;
+  border-radius: 16px;
 }
 
 .eyebrow {
-  margin-bottom: 7px;
+  margin-bottom: 5px;
   color: var(--accent);
   font-size: 11px;
   font-weight: 700;
@@ -127,17 +130,19 @@ a {
 
 .subject-header h1 {
   color: var(--dark-green);
-  font-size: clamp(27px, 4vw, 38px);
-  line-height: 1.3;
+  font-size: clamp(24px, 3vw, 30px);
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
 .subject-header > p:last-child {
-  margin-top: 10px;
+  margin-top: 7px;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
+/* Status messages */
 .page-status {
   min-height: 0;
   color: var(--dark-green);
@@ -152,8 +157,9 @@ a {
   border-radius: 10px;
 }
 
+/* Content sections */
 .section-card {
-  margin-top: 22px;
+  margin-top: 18px;
   padding: 26px;
   background: var(--white);
   border: 1px solid var(--border-green);
@@ -180,7 +186,7 @@ a {
   font-size: 13px;
 }
 
-/* Notes: grouped by unit, with title-only clickable rows */
+/* Notes grouped by unit */
 .notes-groups {
   display: flex;
   flex-direction: column;
@@ -237,6 +243,7 @@ a {
   outline: none;
 }
 
+/* Planner activities and materials */
 .items-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -264,6 +271,7 @@ a {
   overflow-wrap: anywhere;
 }
 
+/* Empty sections */
 .empty-message {
   padding: 18px;
   color: var(--text-muted);
@@ -278,6 +286,7 @@ a {
   display: none;
 }
 
+/* Material upload form */
 .material-form,
 .question-form {
   display: flex;
@@ -329,6 +338,7 @@ a {
   margin-top: 12px;
 }
 
+/* Important questions */
 .questions-list {
   display: flex;
   flex-direction: column;
@@ -462,6 +472,7 @@ a {
   overflow-wrap: anywhere;
 }
 
+/* Footer */
 .footer {
   padding: 28px 16px;
   border-top: 1px solid var(--border-green);
@@ -478,6 +489,7 @@ a {
   font-size: 12px;
 }
 
+/* Responsive layout */
 @media (max-width: 700px) {
   .navbar {
     padding: 14px 5%;
@@ -496,10 +508,24 @@ a {
 
   .container {
     width: 92%;
-    padding-top: 24px;
+    padding-top: 18px;
   }
 
-  .subject-header,
+  .subject-header {
+    padding: 15px 17px;
+    margin-bottom: 14px;
+    border-radius: 13px;
+  }
+
+  .subject-header h1 {
+    font-size: clamp(23px, 5vw, 28px);
+  }
+
+  .subject-header > p:last-child {
+    margin-top: 5px;
+    font-size: 12px;
+  }
+
   .section-card {
     padding: 19px;
     border-radius: 15px;
