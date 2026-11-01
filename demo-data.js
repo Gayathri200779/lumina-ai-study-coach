@@ -27,19 +27,15 @@
   // Sample student profile
   seed("luminaProfile", {
     fullName: "Aarav Demo",
-    course: "B.Sc. Computer Science with Artificial Intelligence",
+    course: "B.Sc. Computer Science",
     semester: "6",
     subjects: [
-      "Computer Vision",
-      "Artificial Intelligence",
+      "Data Structures",
+      "Database Management Systems",
       "Python",
-      "Statistics"
+      "Computer Networks"
     ],
-    goals: [
-      "Improve understanding",
-      "Prepare for exams",
-      "Build projects"
-    ]
+    goals: ["understand", "exams", "practice"]
   });
 
   // Sample notes

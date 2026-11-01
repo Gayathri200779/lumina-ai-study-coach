@@ -104,7 +104,7 @@ button,input,textarea,select{font:inherit}
 <textarea id="promptInput" rows="1" maxlength="20000" aria-label="Message" placeholder="Type a topic or exam question..."></textarea>
 <div class="composer-bar">
 <select id="marksSelect" aria-label="Answer type"><option value="2">2 marks</option><option value="5" selected>5 marks</option><option value="10">10 marks</option></select>
-<button class="send-btn" id="sendBtn" type="submit" aria-label="Send">↑</button>
+<button class="send-btn" id="sendBtn" type="submit" aria-label="Send" title="Send message">➤</button>
 </div></form>
 <p class="disclaimer">AI can make mistakes. Check important facts and formulas with your textbook.</p>
 <p class="demo-notice">Lumina demo: sample answers are available if the AI service cannot respond.</p>
@@ -174,7 +174,7 @@ function makeDemoAnswer(topic,marks){
  }else if(t.includes("artificial intelligence")||t==="what is ai"){
   definition="Artificial Intelligence (AI) is a branch of computer science that develops systems capable of tasks such as learning, reasoning and problem-solving.";
   points=["Machine learning enables systems to learn from data.","Natural language processing helps systems work with human language.","Computer vision enables systems to analyse images and videos.","AI is used in education, healthcare and automation."];
-  example="An AI study assistant can explain concepts, summarize notes and generate practice questions.";
+  example="A study assistant can explain concepts and organize study material for revision.";
  }else if(t.includes("process synchronization")||t.includes("synchronization")){
   definition="Process synchronization coordinates concurrent processes that share data or resources so that their operations occur safely.";
   points=["It helps prevent race conditions.","A critical section is the part of a program that accesses shared resources.","Mutual exclusion allows only one process at a time in the critical section.","Semaphores and mutex locks are common synchronization tools."];
@@ -212,7 +212,8 @@ async function askAI(mode,text,marks,onUpdate){
   return cleanAnswer(data.reply);
  }catch(error){
   console.warn("Lumina AI unavailable; using demo response.",error);
-  return mode==="summarize"?makeDemoSummary(text):makeDemoAnswer(text,marks);
+  const fallback=mode==="summarize"?makeDemoSummary(text):makeDemoAnswer(text,marks);
+  return fallback.includes("Demo notice:")?fallback:fallback+"\n\nDemo notice:\nThis is a sample fallback response because the Gemini API could not be reached. It is not a live AI-generated answer.";
  }finally{clearTimeout(timer);}
 }
 

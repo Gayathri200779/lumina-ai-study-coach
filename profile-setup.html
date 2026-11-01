@@ -211,13 +211,22 @@
     });
   });
 
-  // ===== Fill saved profile when the page opens =====
-  (function loadSavedProfile() {
+  // ===== Load sample or previously saved profile =====
+  (function loadProfile() {
+    const isDemo = new URLSearchParams(window.location.search).get('demo') === '1'
+      || sessionStorage.getItem('luminaDemoMode') === 'true';
+    const demoProfile = {
+      fullName: 'Aarav Demo',
+      course: 'B.Sc. Computer Science',
+      semester: '6',
+      subjects: ['Data Structures', 'Database Management Systems', 'Python', 'Computer Networks'],
+      goals: ['understand', 'exams', 'practice']
+    };
     let saved = null;
     try {
-      saved = JSON.parse(localStorage.getItem('luminaProfile') || 'null');
+      saved = isDemo ? demoProfile : JSON.parse(localStorage.getItem('luminaProfile') || 'null');
     } catch (err) {
-      saved = null;
+      saved = isDemo ? demoProfile : null;
     }
     if (!saved) return;
 
@@ -225,7 +234,7 @@
     document.getElementById('course').value = saved.course || '';
 
     if (saved.semester) {
-      semInput.value = saved.semester;
+      semInput.value = String(saved.semester);
       semBtns.forEach(b => {
         if (b.dataset.val === String(saved.semester)) b.classList.add('selected');
       });
@@ -262,7 +271,7 @@
                    .map(cb => cb.value)
     };
 
-    // Save so other pages (quiz, dashboard...) can read it
+    // Save the profile so the dashboard and other study pages can read it
     localStorage.setItem('luminaProfile', JSON.stringify(profileData));
 
     window.location.href = 'dashboard.html';

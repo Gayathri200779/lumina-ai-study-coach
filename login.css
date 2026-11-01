@@ -246,3 +246,9 @@ form {
 .card-footer a:hover {
   color: #37563b;
 }
+
+/* Teacher demonstration credentials */
+.demo-credentials{display:flex;flex-direction:column;gap:8px;padding:16px;background:#eef8f0;border:1px solid #d7e6d9;border-radius:12px;color:#37563b;font-size:13px}
+.demo-credentials strong{font-size:14px}
+.demo-credentials code{font-family:monospace;background:#fff;padding:2px 5px;border-radius:4px;color:#121e16}
+.demo-credentials .google-btn{margin-top:4px;background:#fff;border-color:#b9cfbc;color:#37563b}

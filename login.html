@@ -14,7 +14,6 @@
     <span>🌿</span>
     <span>Lumina AI Coach</span>
   </div>
-  <a class="back-link" href="home.html">&#8592; Back to Home</a>
 </header>
 
 <main class="main">
@@ -25,15 +24,11 @@
       <p>Sign in to continue your learning journey with Lumina AI Coach.</p>
     </div>
 
-    <button class="google-btn" id="googleBtn" type="button">
-      <img alt="Google Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE0BKtExcyOVgHK1pVtRH2j-VbHPuo0bhDo8dIFtRCT-W0_2-XcGGVDWd1N9UMES7QIPMORkU-9NiWPxL5utqGuMNbwEqQ4pnPqxgS0TIbc9djD-EQ2BztYOGvRrj1gVKm_dpJPkDWUVjuQQgmFap1o50oc3Hb_0x--7HvFFT6-Y7zkWPzLA3RVU6MJV7UYCmh0oXYiNQ4LaKkNJZhwL7qg3mBO-Z-JJt8bO1Egk-A2gV31YfOBoMq"/>
-      Continue with Google
-    </button>
-
-    <div class="divider">
-      <div class="line"></div>
-      <span>OR</span>
-      <div class="line"></div>
+    <div class="demo-credentials" role="note" aria-label="Teacher demonstration login">
+      <strong>Teacher demo account</strong>
+      <span>Email: <code>demo@lumina.study</code></span>
+      <span>Password: <code>Lumina@2026</code></span>
+      <button class="google-btn" id="fillDemoBtn" type="button">Use demo credentials</button>
     </div>
 
     <form id="loginForm">
@@ -55,7 +50,6 @@
           <input type="checkbox"/>
           Remember me
         </label>
-        <a class="forgot-link" href="forgot-password.html">Forgot password?</a>
       </div>
 
       <button class="submit-btn" type="submit">
@@ -64,26 +58,36 @@
     </form>
 
     <div class="card-footer">
-      Don't have an account?
-      <a href="signup.html">Create an account</a>
+      Use the teacher demo account above to explore Lumina AI Study Coach.
     </div>
 
   </div>
 </main>
 
 <script>
+  const DEMO_EMAIL = 'demo@lumina.study';
+  const DEMO_PASSWORD = 'Lumina@2026';
+
   document.getElementById('togglePassword').addEventListener('click', function () {
     const pw = document.getElementById('password');
     pw.type = pw.type === 'password' ? 'text' : 'password';
   });
 
-  document.getElementById('loginForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    window.location.href = 'profile-setup.html';
+  document.getElementById('fillDemoBtn').addEventListener('click', function () {
+    document.getElementById('email').value = DEMO_EMAIL;
+    document.getElementById('password').value = DEMO_PASSWORD;
   });
 
-  document.getElementById('googleBtn').addEventListener('click', function () {
-    window.location.href = 'profile-setup.html';
+  document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const password = document.getElementById('password').value;
+    if (email !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
+      alert('Please use the teacher demo email and password shown on this page.');
+      return;
+    }
+    sessionStorage.setItem('luminaDemoMode', 'true');
+    window.location.href = 'profile-setup.html?demo=1';
   });
 </script>
 
