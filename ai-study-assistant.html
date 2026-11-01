@@ -13,13 +13,12 @@
 html,body{height:100%;margin:0}
 body{display:flex;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 button,input,textarea,select{font:inherit}
-.sidebar{display:flex;flex-direction:column;align-items:center;gap:6px;width:64px;flex-shrink:0;padding:14px 0;border-right:1px solid var(--border)}
+.sidebar{display:flex;flex-direction:column;align-items:center;gap:6px;width:76px;flex-shrink:0;padding:14px 0;border-right:1px solid var(--border)}
 .side-logo,.side-btn{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:12px;text-decoration:none;color:var(--dark);background:transparent;cursor:pointer}
 .side-logo{font-size:24px;margin-bottom:10px}
-.side-btn{position:relative;font-size:20px}
+.side-btn{position:relative;width:66px;height:38px;padding:2px 3px;border-radius:8px;font-size:9.5px;line-height:1.15;text-align:center;white-space:normal;font-weight:600}
 .side-btn:hover,.side-logo:hover,.side-btn[aria-selected=true]{background:var(--soft)}
-.side-btn::after{content:attr(data-label);position:absolute;left:50px;z-index:10;padding:6px 10px;border-radius:7px;background:var(--dark);color:white;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none}
-.side-btn:hover::after{opacity:1}
+.side-btn::after{display:none}
 .side-divider{width:28px;height:1px;margin:8px;background:var(--border)}
 .main{display:flex;flex:1;flex-direction:column;min-width:0;min-height:0}
 .top-header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;gap:12px}
@@ -71,44 +70,75 @@ button,input,textarea,select{font:inherit}
 .send-btn{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;background:var(--accent);color:white;cursor:pointer}
 .send-btn:disabled{opacity:.5}
 .disclaimer,.demo-notice{margin:8px 0 0;color:var(--muted);font-size:12px;text-align:center}
-@media(max-width:600px){.sidebar{width:52px;padding:10px 0}.side-logo,.side-btn{width:38px;height:38px}.side-btn::after{display:none}.top-header{padding:10px 12px}.mode-title{font-size:15px}.home-btn{padding:7px 14px}.chat-scroll{padding:8px 12px 16px}.composer-wrap{padding:8px 10px 10px}}
+@media(max-width:600px){
+.sidebar{width:72px;padding:10px 0}
+.side-logo{width:38px;height:38px}
+.side-btn{width:64px;height:36px;font-size:9px}
+.top-header{padding:10px 12px}
+.mode-title{font-size:15px}
+.home-btn{padding:7px 14px}
+.chat-scroll{padding:8px 12px 16px}
+.composer-wrap{padding:8px 10px 10px}
+}
 @media(prefers-reduced-motion:reduce){.typing span{animation:none}.chat-scroll{scroll-behavior:auto}}
 </style>
 </head>
 <body>
 <aside class="sidebar" aria-label="Tools">
 <a href="dashboard.html" class="side-logo" title="Lumina AI" aria-label="Lumina AI home">🌿</a>
-<button class="side-btn" id="newChatBtn" type="button" data-label="New chat" aria-label="New chat">✎</button>
+<button class="side-btn" id="newChatBtn" type="button" data-label="New chat" aria-label="New chat">New Chat</button>
 <div class="side-divider"></div>
-<button class="side-btn" id="tab-explain" role="tab" type="button" data-label="Concept Explainer" aria-selected="true">💡</button>
-<button class="side-btn" id="tab-summarize" role="tab" type="button" data-label="Notes Summarizer" aria-selected="false">✨</button>
+<button class="side-btn" id="tab-explain" role="tab" type="button" data-label="Concept Explainer" aria-selected="true">Concept<br>Explainer</button>
+<button class="side-btn" id="tab-summarize" role="tab" type="button" data-label="AI Summarize" aria-selected="false">AI<br>Summarize</button>
 </aside>
+
 <div class="main">
-<header class="top-header"><div class="mode-title" id="modeTitle">Concept Explainer</div><a href="dashboard.html" class="home-btn">Home</a></header>
+<header class="top-header">
+<div class="mode-title" id="modeTitle">Concept Explainer</div>
+<a href="dashboard.html" class="home-btn">Home</a>
+</header>
+
 <div class="chat-scroll" id="chatScroll">
 <div class="chat-thread" id="thread-explain" role="log" aria-live="polite">
 <div class="welcome-box">
-<div class="welcome-icon">💡</div><h1>Concept Explainer</h1>
+<div class="welcome-icon">💡</div>
+<h1>Concept Explainer</h1>
 <p>Type a topic or exam question. Choose 2, 5 or 10 marks and get a model answer.</p>
 <div class="starter-list">
 <button class="starter-btn">Explain supervised learning with an example</button>
 <button class="starter-btn">What is normalization in DBMS?</button>
 <button class="starter-btn">Differentiate between TCP and UDP</button>
 <button class="starter-btn">Explain deadlock in operating systems</button>
-</div></div></div>
+</div>
+</div>
+</div>
+
 <div class="chat-thread" id="thread-summarize" role="log" aria-live="polite" hidden>
-<div class="welcome-box"><div class="welcome-icon">✨</div><h1>Notes Summarizer</h1><p>Paste textbook text or lecture notes to get revision notes, key terms and exam questions.</p></div>
-</div></div>
+<div class="welcome-box">
+<div class="welcome-icon">✨</div>
+<h1>Notes Summarizer</h1>
+<p>Paste textbook text or lecture notes to get revision notes, key terms and exam questions.</p>
+</div>
+</div>
+</div>
+
 <div class="composer-wrap">
 <form class="composer" id="composer">
 <textarea id="promptInput" rows="1" maxlength="20000" aria-label="Message" placeholder="Type a topic or exam question..."></textarea>
 <div class="composer-bar">
-<select id="marksSelect" aria-label="Answer type"><option value="2">2 marks</option><option value="5" selected>5 marks</option><option value="10">10 marks</option></select>
+<select id="marksSelect" aria-label="Answer type">
+<option value="2">2 marks</option>
+<option value="5" selected>5 marks</option>
+<option value="10">10 marks</option>
+</select>
 <button class="send-btn" id="sendBtn" type="submit" aria-label="Send" title="Send message">➤</button>
-</div></form>
+</div>
+</form>
 <p class="disclaimer">AI can make mistakes. Check important facts and formulas with your textbook.</p>
 <p class="demo-notice">Lumina demo: sample answers are available if the AI service cannot respond.</p>
-</div></div>
+</div>
+</div>
+
 <datalist id="subjectOptions"></datalist>
 <script>
 "use strict";
@@ -120,8 +150,22 @@ const CACHE_LIMIT = 30;
 const REQUEST_TIMEOUT_MS = 120000;
 
 const modes = {
-  explain:{tab:$("tab-explain"),thread:$("thread-explain"),placeholder:"Type a topic or exam question...",maxLength:500,label:"Concept Explainer",source:"ai-chat"},
-  summarize:{tab:$("tab-summarize"),thread:$("thread-summarize"),placeholder:"Paste your study material here...",maxLength:20000,label:"Notes Summarizer",source:"ai-summary"}
+explain:{
+tab:$("tab-explain"),
+thread:$("thread-explain"),
+placeholder:"Type a topic or exam question...",
+maxLength:500,
+label:"Concept Explainer",
+source:"ai-chat"
+},
+summarize:{
+tab:$("tab-summarize"),
+thread:$("thread-summarize"),
+placeholder:"Paste your study material here...",
+maxLength:20000,
+label:"Notes Summarizer",
+source:"ai-summary"
+}
 };
 
 const input=$("promptInput");
@@ -133,88 +177,88 @@ let busy=false;
 const drafts={explain:"",summarize:""};
 
 function cleanAnswer(text){
- return String(text).replace(/\*\*/g,"").replace(/^#{1,6}\s*/gm,"").replace(/^\s*[\*-]\s+/gm,"• ").replace(/[*_`]/g,"").trim();
+return String(text).replace(/\*\*/g,"").replace(/^#{1,6}\s*/gm,"").replace(/^\s*[\*-]\s+/gm,"• ").replace(/[*_`]/g,"").trim();
 }
 
 function buildExplainPrompt(topic,marks){
- const base=`You are an experienced university professor writing a model answer for a college exam.\nQuestion or topic: "${topic}"\n`;
- const rules=`\nFormatting rules:\n- Use plain text without markdown symbols.\n- Put each heading on its own line ending with a colon.\n- Use numbered points for lists.\n- Use correct technical terms and accurate explanations.`;
- if(marks==="2")return base+`\nWrite a 2-mark answer of about 60–80 words.\nDefinition:\nGive a precise definition.\nKey Points:\nGive 2–3 important points.`+rules;
- if(marks==="10")return base+`\nWrite a 10-mark answer of about 450–550 words.\nIntroduction:\nDefinition:\nDetailed Explanation:\nExplain in 4–6 numbered subheadings.\nTypes or Components:\nAdvantages and Limitations:\nApplications:\nExample:\nConclusion:`+rules;
- return base+`\nWrite a 5-mark answer of about 200–250 words.\nDefinition:\nExplanation:\nGive 4–6 numbered points.\nExample:\nConclusion:`+rules;
+const base=`You are an experienced university professor writing a model answer for a college exam.\nQuestion or topic: "${topic}"\n`;
+const rules=`\nFormatting rules:\n- Use plain text without markdown symbols.\n- Put each heading on its own line ending with a colon.\n- Use numbered points for lists.\n- Use correct technical terms and accurate explanations.`;
+if(marks==="2")return base+`\nWrite a 2-mark answer of about 60–80 words.\nDefinition:\nGive a precise definition.\nKey Points:\nGive 2–3 important points.`+rules;
+if(marks==="10")return base+`\nWrite a 10-mark answer of about 450–550 words.\nIntroduction:\nDefinition:\nDetailed Explanation:\nExplain in 4–6 numbered subheadings.\nTypes or Components:\nAdvantages and Limitations:\nApplications:\nExample:\nConclusion:`+rules;
+return base+`\nWrite a 5-mark answer of about 200–250 words.\nDefinition:\nExplanation:\nGive 4–6 numbered points.\nExample:\nConclusion:`+rules;
 }
 
 function buildSummarizePrompt(material){
- return `You are a university professor creating exam revision notes from the supplied material. Use this structure:\nTopic:\nKey Definitions:\nMain Points:\nFormulas and Important Facts:\nQuick Revision:\nImportant Exam Questions:\nKeep notes shorter than the original. Preserve facts and formulas from the material and do not invent source details.\n\nStudy material:\n${material}`;
+return `You are a university professor creating exam revision notes from the supplied material. Use this structure:\nTopic:\nKey Definitions:\nMain Points:\nFormulas and Important Facts:\nQuick Revision:\nImportant Exam Questions:\nKeep notes shorter than the original. Preserve facts and formulas from the material and do not invent source details.\n\nStudy material:\n${material}`;
 }
 
 /* Demo answers are used only when the real API cannot answer. */
 function makeDemoAnswer(topic,marks){
- const t=topic.toLowerCase();
- let definition="This is an important computer science concept used to understand and solve computing problems.";
- let points=["Understand the purpose and basic principles of the concept.","Follow the appropriate steps or techniques to apply it.","Check the result and consider its practical use."];
- let example="A student can apply this concept while solving a practical computer science problem.";
+const t=topic.toLowerCase();
+let definition="This is an important computer science concept used to understand and solve computing problems.";
+let points=["Understand the purpose and basic principles of the concept.","Follow the appropriate steps or techniques to apply it.","Check the result and consider its practical use."];
+let example="A student can apply this concept while solving a practical computer science problem.";
 
- if(t.includes("supervised learning")){
-  definition="Supervised learning is a machine learning method in which a model learns from labelled examples containing inputs and their correct outputs.";
-  points=["Collect labelled training data.","Train the model to learn the relationship between inputs and outputs.","Evaluate the model using unseen data.","Use the trained model to predict outputs for new inputs."];
-  example="An email classifier learns from emails labelled as spam or not spam and then classifies new emails.";
- }else if(t.includes("normalization")&&t.includes("dbms")){
-  definition="Normalization is the process of organizing database tables to reduce data redundancy and prevent data anomalies.";
-  points=["First Normal Form (1NF) requires atomic values in fields.","Second Normal Form (2NF) removes partial dependency on a composite key.","Third Normal Form (3NF) removes transitive dependency.","Normalization improves consistency and database maintenance."];
-  example="Store department details in a separate table and link them to students using a department ID instead of repeating the details in every student record.";
- }else if(t.includes("tcp")&&t.includes("udp")){
-  definition="TCP and UDP are transport-layer protocols used to transfer data across networks.";
-  points=["TCP establishes a connection before data transmission.","TCP provides reliable and ordered delivery.","UDP sends data without establishing a connection.","UDP has lower overhead but does not guarantee delivery or order."];
-  example="TCP is used for reliable web communication, while UDP is useful for applications such as live streaming and online gaming.";
- }else if(t.includes("deadlock")){
-  definition="A deadlock is a condition in which two or more processes wait indefinitely for resources held by one another.";
-  points=["Mutual exclusion means a resource can be used by one process at a time.","Hold and wait means a process holds one resource while waiting for another.","No preemption means resources cannot be forcibly taken away.","Circular wait occurs when processes form a cycle of waiting."];
-  example="Process P1 holds R1 and waits for R2, while P2 holds R2 and waits for R1. Neither can continue.";
- }else if(t.includes("artificial intelligence")||t==="what is ai"){
-  definition="Artificial Intelligence (AI) is a branch of computer science that develops systems capable of tasks such as learning, reasoning and problem-solving.";
-  points=["Machine learning enables systems to learn from data.","Natural language processing helps systems work with human language.","Computer vision enables systems to analyse images and videos.","AI is used in education, healthcare and automation."];
-  example="A study assistant can explain concepts and organize study material for revision.";
- }else if(t.includes("process synchronization")||t.includes("synchronization")){
-  definition="Process synchronization coordinates concurrent processes that share data or resources so that their operations occur safely.";
-  points=["It helps prevent race conditions.","A critical section is the part of a program that accesses shared resources.","Mutual exclusion allows only one process at a time in the critical section.","Semaphores and mutex locks are common synchronization tools."];
-  example="A mutex lock can ensure that only one process updates a shared bank balance at a time.";
- }
+if(t.includes("supervised learning")){
+definition="Supervised learning is a machine learning method in which a model learns from labelled examples containing inputs and their correct outputs.";
+points=["Collect labelled training data.","Train the model to learn the relationship between inputs and outputs.","Evaluate the model using unseen data.","Use the trained model to predict outputs for new inputs."];
+example="An email classifier learns from emails labelled as spam or not spam and then classifies new emails.";
+}else if(t.includes("normalization")&&t.includes("dbms")){
+definition="Normalization is the process of organizing database tables to reduce data redundancy and prevent data anomalies.";
+points=["First Normal Form (1NF) requires atomic values in fields.","Second Normal Form (2NF) removes partial dependency on a composite key.","Third Normal Form (3NF) removes transitive dependency.","Normalization improves consistency and database maintenance."];
+example="Store department details in a separate table and link them to students using a department ID instead of repeating the details in every student record.";
+}else if(t.includes("tcp")&&t.includes("udp")){
+definition="TCP and UDP are transport-layer protocols used to transfer data across networks.";
+points=["TCP establishes a connection before data transmission.","TCP provides reliable and ordered delivery.","UDP sends data without establishing a connection.","UDP has lower overhead but does not guarantee delivery or order."];
+example="TCP is used for reliable web communication, while UDP is useful for applications such as live streaming and online gaming.";
+}else if(t.includes("deadlock")){
+definition="A deadlock is a condition in which two or more processes wait indefinitely for resources held by one another.";
+points=["Mutual exclusion means a resource can be used by one process at a time.","Hold and wait means a process holds one resource while waiting for another.","No preemption means resources cannot be forcibly taken away.","Circular wait occurs when processes form a cycle of waiting."];
+example="Process P1 holds R1 and waits for R2, while P2 holds R2 and waits for R1. Neither can continue.";
+}else if(t.includes("artificial intelligence")||t==="what is ai"){
+definition="Artificial Intelligence (AI) is a branch of computer science that develops systems capable of tasks such as learning, reasoning and problem-solving.";
+points=["Machine learning enables systems to learn from data.","Natural language processing helps systems work with human language.","Computer vision enables systems to analyse images and videos.","AI is used in education, healthcare and automation."];
+example="A study assistant can explain concepts and organize study material for revision.";
+}else if(t.includes("process synchronization")||t.includes("synchronization")){
+definition="Process synchronization coordinates concurrent processes that share data or resources so that their operations occur safely.";
+points=["It helps prevent race conditions.","A critical section is the part of a program that accesses shared resources.","Mutual exclusion allows only one process at a time in the critical section.","Semaphores and mutex locks are common synchronization tools."];
+example="A mutex lock can ensure that only one process updates a shared bank balance at a time.";
+}
 
- if(marks==="2")return "Definition:\n"+definition+"\n\nKey Points:\n1. "+points[0]+"\n2. "+points[1];
- if(marks==="10")return "Introduction:\n"+topic+" is an important topic in computer science.\n\nDefinition:\n"+definition+"\n\nDetailed Explanation:\n"+points.map((p,i)=>(i+1)+". "+p).join("\n")+"\n\nTypes or Components:\nThe components depend on the problem and the way the concept is applied.\n\nAdvantages and Limitations:\n1. It provides a systematic way to solve relevant problems.\n2. It supports practical computing applications.\n3. The result depends on correct implementation and suitable inputs.\n\nApplications:\n1. Education and learning.\n2. Computer-based problem-solving.\n3. Information processing.\n\nExample:\n"+example+"\n\nConclusion:\nUnderstanding "+topic+" helps connect the basic concept with its practical applications.";
- return "Definition:\n"+definition+"\n\nExplanation:\n"+points.map((p,i)=>(i+1)+". "+p).join("\n")+"\n\nExample:\n"+example+"\n\nConclusion:\nUnderstanding "+topic+" helps students learn its principles and practical applications.\n\nDemo notice:\nThis is a sample fallback answer. Connect the AI service for a genuine AI-generated answer.";
+if(marks==="2")return "Definition:\n"+definition+"\n\nKey Points:\n1. "+points[0]+"\n2. "+points[1];
+if(marks==="10")return "Introduction:\n"+topic+" is an important topic in computer science.\n\nDefinition:\n"+definition+"\n\nDetailed Explanation:\n"+points.map((p,i)=>(i+1)+". "+p).join("\n")+"\n\nTypes or Components:\nThe components depend on the problem and the way the concept is applied.\n\nAdvantages and Limitations:\n1. It provides a systematic way to solve relevant problems.\n2. It supports practical computing applications.\n3. The result depends on correct implementation and suitable inputs.\n\nApplications:\n1. Education and learning.\n2. Computer-based problem-solving.\n3. Information processing.\n\nExample:\n"+example+"\n\nConclusion:\nUnderstanding "+topic+" helps connect the basic concept with its practical applications.";
+return "Definition:\n"+definition+"\n\nExplanation:\n"+points.map((p,i)=>(i+1)+". "+p).join("\n")+"\n\nExample:\n"+example+"\n\nConclusion:\nUnderstanding "+topic+" helps students learn its principles and practical applications.\n\nDemo notice:\nThis is a sample fallback answer. Connect the AI service for a genuine AI-generated answer.";
 }
 
 function makeDemoSummary(material){
- const lines=material.split(/\n+/).map(s=>s.trim()).filter(Boolean);
- const excerpts=lines.slice(0,6);
- return "Topic:\nStudy Material — Demo Revision Summary\n\nKey Definitions:\n• Identify each important term and its meaning from the supplied material.\n\nMain Points:\n"+(excerpts.length?excerpts.map((s,i)=>(i+1)+". "+s).join("\n"):"1. Identify the main ideas in the material.")+"\n\nFormulas and Important Facts:\nCheck the original material for exact formulas, figures and facts.\n\nQuick Revision:\n1. Review key terms.\n2. Memorise important steps and facts.\n3. Practise explaining the main ideas in your own words.\n\nImportant Exam Questions:\n1. Define the main concept in the material.\n2. Explain its important points.\n3. Give an example based on the material.\n\nDemo notice:\nThis is a sample summary of the supplied text, not a full AI-generated summary.";
+const lines=material.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+const excerpts=lines.slice(0,6);
+return "Topic:\nStudy Material — Demo Revision Summary\n\nKey Definitions:\n• Identify each important term and its meaning from the supplied material.\n\nMain Points:\n"+(excerpts.length?excerpts.map((s,i)=>(i+1)+". "+s).join("\n"):"1. Identify the main ideas in the material.")+"\n\nFormulas and Important Facts:\nCheck the original material for exact formulas, figures and facts.\n\nQuick Revision:\n1. Review key terms.\n2. Memorise important steps and facts.\n3. Practise explaining the main ideas in your own words.\n\nImportant Exam Questions:\n1. Define the main concept in the material.\n2. Explain its important points.\n3. Give an example based on the material.\n\nDemo notice:\nThis is a sample summary of the supplied text, not a full AI-generated summary.";
 }
 
 async function askAI(mode,text,marks,onUpdate){
- const prompt=mode==="explain"?buildExplainPrompt(text,marks):buildSummarizePrompt(text);
- const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),REQUEST_TIMEOUT_MS);
- try{
-  const response=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:prompt,stream:true}),signal:controller.signal});
-  if(!response.ok)throw new Error("AI service returned an error.");
-  const type=response.headers.get("content-type")||"";
-  if(!type.includes("application/json")&&response.body&&response.body.getReader){
-   const reader=response.body.getReader();const decoder=new TextDecoder();let full="";
-   while(true){const {done,value}=await reader.read();if(done)break;full+=decoder.decode(value,{stream:true});if(onUpdate)onUpdate(cleanAnswer(full));}
-   full+=decoder.decode();const result=cleanAnswer(full);
-   if(!result)throw new Error("The AI service returned an empty answer.");
-   return result;
-  }
-  const data=await response.json();
-  if(!data||!data.reply)throw new Error("The AI service returned an empty answer.");
-  return cleanAnswer(data.reply);
- }catch(error){
-  console.warn("Lumina AI unavailable; using demo response.",error);
-  const fallback=mode==="summarize"?makeDemoSummary(text):makeDemoAnswer(text,marks);
-  return fallback.includes("Demo notice:")?fallback:fallback+"\n\nDemo notice:\nThis is a sample fallback response because the Gemini API could not be reached. It is not a live AI-generated answer.";
- }finally{clearTimeout(timer);}
+const prompt=mode==="explain"?buildExplainPrompt(text,marks):buildSummarizePrompt(text);
+const controller=new AbortController();
+const timer=setTimeout(()=>controller.abort(),REQUEST_TIMEOUT_MS);
+try{
+const response=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:prompt,stream:true}),signal:controller.signal});
+if(!response.ok)throw new Error("AI service returned an error.");
+const type=response.headers.get("content-type")||"";
+if(!type.includes("application/json")&&response.body&&response.body.getReader){
+const reader=response.body.getReader();const decoder=new TextDecoder();let full="";
+while(true){const {done,value}=await reader.read();if(done)break;full+=decoder.decode(value,{stream:true});if(onUpdate)onUpdate(cleanAnswer(full));}
+full+=decoder.decode();const result=cleanAnswer(full);
+if(!result)throw new Error("The AI service returned an empty answer.");
+return result;
+}
+const data=await response.json();
+if(!data||!data.reply)throw new Error("The AI service returned an empty answer.");
+return cleanAnswer(data.reply);
+}catch(error){
+console.warn("Lumina AI unavailable; using demo response.",error);
+const fallback=mode==="summarize"?makeDemoSummary(text):makeDemoAnswer(text,marks);
+return fallback.includes("Demo notice:")?fallback:fallback+"\n\nDemo notice:\nThis is a sample fallback response because the Gemini API could not be reached. It is not a live AI-generated answer.";
+}finally{clearTimeout(timer);}
 }
 
 function readCache(){try{const d=JSON.parse(localStorage.getItem(CACHE_KEY)||"[]");return Array.isArray(d)?d:[];}catch(e){return[];}}
@@ -223,13 +267,13 @@ function getCached(mode,text,marks){const hit=readCache().find(x=>x.key===cacheK
 function setCached(mode,text,marks,answer){try{const key=cacheKey(mode,text,marks);const list=readCache().filter(x=>x.key!==key);list.push({key,answer});localStorage.setItem(CACHE_KEY,JSON.stringify(list.slice(-CACHE_LIMIT)));}catch(e){}}
 
 function setMode(name){
- if(!modes[name])name="explain";
- drafts[currentMode]=input.value;currentMode=name;
- Object.entries(modes).forEach(([key,m])=>{m.tab.setAttribute("aria-selected",String(key===name));m.thread.hidden=key!==name;});
- $("modeTitle").textContent=modes[name].label;
- input.maxLength=modes[name].maxLength;input.placeholder=modes[name].placeholder;input.value=drafts[name]||"";
- marksSelect.hidden=name!=="explain";resizeInput();scrollToBottom(true);
- history.replaceState(null,"","#"+name);
+if(!modes[name])name="explain";
+drafts[currentMode]=input.value;currentMode=name;
+Object.entries(modes).forEach(([key,m])=>{m.tab.setAttribute("aria-selected",String(key===name));m.thread.hidden=key!==name;});
+$("modeTitle").textContent=modes[name].label;
+input.maxLength=modes[name].maxLength;input.placeholder=modes[name].placeholder;input.value=drafts[name]||"";
+marksSelect.hidden=name!=="explain";resizeInput();scrollToBottom(true);
+history.replaceState(null,"","#"+name);
 }
 modes.explain.tab.addEventListener("click",()=>setMode("explain"));
 modes.summarize.tab.addEventListener("click",()=>setMode("summarize"));
@@ -244,83 +288,83 @@ input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isCompo
 function scrollToBottom(instant=false){requestAnimationFrame(()=>chatScroll.scrollTo({top:chatScroll.scrollHeight,behavior:instant?"auto":"smooth"}));}
 
 function addUserMessage(mode,text){
- const row=document.createElement("div");row.className="msg user";
- const bubble=document.createElement("div");bubble.className="user-bubble";bubble.textContent=text;
- row.appendChild(bubble);modes[mode].thread.appendChild(row);modes[mode].thread.classList.add("has-messages");scrollToBottom();
+const row=document.createElement("div");row.className="msg user";
+const bubble=document.createElement("div");bubble.className="user-bubble";bubble.textContent=text;
+row.appendChild(bubble);modes[mode].thread.appendChild(row);modes[mode].thread.classList.add("has-messages");scrollToBottom();
 }
 function makeAiRow(){const row=document.createElement("div");row.className="msg ai";const body=document.createElement("div");body.className="ai-body";row.appendChild(body);return{row,body};}
 function addTyping(mode){const {row,body}=makeAiRow();const dots=document.createElement("div");dots.className="typing";dots.innerHTML="<span></span><span></span><span></span>";body.appendChild(dots);modes[mode].thread.appendChild(row);scrollToBottom();return row;}
 
 function renderAnswer(container,text){
- container.textContent="";
- text.split("\n").forEach(raw=>{
-  const line=raw.trim();if(!line)return;
-  const item=line.match(/^(\d+[.)]|•)\s+(.*)$/);
-  if(item){const row=document.createElement("div");row.className="a-item";const marker=document.createElement("span");marker.className="a-marker";marker.textContent=item[1];const content=document.createElement("span");content.textContent=item[2];row.append(marker,content);container.appendChild(row);return;}
-  if(/:$/.test(line)&&line.length<=80){const h=document.createElement("div");h.className="a-heading";h.textContent=line.slice(0,-1);container.appendChild(h);return;}
-  const p=document.createElement("div");p.className="a-para";p.textContent=line;container.appendChild(p);
- });
+container.textContent="";
+text.split("\n").forEach(raw=>{
+const line=raw.trim();if(!line)return;
+const item=line.match(/^(\d+[.)]|•)\s+(.*)$/);
+if(item){const row=document.createElement("div");row.className="a-item";const marker=document.createElement("span");marker.className="a-marker";marker.textContent=item[1];const content=document.createElement("span");content.textContent=item[2];row.append(marker,content);container.appendChild(row);return;}
+if(/:$/.test(line)&&line.length<=80){const h=document.createElement("div");h.className="a-heading";h.textContent=line.slice(0,-1);container.appendChild(h);return;}
+const p=document.createElement("div");p.className="a-para";p.textContent=line;container.appendChild(p);
+});
 }
 
 function readNotes(){try{const d=JSON.parse(localStorage.getItem(NOTES_KEY)||"[]");return Array.isArray(d)?d:[];}catch(e){return[];}}
 function fillSubjects(){const list=$("subjectOptions");list.innerHTML="";[...new Set(readNotes().map(n=>n.subject).filter(Boolean))].forEach(subject=>{const o=document.createElement("option");o.value=subject;list.appendChild(o);});}
 function saveToNotes(title,subject,content,source){
- const notes=readNotes();const now=new Date().toISOString();
- notes.push({id:window.crypto?.randomUUID?.()||"note-"+Date.now(),title,subject,content,source,createdAt:now,updatedAt:now});
- localStorage.setItem(NOTES_KEY,JSON.stringify(notes));
+const notes=readNotes();const now=new Date().toISOString();
+notes.push({id:window.crypto?.randomUUID?.()||"note-"+Date.now(),title,subject,content,source,createdAt:now,updatedAt:now});
+localStorage.setItem(NOTES_KEY,JSON.stringify(notes));
 }
 function getNoteTitle(mode,answer,question,marks){
- if(mode==="explain"){const q=question.replace(/\s+/g," ").trim();return(q.length>55?q.slice(0,55)+"...":q)+" ("+marks+" marks)";}
- const match=answer.match(/Topic:\s*\n?\s*(.+)/i);return "Summary: "+(match?match[1].trim():question.slice(0,45));
+if(mode==="explain"){const q=question.replace(/\s+/g," ").trim();return(q.length>55?q.slice(0,55)+"...":q)+" ("+marks+" marks)";}
+const match=answer.match(/Topic:\s*\n?\s*(.+)/i);return "Summary: "+(match?match[1].trim():question.slice(0,45));
 }
 
 function attachActions(body,mode,answer,meta){
- const actions=document.createElement("div");actions.className="ai-actions";
- const copy=document.createElement("button");copy.type="button";copy.className="action-btn";copy.textContent="Copy";
- const toggle=document.createElement("button");toggle.type="button";toggle.className="action-btn";toggle.textContent="Save to My Notes";
- actions.append(copy,toggle);
- const form=document.createElement("div");form.className="save-form";form.hidden=true;
- const subject=document.createElement("input");subject.placeholder="Subject name, e.g. Artificial Intelligence";subject.setAttribute("list","subjectOptions");subject.setAttribute("aria-label","Subject name");
- const title=document.createElement("input");title.maxLength=120;title.value=getNoteTitle(mode,answer,meta.question,meta.marks);title.placeholder="Title / topic";title.setAttribute("aria-label","Title");
- const save=document.createElement("button");save.type="button";save.className="save-btn";save.textContent="Save";
- const status=document.createElement("div");status.className="save-note";status.setAttribute("role","status");
- form.append(subject,title,save,status);
- copy.addEventListener("click",async()=>{
-  try{if(navigator.clipboard&&navigator.clipboard.writeText)await navigator.clipboard.writeText(answer);else{const temp=document.createElement("textarea");temp.value=answer;document.body.appendChild(temp);temp.select();if(!document.execCommand("copy"))throw Error("Copy failed");temp.remove();}copy.textContent="Copied ✓";}
-  catch(e){copy.textContent="Could not copy";}
-  setTimeout(()=>copy.textContent="Copy",1500);
- });
- toggle.addEventListener("click",()=>{form.hidden=!form.hidden;if(!form.hidden)subject.focus();});
- function doSave(){
-  if(!subject.value.trim()){status.textContent="Please enter a subject name.";status.classList.add("error");subject.focus();return;}
-  try{saveToNotes(title.value.trim()||getNoteTitle(mode,answer,meta.question,meta.marks),subject.value.trim(),answer,modes[mode].source);status.classList.remove("error");status.textContent="✓ Saved to My Notes under "+subject.value.trim()+".";fillSubjects();}
-  catch(e){status.textContent="Unable to save. Please try again.";status.classList.add("error");}
- }
- save.addEventListener("click",doSave);
- [subject,title].forEach(el=>el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doSave();}}));
- body.append(actions,form);
+const actions=document.createElement("div");actions.className="ai-actions";
+const copy=document.createElement("button");copy.type="button";copy.className="action-btn";copy.textContent="Copy";
+const toggle=document.createElement("button");toggle.type="button";toggle.className="action-btn";toggle.textContent="Save to My Notes";
+actions.append(copy,toggle);
+const form=document.createElement("div");form.className="save-form";form.hidden=true;
+const subject=document.createElement("input");subject.placeholder="Subject name, e.g. Artificial Intelligence";subject.setAttribute("list","subjectOptions");subject.setAttribute("aria-label","Subject name");
+const title=document.createElement("input");title.maxLength=120;title.value=getNoteTitle(mode,answer,meta.question,meta.marks);title.placeholder="Title / topic";title.setAttribute("aria-label","Title");
+const save=document.createElement("button");save.type="button";save.className="save-btn";save.textContent="Save";
+const status=document.createElement("div");status.className="save-note";status.setAttribute("role","status");
+form.append(subject,title,save,status);
+copy.addEventListener("click",async()=>{
+try{if(navigator.clipboard&&navigator.clipboard.writeText)await navigator.clipboard.writeText(answer);else{const temp=document.createElement("textarea");temp.value=answer;document.body.appendChild(temp);temp.select();if(!document.execCommand("copy"))throw Error("Copy failed");temp.remove();}copy.textContent="Copied ✓";}
+catch(e){copy.textContent="Could not copy";}
+setTimeout(()=>copy.textContent="Copy",1500);
+});
+toggle.addEventListener("click",()=>{form.hidden=!form.hidden;if(!form.hidden)subject.focus();});
+function doSave(){
+if(!subject.value.trim()){status.textContent="Please enter a subject name.";status.classList.add("error");subject.focus();return;}
+try{saveToNotes(title.value.trim()||getNoteTitle(mode,answer,meta.question,meta.marks),subject.value.trim(),answer,modes[mode].source);status.classList.remove("error");status.textContent="✓ Saved to My Notes under "+subject.value.trim()+".";fillSubjects();}
+catch(e){status.textContent="Unable to save. Please try again.";status.classList.add("error");}
+}
+save.addEventListener("click",doSave);
+[subject,title].forEach(el=>el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doSave();}}));
+body.append(actions,form);
 }
 function addAnswer(mode,answer,meta){const {row,body}=makeAiRow();const card=document.createElement("div");card.className="ai-card";body.appendChild(card);renderAnswer(card,answer);attachActions(body,mode,answer,meta);modes[mode].thread.appendChild(row);scrollToBottom();}
 
 async function runRequest(mode,text,marks){
- const meta={question:text,marks};
- const cached=getCached(mode,text,marks);
- if(cached){addAnswer(mode,cached,meta);return;}
- busy=true;sendBtn.disabled=true;
- const typing=addTyping(mode);
- try{
-  const answer=await askAI(mode,text,marks);
-  typing.remove();addAnswer(mode,answer,meta);setCached(mode,text,marks,answer);
- }catch(error){typing.remove();const {row,body}=makeAiRow();const card=document.createElement("div");card.className="error-card";card.textContent="Something went wrong. Please try again.";body.appendChild(card);modes[mode].thread.appendChild(row);}
- finally{busy=false;sendBtn.disabled=false;if(currentMode===mode)input.focus();}
+const meta={question:text,marks};
+const cached=getCached(mode,text,marks);
+if(cached){addAnswer(mode,cached,meta);return;}
+busy=true;sendBtn.disabled=true;
+const typing=addTyping(mode);
+try{
+const answer=await askAI(mode,text,marks);
+typing.remove();addAnswer(mode,answer,meta);setCached(mode,text,marks,answer);
+}catch(error){typing.remove();const {row,body}=makeAiRow();const card=document.createElement("div");card.className="error-card";card.textContent="Something went wrong. Please try again.";body.appendChild(card);modes[mode].thread.appendChild(row);}
+finally{busy=false;sendBtn.disabled=false;if(currentMode===mode)input.focus();}
 }
 
 $("composer").addEventListener("submit",e=>{
- e.preventDefault();if(busy)return;
- const text=input.value.trim();if(!text){input.focus();return;}
- const mode=currentMode;const marks=marksSelect.value;
- const shown=mode==="summarize"&&text.length>300?text.slice(0,300)+"…\n("+text.length+" characters pasted)":text;
- addUserMessage(mode,shown);input.value="";drafts[mode]="";resizeInput();runRequest(mode,text,marks);
+e.preventDefault();if(busy)return;
+const text=input.value.trim();if(!text){input.focus();return;}
+const mode=currentMode;const marks=marksSelect.value;
+const shown=mode==="summarize"&&text.length>300?text.slice(0,300)+"…\n("+text.length+" characters pasted)":text;
+addUserMessage(mode,shown);input.value="";drafts[mode]="";resizeInput();runRequest(mode,text,marks);
 });
 
 fillSubjects();
