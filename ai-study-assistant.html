@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +7,7 @@
 <title>Lumina AI Coach - AI Study Assistant</title>
 <link rel="stylesheet" href="./dashboard.css">
 <style>
-:root{--bg:var(--page-bg,#eefdef);--text:var(--text-main,#1f2d23);--muted:var(--text-muted,#5f7466);--accent:var(--accent,#4b7a52);--dark:var(--dark-green,#2f5535);--soft:var(--soft-green,#dff3e1);--border:var(--border-green,#cfe5d2);--white:#fff;--width:780px}
+:root{--bg:#eefdef;--text:#1f2d23;--muted:#5f7466;--accent:#4b7a52;--dark:#2f5535;--soft:#dff3e1;--border:#cfe5d2;--white:#fff;--width:780px}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{display:flex;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -55,26 +54,34 @@ button,input,textarea,select{font:inherit}
 .save-btn{padding:9px 18px;border:0;border-radius:8px;background:var(--accent);color:white;cursor:pointer}
 .save-note{flex-basis:100%;font-size:13px;color:var(--accent)}
 .save-note.error,.error-card{color:#b42318}
-.typing{display:flex;gap:5px;padding:8px 0}
-.typing span{width:8px;height:8px;background:var(--accent);border-radius:50%;animation:blink 1.2s infinite}
-.typing span:nth-child(2){animation-delay:.2s}
-.typing span:nth-child(3){animation-delay:.4s}
-@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+/* Animated three-dot loading indicator */
+.typing{display:inline-flex;align-items:center;gap:7px;padding:10px 13px;margin:2px 0;border:1px solid var(--border);border-radius:14px;background:#fff;color:var(--muted);font-size:13px;font-weight:500}
+.typing-dots{display:inline-flex;align-items:center;gap:4px}
+.typing-dots span{display:block;width:8px;height:8px;flex:0 0 8px;background:var(--accent);border-radius:50%;opacity:.35;animation:luminaDot 1s ease-in-out infinite}
+.typing-dots span:nth-child(2){animation-delay:.16s}
+.typing-dots span:nth-child(3){animation-delay:.32s}
+@keyframes luminaDot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-5px)}}
+
 .error-card{font-size:15px;line-height:1.6}
 .composer-wrap{flex-shrink:0;padding:8px 20px 12px;background:linear-gradient(to top,var(--bg) 80%,transparent)}
 .composer{max-width:var(--width);width:100%;margin:auto;padding:12px 14px 10px 20px;border:1px solid var(--border);border-radius:26px;background:white;box-shadow:0 4px 16px #37563b14}
 .composer:focus-within{border-color:var(--accent)}
 .composer textarea{display:block;width:100%;max-height:200px;resize:none;overflow-y:auto;border:0;outline:0;background:transparent;color:var(--text);font-size:16px;line-height:1.5}
-.composer-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+.composer-bar{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
 .composer-bar select{padding:6px 10px;border:0;border-radius:999px;background:var(--soft);color:var(--dark);font-size:13px}
-.send-btn{display:flex!important;align-items:center;justify-content:center;flex:0 0 38px;width:38px;min-width:38px;height:38px;border:0;border-radius:50%;background:var(--accent);color:white;font-size:20px;line-height:1;cursor:pointer;visibility:visible!important;opacity:1}
-.send-btn:disabled{opacity:.5}
+
+/* Always-visible Send button */
+.send-btn{display:inline-flex!important;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;min-width:82px;height:38px;padding:0 15px;border:0;border-radius:22px;background:#3f7047!important;color:#fff!important;font-size:14px;font-weight:600;line-height:1;cursor:pointer;visibility:visible!important;opacity:1!important;position:relative;z-index:2}
+.send-btn:disabled{opacity:.55!important;cursor:wait}
+.send-btn .send-arrow{font-size:17px;line-height:1}
 .disclaimer,.demo-notice{margin:8px 0 0;color:var(--muted);font-size:12px;text-align:center}
 @media(max-width:600px){.sidebar{width:72px;padding:10px 0}.side-logo{width:38px;height:38px}.side-btn{width:66px;height:36px;font-size:8.5px}.top-header{padding:10px 12px}.mode-title{font-size:15px}.home-btn{padding:7px 14px}.chat-scroll{padding:8px 12px 16px}.composer-wrap{padding:8px 10px 10px}}
-@media(prefers-reduced-motion:reduce){.typing span{animation:none}.chat-scroll{scroll-behavior:auto}}
+@media(prefers-reduced-motion:reduce){.chat-scroll{scroll-behavior:auto}.typing-dots span{animation:none;opacity:1}}
 </style>
 </head>
 <body>
+
 <aside class="sidebar" aria-label="Tools">
 <a href="dashboard.html" class="side-logo" title="Lumina AI" aria-label="Lumina AI home">🌿</a>
 <button class="side-btn" id="newChatBtn" type="button" data-label="New chat" aria-label="New chat">New Chat</button>
@@ -82,33 +89,58 @@ button,input,textarea,select{font:inherit}
 <button class="side-btn" id="tab-explain" role="tab" type="button" data-label="Concept Explainer" aria-selected="true">Concept<br>Explainer</button>
 <button class="side-btn" id="tab-summarize" role="tab" type="button" data-label="AI Summarize" aria-selected="false">AI<br>Summarize</button>
 </aside>
+
 <div class="main">
-<header class="top-header"><div class="mode-title" id="modeTitle">Concept Explainer</div><a href="dashboard.html" class="home-btn">Home</a></header>
+<header class="top-header">
+<div class="mode-title" id="modeTitle">Concept Explainer</div>
+<a href="dashboard.html" class="home-btn">Home</a>
+</header>
+
 <div class="chat-scroll" id="chatScroll">
 <div class="chat-thread" id="thread-explain" role="log" aria-live="polite">
 <div class="welcome-box">
-<div class="welcome-icon">💡</div><h1>Concept Explainer</h1>
+<div class="welcome-icon">💡</div>
+<h1>Concept Explainer</h1>
 <p>Type a topic or exam question. Choose 2, 5 or 10 marks and get a model answer.</p>
 <div class="starter-list">
 <button class="starter-btn">Explain supervised learning with an example</button>
 <button class="starter-btn">What is normalization in DBMS?</button>
 <button class="starter-btn">Differentiate between TCP and UDP</button>
 <button class="starter-btn">Explain deadlock in operating systems</button>
-</div></div></div>
+</div>
+</div>
+</div>
+
 <div class="chat-thread" id="thread-summarize" role="log" aria-live="polite" hidden>
-<div class="welcome-box"><div class="welcome-icon">✨</div><h1>Notes Summarizer</h1><p>Paste textbook text or lecture notes to get revision notes, key terms and exam questions.</p></div>
-</div></div>
+<div class="welcome-box">
+<div class="welcome-icon">✨</div>
+<h1>Notes Summarizer</h1>
+<p>Paste textbook text or lecture notes to get revision notes, key terms and exam questions.</p>
+</div>
+</div>
+</div>
+
 <div class="composer-wrap">
 <form class="composer" id="composer">
 <textarea id="promptInput" rows="1" maxlength="20000" aria-label="Message" placeholder="Type a topic or exam question..."></textarea>
 <div class="composer-bar">
-<select id="marksSelect" aria-label="Answer type"><option value="2">2 marks</option><option value="5" selected>5 marks</option><option value="10">10 marks</option></select>
-<button class="send-btn" id="sendBtn" type="submit" aria-label="Send" title="Send message">➤</button>
-</div></form>
+<select id="marksSelect" aria-label="Answer type">
+<option value="2">2 marks</option>
+<option value="5" selected>5 marks</option>
+<option value="10">10 marks</option>
+</select>
+<button class="send-btn" id="sendBtn" type="submit" aria-label="Send message" title="Send message">
+<span>Send</span><span class="send-arrow" aria-hidden="true">➤</span>
+</button>
+</div>
+</form>
 <p class="disclaimer">AI can make mistakes. Check important facts and formulas with your textbook.</p>
 <p class="demo-notice">Lumina demo: sample answers are available if the AI service cannot respond.</p>
-</div></div>
+</div>
+</div>
+
 <datalist id="subjectOptions"></datalist>
+
 <script>
 "use strict";
 
@@ -248,7 +280,20 @@ function addUserMessage(mode,text){
  row.appendChild(bubble);modes[mode].thread.appendChild(row);modes[mode].thread.classList.add("has-messages");scrollToBottom();
 }
 function makeAiRow(){const row=document.createElement("div");row.className="msg ai";const body=document.createElement("div");body.className="ai-body";row.appendChild(body);return{row,body};}
-function addTyping(mode){const {row,body}=makeAiRow();const dots=document.createElement("div");dots.className="typing";dots.innerHTML="<span></span><span></span><span></span>";body.appendChild(dots);modes[mode].thread.appendChild(row);scrollToBottom();return row;}
+
+/* Displays the animated three dots while the AI request is running. */
+function addTyping(mode){
+ const {row,body}=makeAiRow();
+ const indicator=document.createElement("div");
+ indicator.className="typing";
+ indicator.setAttribute("role","status");
+ indicator.setAttribute("aria-live","polite");
+ indicator.innerHTML=`<span>Lumina is preparing your answer</span><span class="typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>`;
+ body.appendChild(indicator);
+ modes[mode].thread.appendChild(row);
+ scrollToBottom();
+ return row;
+}
 
 function renderAnswer(container,text){
  container.textContent="";
@@ -278,48 +323,94 @@ function attachActions(body,mode,answer,meta){
  const copy=document.createElement("button");copy.type="button";copy.className="action-btn";copy.textContent="Copy";
  const toggle=document.createElement("button");toggle.type="button";toggle.className="action-btn";toggle.textContent="Save to My Notes";
  actions.append(copy,toggle);
+
  const form=document.createElement("div");form.className="save-form";form.hidden=true;
  const subject=document.createElement("input");subject.placeholder="Subject name, e.g. Artificial Intelligence";subject.setAttribute("list","subjectOptions");subject.setAttribute("aria-label","Subject name");
  const title=document.createElement("input");title.maxLength=120;title.value=getNoteTitle(mode,answer,meta.question,meta.marks);title.placeholder="Title / topic";title.setAttribute("aria-label","Title");
  const save=document.createElement("button");save.type="button";save.className="save-btn";save.textContent="Save";
  const status=document.createElement("div");status.className="save-note";status.setAttribute("role","status");
  form.append(subject,title,save,status);
+
  copy.addEventListener("click",async()=>{
-  try{if(navigator.clipboard&&navigator.clipboard.writeText)await navigator.clipboard.writeText(answer);else{const temp=document.createElement("textarea");temp.value=answer;document.body.appendChild(temp);temp.select();if(!document.execCommand("copy"))throw Error("Copy failed");temp.remove();}copy.textContent="Copied ✓";}
-  catch(e){copy.textContent="Could not copy";}
+  try{
+   if(navigator.clipboard&&navigator.clipboard.writeText)await navigator.clipboard.writeText(answer);
+   else{const temp=document.createElement("textarea");temp.value=answer;document.body.appendChild(temp);temp.select();if(!document.execCommand("copy"))throw Error("Copy failed");temp.remove();}
+   copy.textContent="Copied ✓";
+  }catch(e){copy.textContent="Could not copy";}
   setTimeout(()=>copy.textContent="Copy",1500);
  });
+
  toggle.addEventListener("click",()=>{form.hidden=!form.hidden;if(!form.hidden)subject.focus();});
+
  function doSave(){
   if(!subject.value.trim()){status.textContent="Please enter a subject name.";status.classList.add("error");subject.focus();return;}
-  try{saveToNotes(title.value.trim()||getNoteTitle(mode,answer,meta.question,meta.marks),subject.value.trim(),answer,modes[mode].source);status.classList.remove("error");status.textContent="✓ Saved to My Notes under "+subject.value.trim()+".";fillSubjects();}
-  catch(e){status.textContent="Unable to save. Please try again.";status.classList.add("error");}
+  try{
+   saveToNotes(title.value.trim()||getNoteTitle(mode,answer,meta.question,meta.marks),subject.value.trim(),answer,modes[mode].source);
+   status.classList.remove("error");
+   status.textContent="✓ Saved to My Notes under "+subject.value.trim()+".";
+   fillSubjects();
+  }catch(e){
+   status.textContent="Unable to save. Please try again.";
+   status.classList.add("error");
+  }
  }
  save.addEventListener("click",doSave);
  [subject,title].forEach(el=>el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();doSave();}}));
  body.append(actions,form);
 }
-function addAnswer(mode,answer,meta){const {row,body}=makeAiRow();const card=document.createElement("div");card.className="ai-card";body.appendChild(card);renderAnswer(card,answer);attachActions(body,mode,answer,meta);modes[mode].thread.appendChild(row);scrollToBottom();}
+
+function addAnswer(mode,answer,meta){
+ const {row,body}=makeAiRow();
+ const card=document.createElement("div");card.className="ai-card";
+ body.appendChild(card);
+ renderAnswer(card,answer);
+ attachActions(body,mode,answer,meta);
+ modes[mode].thread.appendChild(row);
+ scrollToBottom();
+}
 
 async function runRequest(mode,text,marks){
  const meta={question:text,marks};
  const cached=getCached(mode,text,marks);
  if(cached){addAnswer(mode,cached,meta);return;}
- busy=true;sendBtn.disabled=true;
+
+ busy=true;
+ sendBtn.disabled=true;
  const typing=addTyping(mode);
+
  try{
   const answer=await askAI(mode,text,marks);
-  typing.remove();addAnswer(mode,answer,meta);setCached(mode,text,marks,answer);
- }catch(error){typing.remove();const {row,body}=makeAiRow();const card=document.createElement("div");card.className="error-card";card.textContent="Something went wrong. Please try again.";body.appendChild(card);modes[mode].thread.appendChild(row);}
- finally{busy=false;sendBtn.disabled=false;if(currentMode===mode)input.focus();}
+  typing.remove();
+  addAnswer(mode,answer,meta);
+  setCached(mode,text,marks,answer);
+ }catch(error){
+  typing.remove();
+  const {row,body}=makeAiRow();
+  const card=document.createElement("div");
+  card.className="error-card";
+  card.textContent="Something went wrong. Please try again.";
+  body.appendChild(card);
+  modes[mode].thread.appendChild(row);
+ }finally{
+  busy=false;
+  sendBtn.disabled=false;
+  if(currentMode===mode)input.focus();
+ }
 }
 
 $("composer").addEventListener("submit",e=>{
- e.preventDefault();if(busy)return;
- const text=input.value.trim();if(!text){input.focus();return;}
- const mode=currentMode;const marks=marksSelect.value;
+ e.preventDefault();
+ if(busy)return;
+ const text=input.value.trim();
+ if(!text){input.focus();return;}
+ const mode=currentMode;
+ const marks=marksSelect.value;
  const shown=mode==="summarize"&&text.length>300?text.slice(0,300)+"…\n("+text.length+" characters pasted)":text;
- addUserMessage(mode,shown);input.value="";drafts[mode]="";resizeInput();runRequest(mode,text,marks);
+ addUserMessage(mode,shown);
+ input.value="";
+ drafts[mode]="";
+ resizeInput();
+ runRequest(mode,text,marks);
 });
 
 fillSubjects();
