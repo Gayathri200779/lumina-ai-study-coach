@@ -1,112 +1,374 @@
 
-/* ===== PROFILE SETUP FINAL REFINEMENTS ===== */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap');
 
-/* Wider main card */
-.card {
-    max-width: 1040px;
-    padding: 24px 38px;
+/* ===== GLOBAL ===== */
+
+* {
+    box-sizing: border-box;
 }
 
-/* Remove progress tracker and extra description */
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 14px 22px 24px;
+    background: #f7f8f2;
+    color: #354b3a;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ===== BACKGROUND DECORATION ===== */
+
+.bg-blob {
+    position: fixed;
+    z-index: -1;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.4;
+    filter: blur(3px);
+}
+
+.blob-1 {
+    width: 260px;
+    height: 260px;
+    top: -110px;
+    left: -90px;
+    background: #dceedd;
+}
+
+.blob-2 {
+    width: 300px;
+    height: 300px;
+    right: -120px;
+    bottom: -140px;
+    background: #e8ead7;
+}
+
+/* ===== HEADER ===== */
+
+.header {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto 14px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4f6f52;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.logo-mark {
+    font-size: 23px;
+}
+
+/* ===== MAIN CARD ===== */
+
+.card {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 25px 34px;
+    background: #ffffff;
+    border: 1px solid #e5ece2;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(65, 91, 66, 0.07);
+}
+
+/* ===== PROGRESS TRACKER ===== */
+
 .progress-track {
     display: none;
+}
+
+/* ===== PAGE HEADING ===== */
+
+.card-header {
+    margin: 0 0 24px;
+    text-align: center;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #3f6045;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
 }
 
 .card-header p {
     display: none;
 }
 
-.card-header {
-    margin-bottom: 22px;
+/* ===== FORM ===== */
+
+#profileForm {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-/* Bring labels closer to their input boxes */
+/* ===== NAME AND DEGREE ===== */
+
 .field {
-    grid-template-columns: 135px minmax(0, 1fr);
+    display: grid;
+    grid-template-columns: 155px minmax(0, 1fr);
+    align-items: center;
     gap: 12px;
 }
 
-.section {
-    grid-template-columns: 135px minmax(0, 1fr);
-    column-gap: 12px;
+.field label,
+.section > label {
+    display: block;
+    margin: 0;
+    color: #49664d;
+    font-size: 13px;
+    font-weight: 700;
 }
 
-/* Make subject entries separate rounded chips */
+.icon-badge {
+    display: inline-block;
+    margin-right: 5px;
+    font-size: 14px;
+}
+
+.field input {
+    width: 100%;
+    height: 41px;
+    min-width: 0;
+    padding: 0 13px;
+    border: 1px solid #dce7dc;
+    border-radius: 9px;
+    outline: none;
+    background: #fbfdf9;
+    color: #354b3a;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field input:focus {
+    border-color: #7da681;
+    box-shadow: 0 0 0 3px rgba(125, 166, 129, 0.12);
+}
+
+.field input::placeholder {
+    color: #a0aaa0;
+}
+
+/* ===== SEMESTER, SUBJECTS AND GOALS LAYOUT ===== */
+
+.section {
+    display: grid;
+    grid-template-columns: 155px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 4px;
+}
+
+.section > label {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+}
+
+.section .hint {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+    margin: 3px 0 0;
+    color: #879487;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.section .sem-grid,
+.section .subjects-box,
+.section .goals {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+/* ===== SEMESTER BUTTONS ===== */
+
+.sem-grid {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.sem-btn {
+    height: 39px;
+    min-width: 0;
+    padding: 0 4px;
+    border: 1px solid #dce8dc;
+    border-radius: 8px;
+    background: #f8fbf7;
+    color: #58735b;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.sem-btn:hover {
+    border-color: #91b494;
+    background: #edf6ed;
+}
+
+.sem-btn.selected {
+    border-color: #5d8962;
+    background: #5d8962;
+    color: #ffffff;
+}
+
+/* ===== SUBJECT INPUT AREA ===== */
+
 .subjects-box {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    padding: 10px;
     min-height: 48px;
+    padding: 9px 10px;
+    border: 1px solid #dce7dc;
+    border-radius: 9px;
+    background: #fbfdf9;
+    transition: border-color 0.2s;
 }
+
+.subjects-box:focus-within {
+    border-color: #8caf8d;
+}
+
+/* Subject chips container */
 
 #subjectsContainer {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 7px;
+    min-width: 0;
 }
 
-/* Actual subject chip */
-.chip {
+/* Individual subject chip */
+
+#subjectsContainer .chip {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    padding: 6px 10px;
+    max-width: 100%;
+    padding: 6px 9px;
     border: 1px solid #d7e8d5;
     border-radius: 7px;
     background: #edf6eb;
     color: #496b4d;
-    font-size: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
     font-weight: 600;
     line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 
-/* Remove button inside each chip */
-.chip button {
-    width: 17px;
-    height: 17px;
-    padding: 0;
+/* Remove subject button */
+
+#subjectsContainer .chip button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    width: 17px;
+    height: 17px;
+    padding: 0;
     border: none;
     border-radius: 50%;
     background: #dcebd9;
     color: #496b4d;
-    font-size: 12px;
+    font-size: 13px;
+    line-height: 1;
     cursor: pointer;
 }
 
-.chip button:hover {
+#subjectsContainer .chip button:hover {
     background: #c8dfc5;
 }
 
-/* Better learning goal cards */
+/* Add subject input */
+
+#subjectInput {
+    flex: 1 1 170px;
+    width: 170px;
+    min-width: 130px;
+    height: 29px;
+    padding: 0 4px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #354b3a;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+}
+
+#subjectInput::placeholder {
+    color: #9aa69a;
+}
+
+/* ===== LEARNING GOALS ===== */
+
 .goals {
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 9px;
 }
 
+/* Individual goal card */
+
 .goal-card {
-    min-height: 42px;
-    padding: 9px 11px;
-    border: 1px solid #dfe9dc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 43px;
+    padding: 9px 10px;
+    border: 1px solid #e0e9dd;
     border-radius: 9px;
     background: #fbfdf9;
     color: #526b55;
-    font-size: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
     font-weight: 500;
+    line-height: 1.4;
+    cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
 }
 
+.goal-card:hover {
+    border-color: #a3c2a3;
+    background: #f1f7ef;
+}
+
 .goal-card input[type="checkbox"] {
-    accent-color: #5d8962;
     width: 16px;
     height: 16px;
-    margin: 0;
     flex-shrink: 0;
+    margin: 0;
+    accent-color: #5d8962;
+    cursor: pointer;
+}
+
+.goal-card span {
+    min-width: 0;
 }
 
 .goal-card.selected {
@@ -117,30 +379,145 @@
 
 .goal-card.disabled {
     opacity: 0.45;
+    cursor: not-allowed;
 }
 
-/* Mobile layout */
-@media (max-width: 650px) {
+/* ===== CONTINUE BUTTON ===== */
+
+.footer-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
+}
+
+.primary-btn {
+    min-width: 150px;
+    height: 41px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 9px;
+    background: #5d8962;
+    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.primary-btn:hover {
+    background: #496f4e;
+    transform: translateY(-1px);
+}
+
+.primary-btn:focus-visible,
+.sem-btn:focus-visible {
+    outline: 3px solid rgba(93, 137, 98, 0.25);
+    outline-offset: 2px;
+}
+
+/* ===== TABLET ===== */
+
+@media (max-width: 760px) {
+
+    body {
+        padding: 12px 16px 20px;
+    }
+
     .card {
-        padding: 20px 17px;
+        padding: 22px 22px;
     }
 
     .field,
     .section {
-        grid-template-columns: 1fr;
-        gap: 8px;
+        grid-template-columns: 125px minmax(0, 1fr);
+        column-gap: 10px;
     }
 
-    .section > label,
-    .section .hint,
-    .section .sem-grid,
-    .section .subjects-box,
-    .section .goals {
-        grid-column: 1;
-        grid-row: auto;
+    .sem-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .goals {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ===== MOBILE ===== */
+
+@media (max-width: 520px) {
+
+    body {
+        padding: 12px 12px 20px;
+    }
+
+    .header {
+        margin-bottom: 12px;
+    }
+
+    .logo {
+        font-size: 20px;
+    }
+
+    .card {
+        padding: 20px 16px;
+        border-radius: 16px;
+    }
+
+    .card-header {
+        margin-bottom: 20px;
+    }
+
+    .card-header h2 {
+        font-size: 22px;
+    }
+
+    #profileForm {
+        gap: 16px;
+    }
+
+    .field,
+    .section {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .field input {
+        height: 42px;
+    }
+
+    .section .hint {
+        margin: -3px 0 0;
+    }
+
+    .section .sem-grid,
+    .section .subjects-box,
+    .section .goals {
+        width: 100%;
+    }
+
+    .sem-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .goals {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .goal-card {
+        min-height: 42px;
+        padding: 8px;
+        font-size: 10px;
+    }
+
+    .footer-action {
+        margin-top: 4px;
+    }
+
+    .primary-btn {
+        width: 100%;
     }
 }
