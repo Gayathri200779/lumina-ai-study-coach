@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,18 +28,22 @@
   </header>
 
   <main class="container">
+
+    <!-- Welcome -->
     <section class="welcome">
       <p class="eyebrow">YOUR PERSONAL LEARNING SPACE</p>
       <h1>Welcome back, <span id="welcomeName">Learner</span>! 🌱</h1>
       <p>What would you like to learn today?</p>
     </section>
 
+    <!-- Profile Information -->
     <section class="info-bar" aria-label="Study profile">
       <div class="info-item" id="currentCourse">🎓 Your Degree</div>
       <div class="info-item" id="currentSemester">📚 Current Semester: Not set</div>
       <div class="info-item" id="subjectCount">📝 Subjects: 0</div>
     </section>
 
+    <!-- Start Learning -->
     <section class="section-block start-learning" id="subjectsSection">
       <div class="section-heading">
         <div>
@@ -57,9 +60,12 @@
         </div>
       </div>
 
-      <a class="primary-link" href="profile-setup.html">Manage My Subjects →</a>
+      <a class="primary-link" href="profile-setup.html">
+        Manage My Subjects →
+      </a>
     </section>
 
+    <!-- AI Learning Tools -->
     <section class="section-block" id="aiLearningSection">
       <div class="section-heading">
         <div>
@@ -69,20 +75,34 @@
         </div>
       </div>
 
-      <div class="tools-grid tools-grid-single">
-        <a href="ai-study-assistant.html" class="tool-card">
-          <span class="tool-icon">🧠</span>
-          <h3>AI Study Assistant</h3>
-          <p>One place for two study helpers: understand difficult concepts with simple explanations, or turn your study material into concise revision notes.</p>
-          <span class="tool-features">
+      <div class="ai-tool-card">
+        <div class="ai-tool-content">
+
+          <div class="ai-tool-title">
+            <span class="tool-icon">🧠</span>
+            <h3>AI Study Assistant</h3>
+          </div>
+
+          <p>
+            One place for two study helpers: understand difficult concepts
+            with simple explanations, or turn your study material into
+            concise revision notes.
+          </p>
+
+          <div class="tool-features">
             <span class="feature-chip">💡 Concept Explainer</span>
             <span class="feature-chip">✨ Notes Summarizer</span>
-          </span>
-          <span class="open-link">Open AI Study Assistant →</span>
+          </div>
+
+        </div>
+
+        <a href="ai-study-assistant.html" class="ai-open-button">
+          Open AI Study Assistant →
         </a>
       </div>
     </section>
 
+    <!-- My Study Space -->
     <section class="section-block" id="studySpaceSection">
       <div class="section-heading">
         <div>
@@ -93,6 +113,7 @@
       </div>
 
       <div class="tools-grid tools-grid-two">
+
         <a href="my-notes.html" class="tool-card">
           <span class="tool-icon">📝</span>
           <h3>My Notes</h3>
@@ -106,6 +127,7 @@
           <p>Organize tasks and plan your study time.</p>
           <span class="open-link">Plan my studies →</span>
         </a>
+
       </div>
     </section>
 
@@ -125,11 +147,14 @@
         </div>
       </div>
     </section>
+
   </main>
 
   <footer class="footer">
     <div class="footer-logo">🌿 Lumina AI</div>
-    <p class="footer-text">Supporting your learning journey, one step at a time.</p>
+    <p class="footer-text">
+      Supporting your learning journey, one step at a time.
+    </p>
   </footer>
 
   <script src="./demo-data.js"></script>
