@@ -1,344 +1,131 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap');
+/* ===== PROFILE SETUP FINAL REFINEMENTS ===== */
 
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    padding: 12px 24px;
-    min-height: 100vh;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    color: #354b3a;
-    background: #f7f8f2;
-}
-
-/* Background decoration */
-
-.bg-blob {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(2px);
-    opacity: 0.35;
-    z-index: -1;
-    pointer-events: none;
-}
-
-.blob-1 {
-    width: 260px;
-    height: 260px;
-    background: #dceedd;
-    top: -100px;
-    left: -80px;
-}
-
-.blob-2 {
-    width: 300px;
-    height: 300px;
-    background: #e8ead7;
-    bottom: -130px;
-    right: -100px;
-}
-
-/* Header */
-
-header {
-    max-width: 940px;
-    margin: 0 auto 12px;
-}
-
-.logo {
-    font-family: 'Quicksand', sans-serif;
-    font-size: 23px;
-    font-weight: 700;
-    color: #4f6f52;
-}
-
-/* Main card */
-
+/* Wider main card */
 .card {
-    width: 100%;
-    max-width: 940px;
-    margin: 0 auto 20px;
-    padding: 22px 36px;
-    background: #ffffff;
-    border: 1px solid #e6eee4;
-    border-radius: 20px;
-    box-shadow: 0 8px 28px rgba(70, 100, 70, 0.07);
+    max-width: 1040px;
+    padding: 24px 38px;
 }
 
-/* Progress tracker */
-
+/* Remove progress tracker and extra description */
 .progress-track {
-    max-width: 520px;
-    margin: 0 auto 18px;
-}
-
-/* Heading */
-
-.card-header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.card-header h1 {
-    margin: 0 0 6px;
-    font-family: 'Quicksand', sans-serif;
-    font-size: 25px;
-    font-weight: 700;
-    color: #3f6045;
+    display: none;
 }
 
 .card-header p {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.5;
-    color: #7b897b;
+    display: none;
 }
 
-/* Form layout */
-
-#profileForm {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+.card-header {
+    margin-bottom: 22px;
 }
 
-/* Name and Degree */
-
+/* Bring labels closer to their input boxes */
 .field {
-    display: grid;
-    grid-template-columns: 170px minmax(0, 1fr);
-    align-items: center;
-    gap: 18px;
+    grid-template-columns: 135px minmax(0, 1fr);
+    gap: 12px;
 }
-
-.field label,
-.section > label {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 700;
-    color: #49664d;
-}
-
-.field input {
-    width: 100%;
-    min-width: 0;
-    height: 40px;
-    padding: 0 13px;
-    border: 1px solid #dce7dc;
-    border-radius: 9px;
-    outline: none;
-    background: #fbfdf9;
-    color: #354b3a;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 13px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.field input:focus {
-    border-color: #7caa80;
-    box-shadow: 0 0 0 3px rgba(124, 170, 128, 0.12);
-}
-
-/* Sections: label left, controls right */
 
 .section {
-    display: grid;
-    grid-template-columns: 170px minmax(0, 1fr);
-    align-items: center;
-    column-gap: 18px;
-    row-gap: 4px;
+    grid-template-columns: 135px minmax(0, 1fr);
+    column-gap: 12px;
 }
 
-.section > label {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: end;
-}
-
-.section .hint {
-    grid-column: 1;
-    grid-row: 2;
-    align-self: start;
-    margin: 3px 0 0;
-    font-size: 11px;
-    line-height: 1.45;
-    color: #899589;
-}
-
-.section .sem-grid,
-.section .subjects-box,
-.section .goals {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-}
-
-/* Semester selection */
-
-.sem-grid {
-    display: grid;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
-    gap: 7px;
-}
-
-.sem-grid button {
-    min-width: 0;
-    height: 36px;
-    padding: 0 4px;
-    border: 1px solid #dce8dc;
-    border-radius: 8px;
-    background: #f8fbf7;
-    color: #58735b;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.sem-grid button:hover {
-    border-color: #91b494;
-    background: #edf6ed;
-}
-
-.sem-grid button.selected {
-    border-color: #5d8962;
-    background: #5d8962;
-    color: #ffffff;
-}
-
-/* Subjects */
-
+/* Make subject entries separate rounded chips */
 .subjects-box {
-    min-height: 42px;
-    padding: 7px 10px;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 6px;
-    border: 1px solid #dce7dc;
-    border-radius: 9px;
-    background: #fbfdf9;
+    gap: 8px;
+    padding: 10px;
+    min-height: 48px;
 }
 
-.subjects-box input {
-    flex: 1;
-    min-width: 130px;
-    height: 26px;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #354b3a;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 12px;
+#subjectsContainer {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
 }
 
-/* Subject tags */
-
-.subject-tag {
+/* Actual subject chip */
+.chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 5px 9px;
-    border-radius: 6px;
-    background: #eaf4e9;
-    color: #4f6f52;
-    font-size: 11px;
+    gap: 7px;
+    padding: 6px 10px;
+    border: 1px solid #d7e8d5;
+    border-radius: 7px;
+    background: #edf6eb;
+    color: #496b4d;
+    font-size: 12px;
     font-weight: 600;
+    line-height: 1.4;
 }
 
-/* Learning goals */
+/* Remove button inside each chip */
+.chip button {
+    width: 17px;
+    height: 17px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #dcebd9;
+    color: #496b4d;
+    font-size: 12px;
+    cursor: pointer;
+}
 
+.chip button:hover {
+    background: #c8dfc5;
+}
+
+/* Better learning goal cards */
 .goals {
-    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 7px;
+    gap: 9px;
 }
 
 .goal-card {
-    min-height: 36px;
-    padding: 7px 9px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    border: 1px solid #e0e9df;
-    border-radius: 8px;
+    min-height: 42px;
+    padding: 9px 11px;
+    border: 1px solid #dfe9dc;
+    border-radius: 9px;
     background: #fbfdf9;
-    color: #5a705d;
-    font-size: 11px;
-    cursor: pointer;
-    transition: 0.2s;
+    color: #526b55;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.2s, border-color 0.2s;
 }
 
-.goal-card:hover {
-    border-color: #a3c2a3;
-    background: #f1f7ef;
+.goal-card input[type="checkbox"] {
+    accent-color: #5d8962;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .goal-card.selected {
-    border-color: #77a47a;
+    border-color: #83aa83;
     background: #edf6eb;
     color: #416947;
 }
 
 .goal-card.disabled {
     opacity: 0.45;
-    cursor: not-allowed;
 }
 
-/* Continue button */
-
-.footer-action {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 3px;
-}
-
-.footer-action button {
-    min-width: 145px;
-    height: 40px;
-    padding: 0 20px;
-    border: none;
-    border-radius: 9px;
-    background: #5d8962;
-    color: #ffffff;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.footer-action button:hover {
-    background: #496f4e;
-    transform: translateY(-1px);
-}
-
-/* Responsive layout */
-
+/* Mobile layout */
 @media (max-width: 650px) {
-    body {
-        padding: 12px 14px;
-    }
-
     .card {
         padding: 20px 17px;
     }
 
-    .card-header h1 {
-        font-size: 22px;
-    }
-
-    .field {
-        grid-template-columns: 1fr;
-        gap: 7px;
-    }
-
+    .field,
     .section {
         grid-template-columns: 1fr;
         gap: 8px;
@@ -353,19 +140,7 @@ header {
         grid-row: auto;
     }
 
-    .section .hint {
-        margin-top: -5px;
-    }
-
-    .sem-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
     .goals {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .footer-action button {
-        width: 100%;
     }
 }
