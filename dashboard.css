@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap');
 
 /* ===== GLOBAL ===== */
@@ -183,12 +182,12 @@ a {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
-    margin-bottom: 15px;
+    margin-bottom: 13px;
 }
 
 .info-item {
     min-width: 0;
-    padding: 8px 11px;
+    padding: 7px 10px;
     background: var(--white);
     border: 1px solid var(--border-green);
     border-radius: 8px;
@@ -200,7 +199,7 @@ a {
 /* ===== SECTIONS ===== */
 
 .section-block {
-    margin-top: 17px;
+    margin-top: 15px;
 }
 
 .start-learning {
@@ -212,7 +211,7 @@ a {
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
 }
 
 .section-heading h2 {
@@ -236,6 +235,7 @@ a {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 9px;
+    align-items: start;
 }
 
 .subject-card {
@@ -314,12 +314,13 @@ a {
     border-color: var(--accent);
 }
 
-/* ===== TOOL CARDS ===== */
+/* ===== GENERAL TOOL CARDS ===== */
 
 .tools-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 9px;
+    align-items: start;
 }
 
 .tools-grid-single {
@@ -328,37 +329,36 @@ a {
 
 .tools-grid-two {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
 }
 
 .tool-card {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    align-self: start;
     min-width: 0;
-    padding: 12px 14px;
+    height: auto;
+    padding: 11px 13px;
     background: var(--white);
     border: 1px solid var(--border-green);
-    border-radius: 10px;
+    border-radius: 9px;
     color: inherit;
     text-decoration: none;
     transition: 0.2s;
 }
 
-/* Icon */
-
 .tool-icon {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     border-radius: 8px;
     background: var(--soft-green);
-    font-size: 17px;
+    font-size: 16px;
 }
-
-/* Title */
 
 .tool-card h3 {
     margin-bottom: 3px;
@@ -366,8 +366,6 @@ a {
     line-height: 1.4;
     font-weight: 700;
 }
-
-/* Description: do not stretch cards to fill empty space */
 
 .tool-card p {
     flex-grow: 0;
@@ -377,27 +375,6 @@ a {
     line-height: 1.45;
 }
 
-/* Feature labels */
-
-.tool-features {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 7px;
-}
-
-.feature-chip {
-    padding: 4px 8px;
-    background: var(--soft-green);
-    border: 1px solid var(--border-green);
-    border-radius: 999px;
-    color: var(--dark-green);
-    font-size: 11px;
-    font-weight: 600;
-}
-
-/* Open link */
-
 .open-link {
     display: inline-block;
     margin-top: 7px;
@@ -406,46 +383,104 @@ a {
     font-weight: 700;
 }
 
-/* AI assistant: neat, full-width horizontal card */
+/* ===== AI STUDY ASSISTANT HORIZONTAL CARD ===== */
 
-#aiLearningSection .tools-grid-single {
-    display: block;
-}
-
-#aiLearningSection .tool-card {
+.ai-tool-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
     width: 100%;
     padding: 11px 15px;
+    background: var(--white);
+    border: 1px solid var(--border-green);
     border-radius: 9px;
+    transition: 0.2s;
 }
 
-#aiLearningSection .tool-icon {
+.ai-tool-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.ai-tool-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
     margin-bottom: 5px;
 }
 
-#aiLearningSection .tool-card h3 {
-    margin-bottom: 2px;
+.ai-tool-title .tool-icon {
+    flex-shrink: 0;
+    margin: 0;
 }
 
-#aiLearningSection .tool-card p {
+.ai-tool-title h3 {
+    font-size: 14px;
     line-height: 1.4;
+    font-weight: 700;
 }
 
-#aiLearningSection .tool-features {
-    margin-top: 6px;
+.ai-tool-content > p {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.45;
 }
 
-#aiLearningSection .open-link {
-    margin-top: 6px;
+.ai-tool-card .tool-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 7px;
+}
+
+.feature-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    background: var(--soft-green);
+    border: 1px solid var(--border-green);
+    border-radius: 999px;
+    color: var(--dark-green);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ai-open-button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 13px;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 7px;
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: 0.2s;
+}
+
+.ai-open-button:hover {
+    background: var(--dark-green);
+    border-color: var(--dark-green);
 }
 
 /* ===== HOVER EFFECTS ===== */
 
 .subject-card:hover,
+.tool-card:hover,
+.ai-tool-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 11px rgba(55, 86, 59, 0.07);
+    transform: translateY(-1px);
+}
+
 .tool-card:hover {
     background: var(--soft-green);
-    border-color: var(--accent);
-    box-shadow: 0 4px 11px rgba(55, 86, 59, 0.08);
-    transform: translateY(-1px);
 }
 
 .tool-card:hover .feature-chip {
@@ -455,7 +490,7 @@ a {
 /* ===== LEARNING PROGRESS ===== */
 
 #progressSection {
-    margin-top: 18px;
+    margin-top: 17px;
 }
 
 #progressSection .section-heading {
@@ -657,7 +692,6 @@ button:focus-visible,
 /* ===== TABLET ===== */
 
 @media (max-width: 900px) {
-
     .navbar {
         padding: 10px 24px;
     }
@@ -666,8 +700,8 @@ button:focus-visible,
         padding: 17px 24px 22px;
     }
 
-    .tools-grid,
-    .subject-grid {
+    .subject-grid,
+    .tools-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -683,7 +717,6 @@ button:focus-visible,
 /* ===== MOBILE ===== */
 
 @media (max-width: 600px) {
-
     .navbar {
         gap: 12px;
         padding: 10px 16px;
@@ -718,7 +751,7 @@ button:focus-visible,
     .info-bar {
         grid-template-columns: 1fr;
         gap: 6px;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
     }
 
     .info-item {
@@ -726,7 +759,7 @@ button:focus-visible,
     }
 
     .section-block {
-        margin-top: 16px;
+        margin-top: 15px;
     }
 
     .start-learning {
@@ -753,8 +786,16 @@ button:focus-visible,
         padding: 10px 11px;
     }
 
-    #aiLearningSection .tool-card {
-        padding: 10px 12px;
+    /* Stack the AI card neatly on narrow screens */
+    .ai-tool-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 11px;
+        padding: 11px 12px;
+    }
+
+    .ai-open-button {
+        align-self: flex-start;
     }
 
     .subject-progress-list {
@@ -778,7 +819,6 @@ button:focus-visible,
 /* ===== REDUCED MOTION ===== */
 
 @media (prefers-reduced-motion: reduce) {
-
     *,
     *::before,
     *::after {
@@ -787,7 +827,8 @@ button:focus-visible,
     }
 
     .subject-card:hover,
-    .tool-card:hover {
+    .tool-card:hover,
+    .ai-tool-card:hover {
         transform: none;
     }
 }
