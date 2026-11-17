@@ -29,7 +29,7 @@ html {
 body {
     background: var(--page-bg);
     color: var(--text-main);
-    line-height: 1.55;
+    line-height: 1.5;
     font-size: 14px;
 }
 
@@ -43,8 +43,8 @@ a {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 20px;
-    padding: 12px 40px;
+    gap: 18px;
+    padding: 10px 40px;
     background: var(--page-bg);
     border-bottom: 1px solid rgba(215, 230, 217, 0.8);
 }
@@ -61,7 +61,7 @@ a {
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 18px;
     margin-right: auto;
     margin-left: 12px;
 }
@@ -98,22 +98,22 @@ a {
 }
 
 .avatar {
-    width: 36px;
-    height: 36px;
+    width: 35px;
+    height: 35px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--border-green);
     border-radius: 50%;
     background: var(--soft-green);
-    font-size: 18px;
+    font-size: 17px;
     cursor: pointer;
 }
 
 .avatar-dropdown {
     display: none;
     position: absolute;
-    top: 44px;
+    top: 43px;
     right: 0;
     z-index: 100;
     min-width: 150px;
@@ -130,7 +130,7 @@ a {
 
 .avatar-dropdown a {
     display: block;
-    padding: 10px 13px;
+    padding: 9px 13px;
     text-decoration: none;
     font-size: 13px;
 }
@@ -146,29 +146,29 @@ a {
 .container {
     width: min(1160px, 100%);
     margin: 0 auto;
-    padding: 27px 40px 42px;
+    padding: 19px 40px 26px;
 }
 
 /* ===== WELCOME SECTION ===== */
 
 .welcome {
-    padding: 10px 0 4px;
-    margin-bottom: 19px;
+    padding: 5px 0 2px;
+    margin-bottom: 14px;
 }
 
 .eyebrow {
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     color: var(--accent);
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 1.3px;
+    letter-spacing: 1.2px;
 }
 
 .welcome h1 {
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     font-family: 'Quicksand', sans-serif;
-    font-size: clamp(25px, 3vw, 32px);
-    line-height: 1.35;
+    font-size: clamp(23px, 2.5vw, 28px);
+    line-height: 1.3;
     font-weight: 700;
 }
 
@@ -182,16 +182,16 @@ a {
 .info-bar {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 11px;
-    margin-bottom: 30px;
+    gap: 9px;
+    margin-bottom: 19px;
 }
 
 .info-item {
     min-width: 0;
-    padding: 12px 14px;
+    padding: 9px 12px;
     background: var(--white);
     border: 1px solid var(--border-green);
-    border-radius: 10px;
+    border-radius: 9px;
     font-size: 12px;
     font-weight: 500;
     overflow-wrap: anywhere;
@@ -200,30 +200,30 @@ a {
 /* ===== DASHBOARD SECTIONS ===== */
 
 .section-block {
-    margin-top: 32px;
+    margin-top: 21px;
 }
 
 .section-heading {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 13px;
+    gap: 12px;
+    margin-bottom: 10px;
 }
 
 .section-heading h2 {
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     color: var(--text-main);
     font-family: 'Quicksand', sans-serif;
-    font-size: 21px;
-    line-height: 1.4;
+    font-size: 20px;
+    line-height: 1.35;
     font-weight: 700;
 }
 
 .section-heading p:not(.eyebrow) {
     color: var(--text-muted);
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.45;
 }
 
 /* ===== START LEARNING ===== */
@@ -235,57 +235,61 @@ a {
 .subject-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 13px;
+    gap: 10px;
 }
 
 .subject-card {
     min-width: 0;
-    padding: 15px;
+    padding: 11px 13px;
     background: var(--white);
     border: 1px solid var(--border-green);
-    border-radius: 11px;
-    transition: 0.2s;
+    border-radius: 10px;
+    transition: background-color 0.2s ease,
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                transform 0.2s ease;
 }
 
 .subject-card h3 {
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     font-size: 14px;
     font-weight: 700;
+    line-height: 1.4;
     overflow-wrap: anywhere;
 }
 
 .subject-card p {
     color: var(--text-muted);
     font-size: 11px;
-    line-height: 1.5;
+    line-height: 1.4;
 }
 
 .subject-symbol {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 9px;
+    margin-bottom: 7px;
     background: var(--soft-green);
-    border-radius: 9px;
-    font-size: 19px;
+    border-radius: 8px;
+    font-size: 17px;
 }
 
 .empty-state {
     grid-column: 1 / -1;
-    padding: 20px 16px;
+    padding: 16px;
     text-align: center;
     background: var(--white);
     border: 1px dashed #b9cfbd;
-    border-radius: 11px;
+    border-radius: 10px;
     color: var(--text-muted);
 }
 
 .empty-state span {
     display: block;
-    margin-bottom: 5px;
-    font-size: 26px;
+    margin-bottom: 4px;
+    font-size: 23px;
 }
 
 .empty-state p {
@@ -296,8 +300,8 @@ a {
 
 .primary-link {
     display: inline-block;
-    margin-top: 13px;
-    padding: 8px 13px;
+    margin-top: 9px;
+    padding: 7px 12px;
     background: transparent;
     color: var(--dark-green);
     border: 1px solid #8eaa92;
@@ -319,7 +323,7 @@ a {
 .tools-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 13px;
+    gap: 10px;
 }
 
 .tools-grid-single {
@@ -334,31 +338,34 @@ a {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding: 17px;
+    padding: 13px 15px;
     background: var(--white);
     border: 1px solid var(--border-green);
-    border-radius: 12px;
+    border-radius: 11px;
     color: inherit;
     text-decoration: none;
-    transition: 0.2s;
+    transition: background-color 0.2s ease,
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                transform 0.2s ease;
 }
 
 .tool-icon {
-    width: 38px;
-    height: 38px;
+    width: 33px;
+    height: 33px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 10px;
-    border-radius: 10px;
+    margin-bottom: 7px;
+    border-radius: 9px;
     background: var(--soft-green);
-    font-size: 19px;
+    font-size: 17px;
 }
 
 .tool-card h3 {
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     font-size: 14px;
-    line-height: 1.45;
+    line-height: 1.4;
     font-weight: 700;
 }
 
@@ -366,18 +373,18 @@ a {
     flex-grow: 1;
     color: var(--text-muted);
     font-size: 12px;
-    line-height: 1.65;
+    line-height: 1.5;
 }
 
 .tool-features {
     display: flex;
     flex-wrap: wrap;
-    gap: 7px;
-    margin-top: 11px;
+    gap: 6px;
+    margin-top: 8px;
 }
 
 .feature-chip {
-    padding: 5px 9px;
+    padding: 4px 8px;
     background: var(--soft-green);
     border: 1px solid var(--border-green);
     border-radius: 999px;
@@ -387,10 +394,20 @@ a {
 }
 
 .open-link {
-    margin-top: 13px;
+    margin-top: 9px;
     color: var(--dark-green);
     font-size: 12px;
     font-weight: 700;
+}
+
+/* Make the AI assistant card compact on desktop */
+#aiLearningSection .tools-grid-single {
+    display: block;
+}
+
+#aiLearningSection .tool-card {
+    width: 100%;
+    max-width: 760px;
 }
 
 /* ===== CARD HOVER EFFECTS ===== */
@@ -410,11 +427,11 @@ a {
 /* ===== LEARNING PROGRESS ===== */
 
 #progressSection {
-    margin-top: 28px;
+    margin-top: 21px;
 }
 
 #progressSection .section-heading {
-    margin-bottom: 11px;
+    margin-bottom: 9px;
 }
 
 #progressSection .section-heading h2 {
@@ -423,29 +440,29 @@ a {
 }
 
 .progress-panel-compact {
-    padding: 11px;
+    padding: 9px;
     text-align: left;
     background: var(--white);
     border: 1px solid var(--border-green);
-    border-radius: 11px;
+    border-radius: 10px;
 }
 
 .subject-progress-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    gap: 8px;
 }
 
 .subject-progress-card {
     min-width: 0;
-    padding: 11px;
+    padding: 9px;
     background: var(--page-bg);
     border: 1px solid var(--border-green);
-    border-radius: 9px;
+    border-radius: 8px;
 }
 
 .subject-progress-title {
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     font-size: 13px;
     line-height: 1.4;
     font-weight: 700;
@@ -457,14 +474,14 @@ a {
     align-items: center;
     flex-wrap: wrap;
     gap: 5px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     color: var(--text-muted);
     font-size: 10px;
 }
 
 .progress-mode-select {
     max-width: 100%;
-    padding: 5px 7px;
+    padding: 4px 7px;
     color: var(--dark-green);
     background: var(--white);
     border: 1px solid var(--border-green);
@@ -488,7 +505,7 @@ a {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin: 7px 0 5px;
+    margin: 6px 0 4px;
     font-size: 11px;
 }
 
@@ -514,8 +531,8 @@ a {
 
 .progress-unit-list {
     display: grid;
-    gap: 6px;
-    margin-top: 9px;
+    gap: 5px;
+    margin-top: 7px;
 }
 
 .progress-unit-row {
@@ -540,13 +557,13 @@ a {
 .progress-add-unit {
     display: flex;
     gap: 6px;
-    margin-top: 9px;
+    margin-top: 7px;
 }
 
 .progress-add-unit input {
     width: 100%;
     min-width: 0;
-    padding: 7px 8px;
+    padding: 6px 8px;
     border: 1px solid var(--border-green);
     border-radius: 7px;
     background: var(--white);
@@ -556,7 +573,7 @@ a {
 
 .progress-add-unit button {
     flex-shrink: 0;
-    padding: 7px 10px;
+    padding: 6px 9px;
     border: 1px solid var(--accent);
     border-radius: 7px;
     background: var(--soft-green);
@@ -583,8 +600,8 @@ a {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
-    padding: 19px 40px;
+    gap: 8px;
+    padding: 14px 40px;
     background: var(--soft-green);
 }
 
@@ -614,11 +631,11 @@ button:focus-visible,
 @media (max-width: 900px) {
 
     .navbar {
-        padding: 12px 24px;
+        padding: 10px 24px;
     }
 
     .container {
-        padding: 24px 24px 36px;
+        padding: 18px 24px 25px;
     }
 
     .tools-grid,
@@ -641,7 +658,7 @@ button:focus-visible,
 
     .navbar {
         gap: 12px;
-        padding: 11px 16px;
+        padding: 10px 16px;
     }
 
     .logo {
@@ -658,35 +675,30 @@ button:focus-visible,
     }
 
     .container {
-        padding: 21px 16px 32px;
+        padding: 16px 15px 22px;
     }
 
     .welcome {
-        margin-bottom: 16px;
+        padding: 4px 0;
+        margin-bottom: 13px;
     }
 
     .welcome h1 {
-        font-size: 25px;
+        font-size: 23px;
     }
 
     .info-bar {
         grid-template-columns: 1fr;
-        gap: 8px;
-        margin-bottom: 25px;
+        gap: 7px;
+        margin-bottom: 17px;
     }
 
     .info-item {
-        padding: 11px 13px;
-    }
-
-    .tools-grid,
-    .tools-grid-two,
-    .subject-grid {
-        grid-template-columns: 1fr;
+        padding: 9px 11px;
     }
 
     .section-block {
-        margin-top: 28px;
+        margin-top: 19px;
     }
 
     .start-learning {
@@ -694,32 +706,44 @@ button:focus-visible,
     }
 
     .section-heading {
-        margin-bottom: 11px;
+        margin-bottom: 9px;
     }
 
     .section-heading h2 {
-        font-size: 20px;
+        font-size: 19px;
     }
 
-    .tool-card {
-        padding: 15px;
-    }
-
-    .subject-progress-list {
+    .subject-grid,
+    .tools-grid,
+    .tools-grid-two {
         grid-template-columns: 1fr;
         gap: 8px;
     }
 
+    .subject-card,
+    .tool-card {
+        padding: 11px 12px;
+    }
+
+    #aiLearningSection .tool-card {
+        max-width: 100%;
+    }
+
+    .subject-progress-list {
+        grid-template-columns: 1fr;
+        gap: 7px;
+    }
+
     .progress-panel-compact {
-        padding: 9px;
+        padding: 8px;
     }
 
     .subject-progress-card {
-        padding: 10px;
+        padding: 9px;
     }
 
     .footer {
-        padding: 17px 16px;
+        padding: 13px 15px;
     }
 }
 
@@ -733,226 +757,6 @@ button:focus-visible,
         scroll-behavior: auto !important;
         transition-duration: 0.01ms !important;
     }
-
-    /* ===== LUMINA DASHBOARD: COMPACT SPACING ===== */
-
-/* Main page spacing */
-.container {
-    padding-top: 18px;
-    padding-bottom: 24px;
-}
-
-/* Welcome section */
-.welcome {
-    padding: 8px 0 4px;
-    margin-bottom: 14px;
-}
-
-.welcome h1 {
-    font-size: clamp(23px, 2.5vw, 29px);
-    margin-bottom: 5px;
-    line-height: 1.25;
-}
-
-.welcome > p:last-child {
-    font-size: 13px;
-}
-
-/* Profile information boxes */
-.info-bar {
-    gap: 10px;
-    margin-bottom: 22px;
-}
-
-.info-item {
-    padding: 10px 13px;
-    border-radius: 10px;
-}
-
-/* Dashboard sections */
-.section-block {
-    margin-top: 25px;
-}
-
-.section-heading {
-    margin-bottom: 12px;
-    gap: 12px;
-}
-
-.section-heading h2 {
-    font-size: 20px;
-    line-height: 1.3;
-    margin-bottom: 3px;
-}
-
-.section-heading p:not(.eyebrow) {
-    font-size: 12px;
-}
-
-/* Subject cards */
-.subject-grid {
-    gap: 12px;
-}
-
-.subject-card {
-    padding: 13px;
-    border-radius: 11px;
-}
-
-.subject-card h3 {
-    margin-bottom: 3px;
-}
-
-.subject-symbol {
-    width: 35px;
-    height: 35px;
-    margin-bottom: 8px;
-    font-size: 18px;
-}
-
-/* Manage subjects link */
-.primary-link {
-    margin-top: 12px;
-    padding: 8px 13px;
-}
-
-/* AI tools and study space */
-.tools-grid {
-    gap: 12px;
-}
-
-.tool-card {
-    padding: 15px;
-    border-radius: 12px;
-}
-
-.tool-icon {
-    width: 36px;
-    height: 36px;
-    margin-bottom: 9px;
-    font-size: 18px;
-}
-
-.tool-card h3 {
-    margin-bottom: 4px;
-}
-
-.tool-card p {
-    line-height: 1.55;
-}
-
-.tool-features {
-    gap: 6px;
-    margin-top: 9px;
-}
-
-.feature-chip {
-    padding: 4px 9px;
-}
-
-.open-link {
-    margin-top: 10px;
-}
-
-/* Learning progress */
-#progressSection {
-    margin-top: 24px;
-}
-
-#progressSection .section-heading {
-    margin-bottom: 9px;
-}
-
-.progress-panel-compact {
-    padding: 9px;
-}
-
-.subject-progress-list {
-    gap: 8px;
-}
-
-.subject-progress-card {
-    padding: 9px;
-}
-
-.subject-progress-title {
-    margin-bottom: 5px;
-}
-
-.progress-mode-label {
-    margin-bottom: 6px;
-}
-
-.subject-progress-summary {
-    margin: 5px 0 4px;
-}
-
-.progress-unit-list {
-    gap: 4px;
-    margin-top: 7px;
-}
-
-.progress-add-unit {
-    margin-top: 7px;
-}
-
-/* Footer */
-.footer {
-    padding: 14px 28px;
-    gap: 8px;
-}
-
-/* Mobile spacing */
-@media (max-width: 600px) {
-    .container {
-        padding: 16px 14px 24px;
-    }
-
-    .welcome {
-        padding: 5px 0;
-        margin-bottom: 12px;
-    }
-
-    .welcome h1 {
-        font-size: 23px;
-    }
-
-    .info-bar {
-        gap: 7px;
-        margin-bottom: 18px;
-    }
-
-    .info-item {
-        padding: 9px 11px;
-    }
-
-    .section-block {
-        margin-top: 23px;
-    }
-
-    .section-heading {
-        margin-bottom: 10px;
-    }
-
-    .section-heading h2 {
-        font-size: 19px;
-    }
-
-    .subject-grid,
-    .tools-grid,
-    .tools-grid-two {
-        gap: 9px;
-    }
-
-    .subject-card,
-    .tool-card {
-        padding: 12px;
-    }
-
-    .footer {
-        padding: 13px 15px;
-    }
-}
 
     .subject-card:hover,
     .tool-card:hover {
